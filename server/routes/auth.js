@@ -73,23 +73,29 @@ router.post('/login', async (req, res) => {
     const { email, password } = req.body;
 
     if (!email || !password) {
+      console.warn('[Auth] Login attempt rejected: missing email or password');
       return res.status(400).json({ error: 'Email and password are required.' });
     }
 
-    const user = db.prepare('SELECT * FROM users WHERE email = ?').get(email.toLowerCase().trim());
+    const cleanEmail = email.toLowerCase().trim();
+    const user = db.prepare('SELECT * FROM users WHERE email = ?').get(cleanEmail);
     if (!user) {
-      return res.status(401).json({ error: 'Invalid email or password.' });
+      console.warn(`[Auth] Login failed: no user found for email "${cleanEmail}"`);
+      return res.status(401).json({ error: 'No account found with this email. Please click "Sign Up" below to create one.' });
     }
 
     if (user.is_suspended) {
+      console.warn(`[Auth] Login rejected: user "${cleanEmail}" (ID: ${user.id}) is suspended`);
       return res.status(403).json({ error: 'Your account has been suspended. Please contact support.' });
     }
 
     const isMatch = await bcrypt.compare(password, user.password_hash);
     if (!isMatch) {
-      return res.status(401).json({ error: 'Invalid email or password.' });
+      console.warn(`[Auth] Login failed: incorrect password for user "${cleanEmail}" (ID: ${user.id})`);
+      return res.status(401).json({ error: 'Incorrect password. Please verify your password or use demo accounts.' });
     }
 
+    console.log(`[Auth] Successful login: "${cleanEmail}" (Role: ${user.role}, ID: ${user.id})`);
     const token = jwt.sign({ id: user.id, role: user.role }, JWT_SECRET, { expiresIn: '7d' });
 
     let restaurant = null;
@@ -162,6 +168,26 @@ router.put('/profile', authenticate, (req, res) => {
   } catch (err) {
     console.error('Update profile error:', err);
     res.status(500).json({ error: 'Failed to update profile.' });
+  }
+});
+
+// Reset / Update Password
+router.post('/reset-password', async (req, res) => {
+  try {
+    const { email, new_password } = req.body;
+    if (!email || !new_password) {
+      return res.status(400).json({ error: 'Email and new password are required.' });
+    }
+    const user = db.prepare('SELECT id FROM users WHERE email = ?').get(email.toLowerCase().trim());
+    if (!user) {
+      return res.status(404).json({ error: 'No account found with this email.' });
+    }
+    const passwordHash = await bcrypt.hash(new_password, 10);
+    db.prepare('UPDATE users SET password_hash = ? WHERE id = ?').run(passwordHash, user.id);
+    res.json({ message: 'Password updated successfully! You can now sign in.' });
+  } catch (err) {
+    console.error('Reset password error:', err);
+    res.status(500).json({ error: 'Failed to reset password.' });
   }
 });
 

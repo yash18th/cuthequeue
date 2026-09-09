@@ -64,6 +64,16 @@ async function seed() {
     JSON.stringify({ push: true, sound: true, vibration: true })
   );
 
+  const yashvanthUser = insertUser.run(
+    'Yashvanth Nayak',
+    'yashvanthnayak1104@gmail.com',
+    '+91 98765 00001',
+    passwordHash,
+    'customer',
+    'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150',
+    JSON.stringify({ push: true, sound: true, vibration: true })
+  );
+
   // 2. Insert Restaurants
   const insertRestaurant = db.prepare(`
     INSERT INTO restaurants (

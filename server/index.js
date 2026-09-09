@@ -67,12 +67,15 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// Socket.IO Room Subscriptions
+// Socket.IO Room Subscriptions & Logging
 io.on('connection', (socket) => {
+  console.log(`⚡ [Socket] Client connected: ${socket.id}`);
+
   // Join restaurant room for live kitchen updates
   socket.on('join:restaurant', (restaurantId) => {
     if (restaurantId) {
       socket.join(`restaurant_${restaurantId}`);
+      console.log(`[Socket] ${socket.id} joined restaurant_${restaurantId}`);
     }
   });
 
@@ -80,6 +83,7 @@ io.on('connection', (socket) => {
   socket.on('join:customer', (customerId) => {
     if (customerId) {
       socket.join(`customer_${customerId}`);
+      console.log(`[Socket] ${socket.id} joined customer_${customerId}`);
     }
   });
 
@@ -87,13 +91,23 @@ io.on('connection', (socket) => {
   socket.on('join:order', (orderId) => {
     if (orderId) {
       socket.join(`order_${orderId}`);
+      console.log(`[Socket] ${socket.id} joined order_${orderId}`);
     }
   });
 
   socket.on('leave:order', (orderId) => {
     if (orderId) {
       socket.leave(`order_${orderId}`);
+      console.log(`[Socket] ${socket.id} left order_${orderId}`);
     }
+  });
+
+  socket.on('disconnect', (reason) => {
+    console.log(`[Socket] Client ${socket.id} disconnected (${reason})`);
+  });
+
+  socket.on('error', (err) => {
+    console.error(`⚠️ [Socket] Error on ${socket.id}:`, err);
   });
 });
 

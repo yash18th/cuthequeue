@@ -111,13 +111,39 @@ export default function AuthPage({ setActivePage }) {
             <div style={{
               background: '#fff1f2',
               color: '#be123c',
-              padding: '0.75rem 1rem',
+              padding: '0.85rem 1rem',
               borderRadius: 'var(--radius-md)',
-              fontSize: '0.85rem',
+              fontSize: '0.875rem',
               marginBottom: '1.25rem',
-              border: '1px solid #fecdd3'
+              border: '1px solid #fecdd3',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '6px'
             }}>
-              {error}
+              <div>{error}</div>
+              {isLogin && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setError('');
+                    setIsLogin(false);
+                  }}
+                  style={{
+                    background: '#059669',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '6px',
+                    padding: '6px 12px',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    fontSize: '0.8rem',
+                    alignSelf: 'flex-start',
+                    marginTop: '4px'
+                  }}
+                >
+                  Click here to Sign Up with this Email &rarr;
+                </button>
+              )}
             </div>
           )}
 

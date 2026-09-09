@@ -1,6 +1,16 @@
 // Centralized API client with JWT authentication and friendly error messaging
 
-const API_BASE = `${import.meta.env.VITE_API_URL || 'http://localhost:5001'}/api`;
+export const getBaseUrl = () => {
+  if (import.meta.env.VITE_API_URL) {
+    return import.meta.env.VITE_API_URL.replace(/\/+$/, '');
+  }
+  if (import.meta.env.PROD) {
+    return 'https://cuthequeue-api.onrender.com';
+  }
+  return 'http://localhost:5001';
+};
+
+export const API_BASE = `${getBaseUrl()}/api`;
 export async function apiRequest(endpoint, options = {}) {
   const token = localStorage.getItem('cq_token');
   const headers = {
@@ -39,6 +49,7 @@ export const authAPI = {
   register: (userData) => apiRequest('/auth/register', { method: 'POST', body: JSON.stringify(userData) }),
   me: () => apiRequest('/auth/me'),
   updateProfile: (profile) => apiRequest('/auth/profile', { method: 'PUT', body: JSON.stringify(profile) }),
+  resetPassword: (data) => apiRequest('/auth/reset-password', { method: 'POST', body: JSON.stringify(data) }),
   getDemoUsers: () => apiRequest('/auth/demo-users')
 };
 

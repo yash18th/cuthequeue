@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { io } from 'socket.io-client';
 import { useAuth } from './AuthContext';
 import { useNotification } from './NotificationContext';
+import { getBaseUrl } from '../utils/api';
 
 const SocketContext = createContext(null);
 
@@ -12,7 +13,8 @@ export function SocketProvider({ children }) {
   const { notify } = useNotification();
 
   useEffect(() => {
-    const s = io(import.meta.env.VITE_API_URL || 'http://localhost:5001', {
+    const socketUrl = getBaseUrl();
+    const s = io(socketUrl, {
       transports: ['websocket', 'polling'],
       reconnectionAttempts: 10,
       reconnectionDelay: 1000
