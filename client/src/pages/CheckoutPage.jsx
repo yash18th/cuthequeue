@@ -148,12 +148,12 @@ export default function CheckoutPage({ setActivePage, setTrackedOrderId }) {
 
         {/* Time-Saving Hero Banner */}
         <div style={{
-          background: 'linear-gradient(135deg, #0B2923 0%, #123C32 100%)',
-          border: '1px solid #C6A15B',
+          background: 'linear-gradient(135deg, #0B352D 0%, #123F35 100%)',
+          border: '1px solid #C49A52',
           borderRadius: 'var(--radius-lg)',
           padding: '1.25rem 1.5rem',
           marginBottom: '2rem',
-          color: '#F7F1E5',
+          color: '#F7F0E2',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
@@ -162,30 +162,30 @@ export default function CheckoutPage({ setActivePage, setTrackedOrderId }) {
           boxShadow: 'var(--shadow-sm)'
         }}>
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#C6A15B', fontWeight: 800, fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.06em', fontFamily: 'var(--font-serif)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#C49A52', fontWeight: 800, fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.06em', fontFamily: 'var(--font-serif)' }}>
               <Clock size={16} /> Skip the Counter Queue
             </div>
-            <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#F7F1E5', marginTop: '3px', fontFamily: 'var(--font-serif)' }}>
+            <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#F7F0E2', marginTop: '3px', fontFamily: 'var(--font-serif)' }}>
               Pickup Method: <strong>Self Pickup at Branch Counter</strong>
             </div>
-            <p style={{ fontSize: '0.85rem', color: '#E8DDC8', marginTop: '2px', maxWidth: '480px' }}>
+            <p style={{ fontSize: '0.85rem', color: '#E9DDC7', marginTop: '2px', maxWidth: '480px' }}>
               The kitchen begins preparation immediately. Walk in, show your digital token, and collect fresh hot food.
             </p>
           </div>
           <div style={{
-            background: 'rgba(247, 241, 229, 0.1)',
+            background: 'rgba(247, 240, 226, 0.1)',
             borderRadius: 'var(--radius-md)',
             padding: '10px 18px',
             textAlign: 'center',
-            border: '1px solid #C6A15B'
+            border: '1px solid #C49A52'
           }}>
-            <div style={{ fontSize: '0.72rem', color: '#C6A15B', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+            <div style={{ fontSize: '0.72rem', color: '#C49A52', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
               Estimated Ready Time
             </div>
-            <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#F7F1E5', fontFamily: 'var(--font-serif)' }}>
+            <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#F7F0E2', fontFamily: 'var(--font-serif)' }}>
               {estimatedReadyTime}
             </div>
-            <div style={{ fontSize: '0.75rem', color: '#C6A15B', fontWeight: 700, marginTop: '2px' }}>
+            <div style={{ fontSize: '0.75rem', color: '#C49A52', fontWeight: 700, marginTop: '2px' }}>
               ⏱️ ~{estimatedTimeSaved} min queue time saved
             </div>
           </div>

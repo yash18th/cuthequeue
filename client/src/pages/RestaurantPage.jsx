@@ -171,9 +171,9 @@ export default function RestaurantPage({ restaurantId, setActivePage, onOpenCart
         position: 'relative',
         height: '280px',
         width: '100%',
-        background: '#0B2923',
+        background: '#0B352D',
         overflow: 'hidden',
-        borderBottom: '2px solid #C6A15B'
+        borderBottom: '2px solid #C49A52'
       }}>
         <img
           src={restaurant.cover_image}
@@ -183,18 +183,18 @@ export default function RestaurantPage({ restaurantId, setActivePage, onOpenCart
         <div style={{
           position: 'absolute',
           inset: 0,
-          background: 'linear-gradient(to top, rgba(11, 41, 35, 0.95) 0%, rgba(18, 60, 50, 0.4) 60%, transparent 100%)'
+          background: 'linear-gradient(to top, rgba(11, 53, 45, 0.95) 0%, rgba(18, 63, 53, 0.4) 60%, transparent 100%)'
         }} />
 
-        <div className="container" style={{ position: 'absolute', bottom: '24px', left: 0, right: 0, color: '#F7F1E5' }}>
+        <div className="container" style={{ position: 'absolute', bottom: '24px', left: 0, right: 0, color: '#F7F0E2' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', marginBottom: '6px' }}>
             <span className={`badge ${isOpen ? 'badge-open' : 'badge-closed'}`}>
               {isOpen ? '🟢 Open for Pre-Order' : '🔴 Closed'}
             </span>
             <span style={{
-              background: 'rgba(11, 41, 35, 0.85)',
-              color: '#C6A15B',
-              border: '1px solid #C6A15B',
+              background: 'rgba(11, 53, 45, 0.85)',
+              color: '#C49A52',
+              border: '1px solid #C49A52',
               padding: '3px 8px',
               borderRadius: '4px',
               fontSize: '0.78rem',
@@ -204,7 +204,7 @@ export default function RestaurantPage({ restaurantId, setActivePage, onOpenCart
               gap: '4px',
               backdropFilter: 'blur(6px)'
             }}>
-              <Star size={13} fill="#C6A15B" strokeWidth={0} />
+              <Star size={13} fill="#C49A52" strokeWidth={0} />
               {restaurant.rating ? Number(restaurant.rating).toFixed(1) : '4.8'}
             </span>
           </div>
@@ -214,7 +214,7 @@ export default function RestaurantPage({ restaurantId, setActivePage, onOpenCart
             fontWeight: 800,
             letterSpacing: '-0.01em',
             margin: '0.2rem 0',
-            color: '#F7F1E5',
+            color: '#F7F0E2',
             fontFamily: 'var(--font-serif)'
           }}>
             {restaurant.name}
@@ -225,16 +225,16 @@ export default function RestaurantPage({ restaurantId, setActivePage, onOpenCart
             alignItems: 'center',
             gap: '12px',
             fontSize: '0.875rem',
-            color: '#E8DDC8',
+            color: '#E9DDC7',
             flexWrap: 'wrap'
           }}>
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-              <MapPin size={14} style={{ color: '#C6A15B' }} />
+              <MapPin size={14} style={{ color: '#C49A52' }} />
               {restaurant.address}
             </span>
             <span>•</span>
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-              <Clock size={14} style={{ color: '#C6A15B' }} />
+              <Clock size={14} style={{ color: '#C49A52' }} />
               Ready in ~{restaurant.prep_time_minutes || 15} mins
             </span>
           </div>
@@ -552,12 +552,12 @@ export default function RestaurantPage({ restaurantId, setActivePage, onOpenCart
           transform: 'translateX(-50%)',
           width: 'calc(100% - 40px)',
           maxWidth: '680px',
-          background: 'linear-gradient(135deg, #0B2923 0%, #123C32 100%)',
-          color: '#F7F1E5',
+          background: 'linear-gradient(135deg, #0B352D 0%, #123F35 100%)',
+          color: '#F7F0E2',
           padding: '1rem 1.4rem',
           borderRadius: 'var(--radius-lg)',
           boxShadow: '0 10px 30px rgba(0,0,0,0.3)',
-          border: '1px solid #C6A15B',
+          border: '1px solid #C49A52',
           zIndex: 999,
           display: 'flex',
           alignItems: 'center',
@@ -566,7 +566,7 @@ export default function RestaurantPage({ restaurantId, setActivePage, onOpenCart
           gap: '0.75rem'
         }}>
           <div>
-            <div style={{ fontSize: '0.78rem', color: '#C6A15B', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: 'var(--font-serif)' }}>
+            <div style={{ fontSize: '0.78rem', color: '#C49A52', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: 'var(--font-serif)' }}>
               {cartRestaurant?.name || restaurant.name}
             </div>
             <div style={{ fontSize: '1rem', fontWeight: 800, fontFamily: 'var(--font-serif)' }}>
@@ -580,8 +580,8 @@ export default function RestaurantPage({ restaurantId, setActivePage, onOpenCart
               onClick={() => navigate('/cart')}
               className="btn btn-sm btn-outline"
               style={{
-                borderColor: '#C6A15B',
-                color: '#F7F1E5',
+                borderColor: '#C49A52',
+                color: '#F7F0E2',
                 padding: '0.5rem 1rem'
               }}
             >
