@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { restaurantAPI } from '../utils/api';
+import PageNavHeader from '../components/PageNavHeader';
 import { CheckCircle2, Clock, MapPin, Store, AlertTriangle } from 'lucide-react';
 
 export default function RestaurantSettings() {
@@ -60,8 +61,16 @@ export default function RestaurantSettings() {
   };
 
   return (
-    <div style={{ padding: '2.5rem 0 6rem 0' }}>
+    <div style={{ padding: '2rem 0 6rem 0' }}>
       <div className="container" style={{ maxWidth: '720px' }}>
+        <PageNavHeader
+          backLabel="Back to Kitchen"
+          fallbackPath="/kitchen"
+          breadcrumbs={[
+            { label: 'Kitchen Dashboard', path: '/kitchen' },
+            { label: 'Settings' }
+          ]}
+        />
         <h1 style={{ fontSize: '1.8rem', fontWeight: 800, letterSpacing: '-0.02em', marginBottom: '0.35rem' }}>
           Restaurant Settings
         </h1>

@@ -1,8 +1,14 @@
 import React, { useState } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { UtensilsCrossed, Lock, Mail, User, Phone, ArrowRight, Shield, CheckCircle, Eye, EyeOff } from 'lucide-react';
+import { UtensilsCrossed, Lock, Mail, User, Phone, ArrowRight, ArrowLeft, Shield, CheckCircle, Eye, EyeOff } from 'lucide-react';
 
 export default function AuthPage({ setActivePage }) {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const redirectParam = searchParams.get('redirect');
+
   const { login, register } = useAuth();
   const [isLogin, setIsLogin] = useState(true);
   const [isForgotPassword, setIsForgotPassword] = useState(false);
@@ -20,6 +26,23 @@ export default function AuthPage({ setActivePage }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  const redirectUser = (role) => {
+    if (redirectParam && redirectParam.startsWith('/')) {
+      navigate(redirectParam);
+      return;
+    }
+    if (role === 'restaurant_admin') {
+      setActivePage?.('restaurant-dashboard');
+      navigate('/kitchen');
+    } else if (role === 'super_admin') {
+      setActivePage?.('superadmin');
+      navigate('/admin');
+    } else {
+      setActivePage?.('home');
+      navigate('/browse');
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -27,7 +50,6 @@ export default function AuthPage({ setActivePage }) {
 
     try {
       if (isForgotPassword) {
-        // Simulate password reset email send
         setResetSent(true);
         setLoading(false);
         return;
@@ -35,20 +57,10 @@ export default function AuthPage({ setActivePage }) {
 
       if (isLogin) {
         const res = await login(formData.email, formData.password);
-        if (res.user.role === 'restaurant_admin') {
-          setActivePage('restaurant-dashboard');
-        } else if (res.user.role === 'super_admin') {
-          setActivePage('superadmin');
-        } else {
-          setActivePage('home');
-        }
+        redirectUser(res.user?.role);
       } else {
         const res = await register(formData);
-        if (res.user.role === 'restaurant_admin') {
-          setActivePage('restaurant-dashboard');
-        } else {
-          setActivePage('home');
-        }
+        redirectUser(res.user?.role);
       }
     } catch (err) {
       setError(err.message || 'Authentication failed. Please check your credentials.');
@@ -62,9 +74,7 @@ export default function AuthPage({ setActivePage }) {
     setLoading(true);
     try {
       await login(email, 'password123');
-      if (role === 'customer') setActivePage('home');
-      else if (role === 'restaurant_admin') setActivePage('restaurant-dashboard');
-      else if (role === 'super_admin') setActivePage('superadmin');
+      redirectUser(role);
     } catch (err) {
       setError(err.message || 'Demo login failed');
     } finally {
@@ -75,6 +85,26 @@ export default function AuthPage({ setActivePage }) {
   return (
     <div style={{ padding: '3.5rem 0', minHeight: '80vh', display: 'flex', alignItems: 'center' }}>
       <div className="container" style={{ maxWidth: '480px' }}>
+        <button
+          type="button"
+          onClick={() => {
+            if (window.history.state && window.history.state.idx > 0) {
+              navigate(-1);
+            } else {
+              navigate('/');
+            }
+          }}
+          className="btn btn-sm btn-secondary"
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '6px',
+            marginBottom: '1rem'
+          }}
+        >
+          <ArrowLeft size={15} /> Back
+        </button>
+
         <div className="card" style={{ padding: '2.25rem', boxShadow: 'var(--shadow-xl)', border: '1px solid var(--border-medium)' }}>
           {/* Brand header */}
           <div style={{ textAlign: 'center', marginBottom: '2rem' }}>

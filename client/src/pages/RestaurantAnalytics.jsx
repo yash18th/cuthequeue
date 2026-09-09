@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { analyticsAPI } from '../utils/api';
+import PageNavHeader from '../components/PageNavHeader';
 import { TrendingUp, DollarSign, ShoppingBag, Clock, Award, BarChart3 } from 'lucide-react';
 
 export default function RestaurantAnalytics() {
@@ -31,8 +32,17 @@ export default function RestaurantAnalytics() {
   const maxPeakOrders = Math.max(...peakHours.map((p) => p.order_count), 5);
 
   return (
-    <div style={{ padding: '2.5rem 0 6rem 0' }}>
+    <div style={{ padding: '2rem 0 6rem 0' }}>
       <div className="container">
+        <PageNavHeader
+          backLabel="Back to Kitchen"
+          fallbackPath="/kitchen"
+          breadcrumbs={[
+            { label: 'Kitchen Dashboard', path: '/kitchen' },
+            { label: 'Analytics' }
+          ]}
+        />
+
         {/* Header */}
         <div style={{ marginBottom: '2rem' }}>
           <h1 style={{ fontSize: '1.8rem', fontWeight: 800, letterSpacing: '-0.02em', margin: 0 }}>

@@ -1,12 +1,18 @@
 import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
 import { orderAPI } from '../utils/api';
 import { useSocket } from '../context/SocketContext';
 import { useNotification } from '../context/NotificationContext';
 import StatusBadge from '../components/StatusBadge';
+import PageNavHeader from '../components/PageNavHeader';
 import { Clock, MapPin, Phone, Bell, CheckCircle2, ArrowLeft, Sparkles, QrCode, AlertTriangle, ShieldCheck } from 'lucide-react';
 
 export default function OrderTrackingPage({ orderId, setActivePage }) {
+  const params = useParams();
+  const navigate = useNavigate();
+  const effectiveOrderId = orderId || params.orderId || params.id;
+
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -14,9 +20,9 @@ export default function OrderTrackingPage({ orderId, setActivePage }) {
   const { notify } = useNotification();
 
   const loadOrder = async () => {
-    if (!orderId) return;
+    if (!effectiveOrderId) return;
     try {
-      const res = await orderAPI.getOrder(orderId);
+      const res = await orderAPI.getOrder(effectiveOrderId);
       setOrder(res);
     } catch (err) {
       console.error('Failed to load order:', err);
@@ -28,7 +34,7 @@ export default function OrderTrackingPage({ orderId, setActivePage }) {
 
   useEffect(() => {
     loadOrder();
-  }, [orderId]);
+  }, [effectiveOrderId]);
 
   // Real-Time Socket Connection for Order Status
   useEffect(() => {
@@ -92,7 +98,7 @@ export default function OrderTrackingPage({ orderId, setActivePage }) {
     return (
       <div className="container" style={{ padding: '4rem 0', textAlign: 'center' }}>
         <p style={{ color: 'var(--accent-rose)', fontSize: '1.1rem', marginBottom: '1rem' }}>{error || 'Order not found.'}</p>
-        <button className="btn btn-secondary" onClick={() => setActivePage('orders')}>
+        <button className="btn btn-secondary" onClick={() => navigate('/orders')}>
           <ArrowLeft size={16} /> View All Orders
         </button>
       </div>
@@ -121,19 +127,22 @@ export default function OrderTrackingPage({ orderId, setActivePage }) {
   return (
     <div style={{ padding: '2.5rem 0 6rem 0' }}>
       <div className="container" style={{ maxWidth: '780px' }}>
-        {/* Navigation row */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-          <button
-            className="btn btn-sm btn-secondary"
-            onClick={() => setActivePage('orders')}
-          >
-            <ArrowLeft size={16} /> My Orders
-          </button>
-          <span style={{ fontSize: '0.8rem', color: 'var(--primary)', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--primary)', animation: 'pulse 1.5s infinite' }} />
-            Live Kitchen Tracking
-          </span>
-        </div>
+        {/* Contextual Back Navigation & Breadcrumb Header */}
+        <PageNavHeader
+          backLabel="Back to My Orders"
+          fallbackPath="/orders"
+          breadcrumbs={[
+            { label: 'Home', path: '/' },
+            { label: 'My Orders', path: '/orders' },
+            { label: `Order ${order.order_number}` }
+          ]}
+          extraAction={
+            <span style={{ fontSize: '0.8rem', color: 'var(--primary)', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--primary)', animation: 'pulse 1.5s infinite' }} />
+              Live Kitchen Tracking
+            </span>
+          }
+        />
 
         {/* HERO TIME-SAVING BADGE */}
         <div style={{

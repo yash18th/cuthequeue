@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { menuAPI } from '../utils/api';
+import PageNavHeader from '../components/PageNavHeader';
 import { Plus, Edit2, Trash2, Check, X, AlertCircle } from 'lucide-react';
 
 export default function RestaurantMenuManagement() {
@@ -124,8 +125,17 @@ export default function RestaurantMenuManagement() {
   };
 
   return (
-    <div style={{ padding: '2.5rem 0 6rem 0' }}>
+    <div style={{ padding: '2rem 0 6rem 0' }}>
       <div className="container">
+        <PageNavHeader
+          backLabel="Back to Kitchen"
+          fallbackPath="/kitchen"
+          breadcrumbs={[
+            { label: 'Kitchen Dashboard', path: '/kitchen' },
+            { label: 'Menu Management' }
+          ]}
+        />
+
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', marginBottom: '2rem' }}>
           <div>

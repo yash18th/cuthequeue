@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { useNotification } from '../context/NotificationContext';
 import { orderAPI, paymentAPI } from '../utils/api';
+import PageNavHeader from '../components/PageNavHeader';
 import { ArrowLeft, Clock, Calendar, ShieldCheck, CreditCard, Smartphone, Banknote, AlertTriangle, Plus, Minus, Trash2 } from 'lucide-react';
 
 export default function CheckoutPage({ setActivePage, setTrackedOrderId }) {
+  const navigate = useNavigate();
   const { cartItems, restaurant, updateQuantity, removeItem, clearCart, subtotal, tax, convenienceFee, discount, total } = useCart();
   const { user } = useAuth();
   const { notify } = useNotification();
@@ -21,13 +24,18 @@ export default function CheckoutPage({ setActivePage, setTrackedOrderId }) {
 
   if (!restaurant || cartItems.length === 0) {
     return (
-      <div className="container" style={{ padding: '4rem 0', textAlign: 'center' }}>
-        <div style={{ maxWidth: '440px', margin: '0 auto' }}>
+      <div className="container" style={{ padding: '4rem 0', maxWidth: '640px' }}>
+        <PageNavHeader
+          backLabel="Back to Cart"
+          fallbackPath="/cart"
+          breadcrumbs={[{ label: 'Home', path: '/' }, { label: 'Cart', path: '/cart' }, { label: 'Checkout' }]}
+        />
+        <div className="card" style={{ padding: '3.5rem 2rem', textAlign: 'center', background: 'white' }}>
           <h2 style={{ fontSize: '1.5rem', fontWeight: 800, marginBottom: '0.5rem' }}>Your tray is empty</h2>
           <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
             Choose a campus restaurant to pre-order delicious meals.
           </p>
-          <button className="btn btn-primary" onClick={() => setActivePage('home')}>
+          <button className="btn btn-primary" onClick={() => navigate('/browse')}>
             Browse Restaurants
           </button>
         </div>
@@ -37,7 +45,7 @@ export default function CheckoutPage({ setActivePage, setTrackedOrderId }) {
 
   const handlePlaceOrder = async () => {
     if (!user) {
-      setActivePage('auth');
+      navigate('/signin?redirect=/checkout');
       return;
     }
 
@@ -90,8 +98,9 @@ export default function CheckoutPage({ setActivePage, setTrackedOrderId }) {
       });
 
       clearCart();
-      setTrackedOrderId(newOrder.id);
-      setActivePage('order-tracking');
+      if (setTrackedOrderId) setTrackedOrderId(newOrder.id);
+      navigate(`/order-confirmation/${newOrder.id}`);
+      if (setActivePage) setActivePage('order-confirmation');
     } catch (err) {
       console.error('Place order error:', err);
       setError(err.message || 'We couldn’t place your order. Please try again.');
@@ -107,20 +116,23 @@ export default function CheckoutPage({ setActivePage, setTrackedOrderId }) {
     : readyDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   const estimatedTimeSaved = Math.max(15, prepMinutes + 5);
 
+  const breadcrumbs = [
+    { label: 'Home', path: '/' },
+    { label: 'Browse', path: '/browse' },
+    ...(restaurant ? [{ label: restaurant.name, path: `/restaurant/${restaurant.id}` }] : []),
+    { label: 'Cart', path: '/cart' },
+    { label: 'Checkout' }
+  ];
+
   return (
     <div style={{ padding: '2.5rem 0 6rem 0' }}>
       <div className="container" style={{ maxWidth: '920px' }}>
-        <button
-          className="btn btn-sm btn-secondary"
-          onClick={() => setActivePage('restaurant-menu-view')}
-          style={{ marginBottom: '1.5rem' }}
-        >
-          <ArrowLeft size={16} /> Back to Menu
-        </button>
-
-        <h1 style={{ fontSize: '1.8rem', fontWeight: 800, letterSpacing: '-0.02em', marginBottom: '0.5rem' }}>
-          Pickup Checkout
-        </h1>
+        <PageNavHeader
+          title="Pickup Checkout"
+          backLabel="Back to Cart"
+          fallbackPath="/cart"
+          breadcrumbs={breadcrumbs}
+        />
         <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', marginBottom: '1.5rem' }}>
           Order before you arrive. Collect directly from the kitchen counter without waiting.
         </p>

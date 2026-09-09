@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { superAdminAPI } from '../utils/api';
 import StatusBadge from '../components/StatusBadge';
+import PageNavHeader from '../components/PageNavHeader';
 import { Shield, Users, Store, TrendingUp, AlertTriangle, CheckCircle2, DollarSign, Filter } from 'lucide-react';
 
 export default function SuperAdminDashboard() {
@@ -65,8 +66,17 @@ export default function SuperAdminDashboard() {
   const metrics = overview?.metrics || {};
 
   return (
-    <div style={{ padding: '2.5rem 0 6rem 0' }}>
+    <div style={{ padding: '2rem 0 6rem 0' }}>
       <div className="container">
+        <PageNavHeader
+          backLabel="Back to Home"
+          fallbackPath="/"
+          breadcrumbs={[
+            { label: 'Platform', path: '/admin' },
+            { label: 'Super Admin Overview' }
+          ]}
+        />
+
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', marginBottom: '2rem' }}>
           <div>

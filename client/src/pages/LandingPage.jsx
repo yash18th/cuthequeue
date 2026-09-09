@@ -1,14 +1,25 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { UtensilsCrossed, ArrowRight, Clock, Bell, QrCode, Smartphone, Sparkles, CheckCircle2, ShieldCheck, ChevronRight } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 export default function LandingPage({ setActivePage, onOpenCart }) {
+  const navigate = useNavigate();
   const { login } = useAuth();
 
   const handleQuickDemo = async (email, page) => {
     try {
       await login(email, 'password123');
-      setActivePage(page);
+      if (page === 'restaurant-dashboard') {
+        setActivePage?.('restaurant-dashboard');
+        navigate('/kitchen');
+      } else if (page === 'superadmin') {
+        setActivePage?.('superadmin');
+        navigate('/admin');
+      } else {
+        setActivePage?.('home');
+        navigate('/browse');
+      }
     } catch (e) {
       console.error(e);
     }
@@ -42,7 +53,10 @@ export default function LandingPage({ setActivePage, onOpenCart }) {
           <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap', marginBottom: '3rem' }}>
             <button
               className="btn btn-primary btn-lg"
-              onClick={() => setActivePage('home')}
+              onClick={() => {
+                setActivePage?.('home');
+                navigate('/browse');
+              }}
             >
               Order Ahead <ArrowRight size={18} />
             </button>

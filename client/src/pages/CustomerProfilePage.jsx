@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { useNotification } from '../context/NotificationContext';
 import { playReadyChime, playNewOrderChime } from '../utils/sound';
 import { triggerVibration, isVibrationSupported } from '../utils/vibration';
+import PageNavHeader from '../components/PageNavHeader';
 import { User, Mail, Phone, Bell, Volume2, Vibrate, CheckCircle2, Shield, LogOut } from 'lucide-react';
 
 export default function CustomerProfilePage({ setActivePage }) {
@@ -79,8 +80,16 @@ export default function CustomerProfilePage({ setActivePage }) {
   };
 
   return (
-    <div style={{ padding: '2.5rem 0 6rem 0' }}>
+    <div style={{ padding: '2rem 0 6rem 0' }}>
       <div className="container" style={{ maxWidth: '680px' }}>
+        <PageNavHeader
+          backLabel="Back to Home"
+          fallbackPath="/"
+          breadcrumbs={[
+            { label: 'Home', path: '/' },
+            { label: 'Profile & Settings' }
+          ]}
+        />
         <h1 style={{ fontSize: '1.8rem', fontWeight: 800, letterSpacing: '-0.02em', marginBottom: '1.5rem' }}>
           Profile & Preferences
         </h1>

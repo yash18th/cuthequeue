@@ -1,10 +1,16 @@
 import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { restaurantAPI } from '../utils/api';
 import { useCart } from '../context/CartContext';
 import ItemModal from '../components/ItemModal';
+import PageNavHeader from '../components/PageNavHeader';
 import { Star, Clock, MapPin, ArrowLeft, ShoppingBag, AlertCircle, Plus, Info } from 'lucide-react';
 
 export default function RestaurantPage({ restaurantId, setActivePage, onOpenCart }) {
+  const params = useParams();
+  const navigate = useNavigate();
+  const effectiveId = restaurantId || params.restaurantId || params.id;
+
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeCategory, setActiveCategory] = useState(null);
@@ -12,9 +18,9 @@ export default function RestaurantPage({ restaurantId, setActivePage, onOpenCart
   const { addItem, totalItemCount } = useCart();
 
   useEffect(() => {
-    if (!restaurantId) return;
+    if (!effectiveId) return;
     setLoading(true);
-    restaurantAPI.getById(restaurantId)
+    restaurantAPI.getById(effectiveId)
       .then((res) => {
         setData(res);
         if (res.categories && res.categories.length > 0) {
@@ -23,11 +29,21 @@ export default function RestaurantPage({ restaurantId, setActivePage, onOpenCart
       })
       .catch((err) => console.error('Failed to load restaurant:', err))
       .finally(() => setLoading(false));
-  }, [restaurantId]);
+  }, [effectiveId]);
+
+  const handleBack = () => {
+    if (window.history.state && window.history.state.idx > 0) {
+      navigate(-1);
+    } else if (setActivePage) {
+      setActivePage('home');
+    } else {
+      navigate('/browse');
+    }
+  };
 
   if (loading) {
     return (
-      <div className="container" style={{ padding: '3rem 0', textAlign: 'center' }}>
+      <div className="container" style={{ padding: '4rem 0', textAlign: 'center' }}>
         <p style={{ color: 'var(--text-muted)' }}>Loading live menu...</p>
       </div>
     );
@@ -37,7 +53,7 @@ export default function RestaurantPage({ restaurantId, setActivePage, onOpenCart
     return (
       <div className="container" style={{ padding: '4rem 0', textAlign: 'center' }}>
         <p style={{ fontSize: '1.1rem', marginBottom: '1rem' }}>Restaurant not found or currently unavailable.</p>
-        <button className="btn btn-secondary" onClick={() => setActivePage('home')}>
+        <button className="btn btn-secondary" onClick={handleBack}>
           <ArrowLeft size={16} /> Back to Restaurants
         </button>
       </div>
@@ -52,6 +68,18 @@ export default function RestaurantPage({ restaurantId, setActivePage, onOpenCart
 
   return (
     <div style={{ paddingBottom: '6rem' }}>
+      <div className="container" style={{ paddingTop: '1.25rem', paddingBottom: '0.75rem' }}>
+        <PageNavHeader
+          backLabel="Back to Restaurants"
+          fallbackPath="/browse"
+          breadcrumbs={[
+            { label: 'Home', path: '/' },
+            { label: 'Browse', path: '/browse' },
+            { label: restaurant.name }
+          ]}
+        />
+      </div>
+
       {/* Cover Banner */}
       <div style={{ position: 'relative', height: '280px', width: '100%', background: '#0f172a' }}>
         <img
@@ -67,7 +95,7 @@ export default function RestaurantPage({ restaurantId, setActivePage, onOpenCart
 
         <div className="container" style={{ position: 'absolute', bottom: '24px', left: 0, right: 0, color: 'white' }}>
           <button
-            onClick={() => setActivePage('home')}
+            onClick={handleBack}
             style={{
               display: 'inline-flex',
               alignItems: 'center',
@@ -82,7 +110,7 @@ export default function RestaurantPage({ restaurantId, setActivePage, onOpenCart
               backdropFilter: 'blur(6px)'
             }}
           >
-            <ArrowLeft size={14} /> Back
+            <ArrowLeft size={14} /> Back to Restaurants
           </button>
 
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '1rem' }}>

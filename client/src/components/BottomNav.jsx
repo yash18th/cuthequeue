@@ -1,13 +1,17 @@
 import React from 'react';
-import { Home, ClipboardList, ShoppingBag, User } from 'lucide-react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { Home, Compass, ClipboardList, ShoppingBag, User } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 
-export default function BottomNav({ activePage, setActivePage, onOpenCart, ordersInitialTab, setOrdersInitialTab }) {
+export default function BottomNav({ activePage, setActivePage, onOpenCart }) {
   const { totalItemCount } = useCart();
-  const { isRestaurantAdmin, isSuperAdmin } = useAuth();
+  const { isRestaurantAdmin, isSuperAdmin, user } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const path = location.pathname;
 
-  // If logged in as restaurant admin or super admin, show appropriate navigation or hide customer bottom nav
+  // Hide customer bottom nav for restaurant admin or super admin
   if (isRestaurantAdmin || isSuperAdmin) {
     return null;
   }
@@ -15,29 +19,39 @@ export default function BottomNav({ activePage, setActivePage, onOpenCart, order
   return (
     <nav className="bottom-nav">
       <button
-        className={`bottom-nav-item ${activePage === 'home' || activePage === 'landing' ? 'active' : ''}`}
-        onClick={() => setActivePage('home')}
+        type="button"
+        className={`bottom-nav-item ${path === '/' ? 'active' : ''}`}
+        onClick={() => {
+          setActivePage?.('landing');
+          navigate('/');
+        }}
       >
         <Home size={20} />
         <span>Home</span>
       </button>
 
       <button
-        className={`bottom-nav-item ${activePage === 'orders' && ordersInitialTab === 'browse' ? 'active' : ''}`}
+        type="button"
+        className={`bottom-nav-item ${path === '/browse' || path.startsWith('/restaurant') ? 'active' : ''}`}
         onClick={() => {
-          if (setOrdersInitialTab) setOrdersInitialTab('browse');
-          setActivePage('orders');
+          setActivePage?.('home');
+          navigate('/browse');
         }}
       >
-        <ClipboardList size={20} />
+        <Compass size={20} />
         <span>Browse</span>
       </button>
 
       <button
-        className={`bottom-nav-item ${activePage === 'orders' && ordersInitialTab === 'orders' ? 'active' : ''}`}
+        type="button"
+        className={`bottom-nav-item ${path.startsWith('/orders') ? 'active' : ''}`}
         onClick={() => {
-          if (setOrdersInitialTab) setOrdersInitialTab('orders');
-          setActivePage('orders');
+          if (!user) {
+            navigate('/signin?redirect=/orders');
+          } else {
+            setActivePage?.('orders');
+            navigate('/orders');
+          }
         }}
       >
         <ClipboardList size={20} />
@@ -45,9 +59,13 @@ export default function BottomNav({ activePage, setActivePage, onOpenCart, order
       </button>
 
       <button
-        className="bottom-nav-item"
+        type="button"
+        className={`bottom-nav-item ${path === '/cart' ? 'active' : ''}`}
         style={{ position: 'relative' }}
-        onClick={onOpenCart}
+        onClick={() => {
+          setActivePage?.('cart');
+          navigate('/cart');
+        }}
       >
         <div style={{ position: 'relative' }}>
           <ShoppingBag size={20} />
@@ -75,8 +93,17 @@ export default function BottomNav({ activePage, setActivePage, onOpenCart, order
       </button>
 
       <button
-        className={`bottom-nav-item ${activePage === 'profile' || activePage === 'auth' ? 'active' : ''}`}
-        onClick={() => setActivePage('profile')}
+        type="button"
+        className={`bottom-nav-item ${path === '/profile' || path === '/signin' ? 'active' : ''}`}
+        onClick={() => {
+          if (user) {
+            setActivePage?.('profile');
+            navigate('/profile');
+          } else {
+            setActivePage?.('auth');
+            navigate('/signin');
+          }
+        }}
       >
         <User size={20} />
         <span>Account</span>

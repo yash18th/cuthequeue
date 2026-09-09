@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { restaurantAPI } from '../utils/api';
 import RestaurantCard from '../components/RestaurantCard';
@@ -27,6 +28,7 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
 }
 
 export default function CustomerHome({ setActivePage, setSelectedRestaurantId }) {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const [restaurants, setRestaurants] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -494,8 +496,9 @@ export default function CustomerHome({ setActivePage, setSelectedRestaurantId })
                 restaurant={rest}
                 calculatedDistance={rest.calculatedDistance}
                 onSelectRestaurant={(id) => {
-                  setSelectedRestaurantId(id);
-                  setActivePage('restaurant-menu-view');
+                  setSelectedRestaurantId?.(id);
+                  setActivePage?.('restaurant-menu-view');
+                  navigate(`/restaurant/${id}`);
                 }}
               />
             ))}

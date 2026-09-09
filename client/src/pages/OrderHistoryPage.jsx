@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { orderAPI, restaurantAPI } from '../utils/api';
 import StatusBadge from '../components/StatusBadge';
 import RestaurantCard from '../components/RestaurantCard';
+import PageNavHeader from '../components/PageNavHeader';
 import {
   RotateCcw,
   ChevronRight,
@@ -34,8 +36,9 @@ export default function OrderHistoryPage({
   setActivePage,
   setTrackedOrderId,
   setSelectedRestaurantId,
-  initialTab = 'browse'
+  initialTab = 'orders'
 }) {
+  const navigate = useNavigate();
   // Main segment tab: 'browse' | 'orders'
   const [mainTab, setMainTab] = useState(initialTab);
 
@@ -173,8 +176,9 @@ export default function OrderHistoryPage({
   }
 
   const handleOrderAgain = (order) => {
-    setSelectedRestaurantId(order.restaurant_id);
-    setActivePage('restaurant-menu-view');
+    setSelectedRestaurantId?.(order.restaurant_id);
+    setActivePage?.('restaurant-menu-view');
+    navigate(`/restaurant/${order.restaurant_id}`);
   };
 
   const handleClearFilters = () => {
@@ -188,13 +192,22 @@ export default function OrderHistoryPage({
   const currentOrderList = ordersTab === 'active' ? orders.active : orders.previous;
 
   return (
-    <div style={{ padding: '2.5rem 0 6rem 0' }}>
+    <div style={{ padding: '2rem 0 6rem 0' }}>
       <div className="container">
+        <PageNavHeader
+          backLabel="Back to Home"
+          fallbackPath="/"
+          breadcrumbs={[
+            { label: 'Home', path: '/' },
+            { label: mainTab === 'orders' ? 'My Orders' : 'Browse Restaurants' }
+          ]}
+        />
+
         {/* Top-Level Orders Hub Segment Navigation: Browse Restaurants vs My Orders */}
         <div style={{
           display: 'flex',
           justifyContent: 'center',
-          marginBottom: '2.5rem'
+          marginBottom: '2rem'
         }}>
           <div style={{
             display: 'inline-flex',
@@ -589,8 +602,9 @@ export default function OrderHistoryPage({
                     restaurant={rest}
                     calculatedDistance={rest.calculatedDistance}
                     onSelectRestaurant={(id) => {
-                      setSelectedRestaurantId(id);
-                      setActivePage('restaurant-menu-view');
+                      setSelectedRestaurantId?.(id);
+                      setActivePage?.('restaurant-menu-view');
+                      navigate(`/restaurant/${id}`);
                     }}
                   />
                 ))}
@@ -708,8 +722,9 @@ export default function OrderHistoryPage({
                         border: '1px solid var(--border-subtle)'
                       }}
                       onClick={() => {
-                        setTrackedOrderId(order.id);
-                        setActivePage('order-tracking');
+                        setTrackedOrderId?.(order.id);
+                        setActivePage?.('order-tracking');
+                        navigate(`/orders/${order.id}`);
                       }}
                     >
                       <div style={{
@@ -814,8 +829,9 @@ export default function OrderHistoryPage({
                             className="btn btn-sm btn-primary"
                             onClick={(e) => {
                               e.stopPropagation();
-                              setTrackedOrderId(order.id);
-                              setActivePage('order-tracking');
+                              setTrackedOrderId?.(order.id);
+                              setActivePage?.('order-tracking');
+                              navigate(`/orders/${order.id}`);
                             }}
                           >
                             {order.status === 'completed' ? 'View Order' : 'Track Order'} <ChevronRight size={14} />
