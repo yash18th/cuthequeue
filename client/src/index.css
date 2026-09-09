@@ -7,46 +7,46 @@
   --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   
   /* Royal South Indian Hospitality Palette */
-  --bg-main: #F7F1E5; /* Warm Ivory canvas */
-  --bg-canvas: #F7F1E5;
+  --bg-main: #F7F0E2; /* Warm Ivory canvas */
+  --bg-canvas: #F7F0E2;
   --bg-card: #FFFFFF;
   --bg-card-warm: #FAF8F5;
-  --bg-sand: #E8DDC8;
+  --bg-sand: #E9DDC7; /* Temple Sand */
   --bg-sand-light: #F2EADA;
-  --bg-subtle: #F2EADA;
+  --bg-subtle: #E9DDC7;
   --bg-elevated: #FFFFFF;
 
   /* Royal Dark Surfaces */
-  --bg-deep-green: #123C32; /* Deep Heritage Green */
-  --bg-dark-forest: #0B2923; /* Dark Forest */
+  --bg-deep-green: #123F35; /* Heritage Green */
+  --bg-dark-forest: #0B352D; /* Deep Forest Green */
   --bg-royal-maroon: #641F27; /* Royal Maroon */
   --bg-deep-burgundy: #42151B; /* Deep Burgundy */
   
-  /* Antique Gold Accents */
-  --accent-gold: #C6A15B; /* Antique Gold */
-  --accent-gold-hover: #D5B26B;
+  /* Antique Brass Gold Accents */
+  --accent-gold: #C49A52; /* Antique Brass Gold */
+  --accent-gold-hover: #D5AB63;
   --accent-gold-muted: #A98242; /* Muted Gold */
-  --accent-gold-light: rgba(198, 161, 91, 0.12);
-  --accent-gold-border: rgba(198, 161, 91, 0.38);
+  --accent-gold-light: rgba(196, 154, 82, 0.12);
+  --accent-gold-border: rgba(196, 154, 82, 0.38);
 
   /* Typography Colors */
-  --text-primary: #171512; /* Dark Charcoal */
-  --text-charcoal: #171512;
+  --text-primary: #191714; /* Dark Charcoal */
+  --text-charcoal: #191714;
   --text-secondary: #57534E;
   --text-muted: #8C827A;
   --text-white: #FFFFFF;
-  --text-ivory: #F7F1E5;
-  --text-gold: #C6A15B;
+  --text-ivory: #F7F0E2;
+  --text-gold: #C49A52;
   
-  /* Primary mapped to Deep Heritage Green with Gold accents */
-  --primary: #123C32;
-  --primary-hover: #0B2923;
+  /* Primary mapped to Heritage Green with Gold accents */
+  --primary: #123F35;
+  --primary-hover: #0B352D;
   --primary-light: #EEF6F4;
   --primary-border: #C7DED7;
   
-  --accent-amber: #C6A15B;
+  --accent-amber: #C49A52;
   --accent-amber-light: #FEF6EC;
-  --accent-amber-border: #E8DDC8;
+  --accent-amber-border: #E9DDC7;
   
   --accent-blue: #1E3A8A;
   --accent-blue-light: #EFF6FF;
@@ -54,9 +54,9 @@
   --accent-rose: #641F27;
   --accent-rose-light: #FAECEB;
   
-  --border-subtle: #E8DDC8;
+  --border-subtle: #E9DDC7;
   --border-medium: #D8CCA8;
-  --border-gold: rgba(198, 161, 91, 0.32);
+  --border-gold: rgba(196, 154, 82, 0.35);
   
   /* Refined, stately radii (not bubbly SaaS pills) */
   --radius-xs: 4px;
@@ -619,20 +619,50 @@ input, textarea, select {
 .bg-warm-canvas {
   background-color: var(--bg-canvas);
   background-image: 
-    radial-gradient(rgba(198, 161, 91, 0.07) 1px, transparent 1px),
-    radial-gradient(rgba(18, 60, 50, 0.035) 1px, transparent 1px);
+    radial-gradient(rgba(196, 154, 82, 0.08) 1px, transparent 1px),
+    radial-gradient(rgba(18, 63, 53, 0.04) 1px, transparent 1px);
   background-size: 24px 24px;
   background-position: 0 0, 12px 12px;
 }
 
+/* Hero section: Warm ivory + subtle kolam geometric lattice */
+.bg-hero-canvas {
+  background-color: #F7F0E2;
+  background-image: 
+    radial-gradient(circle at 50% 50%, rgba(196, 154, 82, 0.06) 0%, transparent 60%),
+    linear-gradient(rgba(196, 154, 82, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(196, 154, 82, 0.05) 1px, transparent 1px);
+  background-size: 100% 100%, 32px 32px, 32px 32px;
+}
+
+/* Temple Sand section: Slightly darker sand background for story/discovery */
+.bg-temple-sand {
+  background-color: #E9DDC7;
+  background-image: 
+    radial-gradient(rgba(18, 63, 53, 0.035) 1px, transparent 1px),
+    radial-gradient(rgba(196, 154, 82, 0.05) 1px, transparent 1px);
+  background-size: 20px 20px;
+  background-position: 0 0, 10px 10px;
+}
+
+/* How It Works & Dark sections: Deep Forest Green with gold detailing */
+.bg-forest-section {
+  background-color: #0B352D;
+  background-image: 
+    radial-gradient(rgba(196, 154, 82, 0.09) 1px, transparent 1px),
+    linear-gradient(180deg, #0B352D 0%, #123F35 100%);
+  background-size: 28px 28px, 100% 100%;
+  color: #F7F0E2;
+}
+
 .bg-royal-dark {
-  background: linear-gradient(145deg, #0B2923 0%, #123C32 100%);
-  color: #F7F1E5;
+  background: linear-gradient(145deg, #0B352D 0%, #123F35 100%);
+  color: #F7F0E2;
 }
 
 .bg-royal-maroon {
   background: linear-gradient(145deg, #42151B 0%, #641F27 100%);
-  color: #F7F1E5;
+  color: #F7F0E2;
 }
 
 /* Royal Cards */
@@ -641,7 +671,7 @@ input, textarea, select {
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-heritage);
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.28s cubic-bezier(0.4, 0, 0.2, 1);
   overflow: hidden;
   position: relative;
 }
@@ -654,19 +684,76 @@ input, textarea, select {
   right: 0;
   height: 2px;
   background: linear-gradient(90deg, transparent 0%, var(--accent-gold) 50%, transparent 100%);
-  opacity: 0.8;
+  opacity: 0.85;
 }
 
 .heritage-card:hover, .royal-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 16px 32px -4px rgba(23, 21, 18, 0.1), 0 4px 10px -2px rgba(23, 21, 18, 0.04);
+  box-shadow: 0 16px 32px -4px rgba(25, 23, 20, 0.12), 0 4px 10px -2px rgba(25, 23, 20, 0.05);
   border-color: var(--accent-gold-border);
+}
+
+/* Micro-interaction: Subtle 1.5% image zoom */
+.heritage-card img, .heritage-card-zoom img {
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.heritage-card:hover img, .heritage-card-zoom:hover img {
+  transform: scale(1.02);
 }
 
 /* Subtle Traditional Frame Border */
 .heritage-frame {
-  border: 1px solid rgba(198, 161, 91, 0.35);
-  box-shadow: inset 0 0 0 3px rgba(247, 241, 229, 0.6), inset 0 0 0 4px rgba(198, 161, 91, 0.2);
+  border: 1px solid rgba(196, 154, 82, 0.4);
+  box-shadow: inset 0 0 0 3px rgba(247, 240, 226, 0.6), inset 0 0 0 4px rgba(196, 154, 82, 0.25);
+}
+
+/* High-End South Indian Ornamental Frame System (Section 7) */
+.heritage-ornamental-frame {
+  position: relative;
+  background: #F7F0E2;
+  border: 2px solid #C49A52;
+  padding: 8px;
+  border-radius: 12px;
+  box-shadow: 0 20px 48px -12px rgba(11, 53, 45, 0.3), 0 4px 16px rgba(196, 154, 82, 0.15);
+}
+
+.heritage-ornamental-frame::before {
+  content: '';
+  position: absolute;
+  inset: 4px;
+  border: 1px solid #123F35;
+  border-radius: 9px;
+  pointer-events: none;
+}
+
+/* Filigree Rule `──────── ✦ ────────` */
+.heritage-filigree-rule {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin: 1.5rem 0;
+  color: #C49A52;
+  font-size: 0.85rem;
+}
+.heritage-filigree-rule::before,
+.heritage-filigree-rule::after {
+  content: '';
+  flex: 1;
+  max-width: 140px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #C49A52 60%, transparent);
+}
+
+/* Subtle Live Queue Pulse Animation */
+@keyframes queuePulseGlow {
+  0% { transform: scale(0.95); opacity: 0.8; }
+  50% { transform: scale(1.15); opacity: 1; filter: drop-shadow(0 0 4px #123F35); }
+  100% { transform: scale(0.95); opacity: 0.8; }
+}
+
+.live-indicator-pulse {
+  animation: queuePulseGlow 2s infinite ease-in-out;
 }
 
 /* Badges */

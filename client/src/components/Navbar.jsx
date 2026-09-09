@@ -95,49 +95,72 @@ export default function Navbar({ activePage, setActivePage, onOpenCart }) {
       }}
     >
       <div className="container navbar-inner" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', minHeight: '68px' }}>
-        {/* Brand Logo */}
+        {/* Brand Logo with Heritage Hospitality Emblem */}
         <div
           className="brand-logo"
-          style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}
+          style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '12px' }}
           onClick={handleBrandClick}
         >
           <div
             style={{
-              width: '38px',
-              height: '38px',
+              width: '42px',
+              height: '42px',
               borderRadius: '8px',
-              background: 'linear-gradient(135deg, rgba(198, 161, 91, 0.25) 0%, rgba(169, 130, 66, 0.1) 100%)',
-              border: '1.5px solid #C6A15B',
+              background: 'linear-gradient(135deg, #123F35 0%, #0B352D 100%)',
+              border: '1.5px solid #C49A52',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              color: '#C6A15B',
-              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.2)'
+              color: '#C49A52',
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.35)',
+              position: 'relative'
             }}
           >
-            <UtensilsCrossed size={20} strokeWidth={2.2} />
+            {/* South Indian Heritage Emblem: Temple Doorway + Stylized C + Brass Lamp Motif */}
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path
+                d="M4 20V9C4 5.5 7.5 3 12 3C16.5 3 20 5.5 20 9V20"
+                stroke="#C49A52"
+                strokeWidth="1.6"
+                strokeLinecap="round"
+              />
+              <path
+                d="M8 20V12C8 9.8 9.8 8 12 8C14.2 8 16 9.8 16 12V20"
+                stroke="#C49A52"
+                strokeWidth="1.3"
+                strokeLinecap="round"
+              />
+              <path
+                d="M15 13C14.5 11.5 13.5 10.8 12 10.8C10.2 10.8 9 12 9 13.8C9 15.6 10.2 16.8 12 16.8C13.5 16.8 14.5 16.1 15 14.6"
+                stroke="#F7F0E2"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+              />
+              <circle cx="12" cy="4.5" r="1.2" fill="#C49A52" />
+            </svg>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column' }}>
             <span
               style={{
                 fontFamily: 'var(--font-serif)',
                 fontWeight: 800,
-                letterSpacing: '0.04em',
-                fontSize: '1.25rem',
-                color: '#F7F1E5'
+                letterSpacing: '0.06em',
+                fontSize: '1.3rem',
+                color: '#F7F0E2',
+                lineHeight: 1.1
               }}
             >
-              Cut<span style={{ color: '#C6A15B' }}>The</span>Queue
+              CUT THE QUEUE
             </span>
             <span
               style={{
-                fontSize: '0.62rem',
-                color: 'rgba(232, 221, 200, 0.75)',
-                letterSpacing: '0.14em',
+                fontSize: '0.64rem',
+                color: '#C49A52',
+                letterSpacing: '0.18em',
                 textTransform: 'uppercase',
                 fontFamily: 'var(--font-sans)',
-                fontWeight: 600,
-                marginTop: '-2px'
+                fontWeight: 700,
+                marginTop: '1px'
               }}
             >
               Bengaluru Dining Heritage

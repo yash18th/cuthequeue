@@ -8,25 +8,39 @@ export default function Footer({ setActivePage }) {
   return (
     <footer
       style={{
-        background: '#0B2923',
-        color: '#E8DDC8',
-        padding: '4.5rem 0 2.5rem 0',
-        borderTop: '1px solid rgba(198, 161, 91, 0.35)',
+        background: '#0B352D',
+        color: '#E9DDC7',
+        padding: '5rem 0 3rem 0',
+        borderTop: '1px solid rgba(196, 154, 82, 0.4)',
         marginTop: '5rem',
         position: 'relative'
       }}
     >
-      {/* Delicate Gold Top Border Flare */}
+      {/* South Indian Ornamental Pattern at Top of Footer */}
       <div
         style={{
           position: 'absolute',
-          top: 0,
-          left: '10%',
-          right: '10%',
-          height: '1px',
-          background: 'linear-gradient(90deg, transparent 0%, #C6A15B 50%, transparent 100%)'
+          top: '-12px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          background: '#0B352D',
+          border: '1px solid #C49A52',
+          padding: '2px 18px',
+          borderRadius: '20px',
+          color: '#C49A52',
+          fontSize: '0.75rem',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.35)'
         }}
-      />
+      >
+        <span>✦</span>
+        <span style={{ fontFamily: 'var(--font-serif)', letterSpacing: '0.15em', fontSize: '0.68rem', textTransform: 'uppercase' }}>
+          Bengaluru Dining Heritage
+        </span>
+        <span>✦</span>
+      </div>
 
       <div className="container">
         <div
@@ -39,37 +53,62 @@ export default function Footer({ setActivePage }) {
         >
           {/* Col 1: Brand & Heritage Philosophy */}
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '1.25rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '1.25rem' }}>
               <div
                 style={{
-                  width: '36px',
-                  height: '36px',
+                  width: '38px',
+                  height: '38px',
                   borderRadius: '8px',
-                  background: 'rgba(198, 161, 91, 0.2)',
-                  border: '1px solid #C6A15B',
+                  background: 'linear-gradient(135deg, #123F35 0%, #0B352D 100%)',
+                  border: '1.5px solid #C49A52',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  color: '#C6A15B'
+                  color: '#C49A52',
+                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)'
                 }}
               >
-                <UtensilsCrossed size={18} />
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M4 20V9C4 5.5 7.5 3 12 3C16.5 3 20 5.5 20 9V20" stroke="#C49A52" strokeWidth="1.6" strokeLinecap="round" />
+                  <path d="M8 20V12C8 9.8 9.8 8 12 8C14.2 8 16 9.8 16 12V20" stroke="#C49A52" strokeWidth="1.3" strokeLinecap="round" />
+                  <circle cx="12" cy="4.5" r="1.2" fill="#C49A52" />
+                </svg>
               </div>
-              <span
-                style={{
-                  fontSize: '1.35rem',
-                  fontWeight: 800,
-                  fontFamily: 'var(--font-serif)',
-                  color: '#F7F1E5',
-                  letterSpacing: '0.04em'
-                }}
-              >
-                Cut<span style={{ color: '#C6A15B' }}>The</span>Queue
-              </span>
+              <div>
+                <span
+                  style={{
+                    fontSize: '1.3rem',
+                    fontWeight: 800,
+                    fontFamily: 'var(--font-serif)',
+                    color: '#F7F0E2',
+                    letterSpacing: '0.06em',
+                    display: 'block',
+                    lineHeight: 1.1
+                  }}
+                >
+                  CUT THE QUEUE
+                </span>
+                <span
+                  style={{
+                    fontSize: '0.62rem',
+                    color: '#C49A52',
+                    letterSpacing: '0.16em',
+                    textTransform: 'uppercase',
+                    fontFamily: 'var(--font-sans)',
+                    fontWeight: 700
+                  }}
+                >
+                  Bengaluru Dining Heritage
+                </span>
+              </div>
             </div>
 
-            <p style={{ fontSize: '0.9rem', color: '#C5BAA8', lineHeight: 1.65, marginBottom: '1.5rem' }}>
-              A tribute to Bengaluru’s rich culinary heritage. Pre-order ahead from iconic dining institutions, travel at your own pace, and arrive when your food is fresh, hot, and ready at the counter.
+            <p style={{ fontSize: '0.92rem', color: '#E9DDC7', fontStyle: 'italic', fontFamily: 'var(--font-serif-sub)', lineHeight: 1.6, marginBottom: '0.75rem' }}>
+              "Technology that respects the tradition of dining."
+            </p>
+
+            <p style={{ fontSize: '0.86rem', color: '#C5BAA8', lineHeight: 1.65, marginBottom: '1.5rem' }}>
+              A tribute to Bengaluru’s culinary institutions. Pre-order ahead from iconic dining houses, travel at your own pace, and arrive when your food is fresh, hot, and ready at the counter.
             </p>
 
             <div style={{ display: 'flex', gap: '0.65rem', flexWrap: 'wrap' }}>

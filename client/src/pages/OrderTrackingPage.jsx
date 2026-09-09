@@ -107,11 +107,11 @@ export default function OrderTrackingPage({ orderId, setActivePage }) {
 
   // Stepper Calculation
   const steps = [
-    { key: 'pending', label: 'Order Placed' },
-    { key: 'accepted', label: 'Accepted' },
+    { key: 'pending', label: 'Order Received' },
+    { key: 'accepted', label: 'Restaurant Accepted' },
     { key: 'preparing', label: 'Preparing' },
     { key: 'ready', label: 'Ready for Pickup' },
-    { key: 'completed', label: 'Picked Up' }
+    { key: 'completed', label: 'Completed' }
   ];
 
   const statusOrder = ['pending', 'accepted', 'preparing', 'ready', 'completed'];
@@ -295,14 +295,16 @@ export default function OrderTrackingPage({ orderId, setActivePage }) {
                     <div
                       className={`step-circle ${isPassed ? 'completed' : ''} ${isCurrent ? 'active' : ''}`}
                       style={{
-                        background: isPassed ? 'var(--bg-deep-green)' : '#F7F1E5',
-                        borderColor: isCurrent ? 'var(--accent-gold)' : (isPassed ? 'var(--bg-deep-green)' : '#E8DDC8'),
-                        color: isPassed ? '#F7F1E5' : 'var(--text-secondary)'
+                        background: isPassed ? '#123F35' : '#F7F0E2',
+                        borderColor: isCurrent ? '#C49A52' : (isPassed ? '#123F35' : '#E9DDC7'),
+                        color: isPassed ? '#F7F0E2' : '#57534E',
+                        boxShadow: isCurrent ? '0 0 14px rgba(196, 154, 82, 0.8)' : 'none',
+                        animation: isCurrent ? 'queuePulseGlow 2s infinite ease-in-out' : 'none'
                       }}
                     >
                       {isPassed ? <CheckCircle2 size={20} /> : idx + 1}
                     </div>
-                    <span className={`step-label ${isCurrent ? 'active' : ''}`} style={{ fontFamily: 'var(--font-serif)' }}>
+                    <span className={`step-label ${isCurrent ? 'active' : ''}`} style={{ fontFamily: 'var(--font-serif)', color: isCurrent ? '#123F35' : '#57534E', fontWeight: isCurrent ? 800 : 600 }}>
                       {step.label}
                     </span>
                   </div>
