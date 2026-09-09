@@ -125,7 +125,7 @@ export default function RestaurantMenuManagement() {
   };
 
   return (
-    <div style={{ padding: '2rem 0 6rem 0' }}>
+    <div className="bg-warm-canvas" style={{ padding: '2rem 0 6rem 0', minHeight: '90vh' }}>
       <div className="container">
         <PageNavHeader
           backLabel="Back to Kitchen"
@@ -139,19 +139,19 @@ export default function RestaurantMenuManagement() {
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', marginBottom: '2rem' }}>
           <div>
-            <h1 style={{ fontSize: '1.8rem', fontWeight: 800, letterSpacing: '-0.02em', margin: 0 }}>
-              Menu Management
+            <h1 className="font-royal" style={{ fontSize: '2rem', fontWeight: 700, color: '#123C32', margin: 0 }}>
+              Menu & Culinary Offerings
             </h1>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginTop: '4px' }}>
-              Add, edit food items, adjust prices, and toggle instant availability for customers.
+            <p style={{ color: '#42151B', opacity: 0.85, fontSize: '0.9rem', marginTop: '4px' }}>
+              Curate dishes, prices, and instant kitchen availability for {restaurant?.name}.
             </p>
           </div>
 
           <div style={{ display: 'flex', gap: '0.75rem' }}>
-            <button className="btn btn-secondary btn-sm" onClick={() => setShowAddCat(!showAddCat)}>
+            <button className="btn btn-secondary btn-sm" onClick={() => setShowAddCat(!showAddCat)} style={{ background: '#F7F1E5', borderColor: '#C6A15B', color: '#123C32' }}>
               + Add Category
             </button>
-            <button className="btn btn-primary btn-sm" onClick={handleOpenAdd}>
+            <button className="btn btn-forest btn-sm" onClick={handleOpenAdd}>
               <Plus size={16} /> Add Food Item
             </button>
           </div>
@@ -159,18 +159,18 @@ export default function RestaurantMenuManagement() {
 
         {/* Add Category Drawer/Form */}
         {showAddCat && (
-          <form onSubmit={handleCreateCategory} className="card" style={{ padding: '1.25rem', marginBottom: '1.5rem', background: 'white', maxWidth: '480px' }}>
-            <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '0.5rem' }}>New Menu Category</h3>
+          <form onSubmit={handleCreateCategory} className="heritage-card" style={{ padding: '1.25rem', marginBottom: '1.5rem', maxWidth: '480px' }}>
+            <h3 className="font-royal" style={{ fontSize: '1.1rem', fontWeight: 700, color: '#123C32', marginBottom: '0.5rem' }}>New Menu Category</h3>
             <div style={{ display: 'flex', gap: '0.5rem' }}>
               <input
                 type="text"
                 className="input-field"
-                placeholder="e.g., Combos & Specials"
+                placeholder="e.g., Tiffin Specials"
                 value={newCatName}
                 onChange={(e) => setNewCatName(e.target.value)}
                 autoFocus
               />
-              <button type="submit" className="btn btn-primary">Create</button>
+              <button type="submit" className="btn btn-forest">Create</button>
             </div>
           </form>
         )}
@@ -184,9 +184,9 @@ export default function RestaurantMenuManagement() {
               const catItems = items.filter((i) => i.category_id === cat.id);
 
               return (
-                <div key={cat.id} className="card" style={{ padding: '1.5rem', background: 'white' }}>
+                <div key={cat.id} className="heritage-card" style={{ padding: '1.5rem' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
-                    <h3 style={{ fontSize: '1.25rem', fontWeight: 800 }}>
+                    <h3 className="font-royal" style={{ fontSize: '1.3rem', fontWeight: 700, color: '#123C32' }}>
                       {cat.name} ({catItems.length})
                     </h3>
                   </div>

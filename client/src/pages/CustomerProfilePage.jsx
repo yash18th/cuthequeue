@@ -80,7 +80,7 @@ export default function CustomerProfilePage({ setActivePage }) {
   };
 
   return (
-    <div style={{ padding: '2rem 0 6rem 0' }}>
+    <div className="bg-warm-canvas" style={{ padding: '2rem 0 6rem 0', minHeight: '90vh' }}>
       <div className="container" style={{ maxWidth: '680px' }}>
         <PageNavHeader
           backLabel="Back to Home"
@@ -90,34 +90,35 @@ export default function CustomerProfilePage({ setActivePage }) {
             { label: 'Profile & Settings' }
           ]}
         />
-        <h1 style={{ fontSize: '1.8rem', fontWeight: 800, letterSpacing: '-0.02em', marginBottom: '1.5rem' }}>
+        <h1 style={{ fontSize: '1.8rem', fontWeight: 800, letterSpacing: '-0.01em', marginBottom: '1.5rem', fontFamily: 'var(--font-serif)', color: 'var(--text-charcoal)' }}>
           Profile & Preferences
         </h1>
 
         {message && (
           <div style={{
-            background: '#ecfdf5',
-            color: '#047857',
+            background: '#F0E6D2',
+            color: 'var(--bg-deep-green)',
             padding: '0.85rem 1rem',
             borderRadius: 'var(--radius-md)',
-            border: '1px solid #a7f3d0',
+            border: '1px solid #E8DDC8',
             marginBottom: '1.5rem',
             display: 'flex',
             alignItems: 'center',
-            gap: '8px'
+            gap: '8px',
+            fontFamily: 'var(--font-serif)'
           }}>
-            <CheckCircle2 size={18} />
+            <CheckCircle2 size={18} style={{ color: 'var(--accent-gold)' }} />
             <span>{message}</span>
           </div>
         )}
 
         {testResult && (
           <div style={{
-            background: '#eff6ff',
-            color: '#1d4ed8',
+            background: '#F7F1E5',
+            color: 'var(--text-charcoal)',
             padding: '0.85rem 1rem',
             borderRadius: 'var(--radius-md)',
-            border: '1px solid #bfdbfe',
+            border: '1px solid #C6A15B',
             marginBottom: '1.5rem',
             fontSize: '0.85rem'
           }}>
@@ -127,32 +128,27 @@ export default function CustomerProfilePage({ setActivePage }) {
 
         {/* Profile Card */}
         <form onSubmit={handleSave}>
-          <div className="card" style={{ padding: '1.75rem', marginBottom: '1.5rem', background: 'white' }}>
+          <div className="heritage-card" style={{ padding: '1.75rem', marginBottom: '1.5rem', background: 'white', borderRadius: 'var(--radius-lg)', border: '1px solid #E8DDC8' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', marginBottom: '1.5rem' }}>
               <div style={{
                 width: '64px',
                 height: '64px',
                 borderRadius: '50%',
-                background: 'var(--primary-light)',
-                color: 'var(--primary)',
+                background: '#F7F1E5',
+                color: 'var(--bg-deep-green)',
+                border: '2px solid #C6A15B',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                fontSize: '1.4rem',
-                fontWeight: 800,
-                border: '2px solid var(--primary-border)'
+                boxShadow: '0 4px 12px rgba(18, 60, 50, 0.15)'
               }}>
-                {user.avatar ? (
-                  <img src={user.avatar} alt={user.name} style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
-                ) : (
-                  user.name.charAt(0)
-                )}
+                <User size={30} style={{ color: 'var(--bg-deep-green)' }} />
               </div>
               <div>
-                <h3 style={{ fontSize: '1.25rem', fontWeight: 800 }}>{user.name}</h3>
-                <span className="badge badge-amber" style={{ textTransform: 'capitalize' }}>
-                  {user.role.replace('_', ' ')}
-                </span>
+                <h3 style={{ fontSize: '1.2rem', fontWeight: 800, margin: 0, fontFamily: 'var(--font-serif)', color: 'var(--text-charcoal)' }}>{user.name}</h3>
+                <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', margin: '2px 0 0 0' }}>
+                  Customer Account • Bengaluru Dining Pass
+                </p>
               </div>
             </div>
 

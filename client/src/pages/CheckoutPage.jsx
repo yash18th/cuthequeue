@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { useNotification } from '../context/NotificationContext';
 import { orderAPI, paymentAPI } from '../utils/api';
 import PageNavHeader from '../components/PageNavHeader';
+import CheckoutProgress from '../components/CheckoutProgress';
 import { ArrowLeft, Clock, Calendar, ShieldCheck, CreditCard, Smartphone, Banknote, AlertTriangle, Plus, Minus, Trash2 } from 'lucide-react';
 
 export default function CheckoutPage({ setActivePage, setTrackedOrderId }) {
@@ -24,20 +25,22 @@ export default function CheckoutPage({ setActivePage, setTrackedOrderId }) {
 
   if (!restaurant || cartItems.length === 0) {
     return (
-      <div className="container" style={{ padding: '4rem 0', maxWidth: '640px' }}>
-        <PageNavHeader
-          backLabel="Back to Cart"
-          fallbackPath="/cart"
-          breadcrumbs={[{ label: 'Home', path: '/' }, { label: 'Cart', path: '/cart' }, { label: 'Checkout' }]}
-        />
-        <div className="card" style={{ padding: '3.5rem 2rem', textAlign: 'center', background: 'white' }}>
-          <h2 style={{ fontSize: '1.5rem', fontWeight: 800, marginBottom: '0.5rem' }}>Your tray is empty</h2>
-          <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
-            Choose a campus restaurant to pre-order delicious meals.
-          </p>
-          <button className="btn btn-primary" onClick={() => navigate('/browse')}>
-            Browse Restaurants
-          </button>
+      <div className="bg-warm-canvas" style={{ minHeight: '80vh', padding: '4rem 0' }}>
+        <div className="container" style={{ maxWidth: '640px' }}>
+          <PageNavHeader
+            backLabel="Back to Tray"
+            fallbackPath="/cart"
+            breadcrumbs={[{ label: 'Home', path: '/' }, { label: 'Tray', path: '/cart' }, { label: 'Checkout' }]}
+          />
+          <div className="heritage-card" style={{ padding: '3.5rem 2rem', textAlign: 'center', background: 'white', borderRadius: 'var(--radius-lg)', border: '1px solid #E8DDC8' }}>
+            <h2 style={{ fontSize: '1.6rem', fontWeight: 800, marginBottom: '0.5rem', fontFamily: 'var(--font-serif)', color: 'var(--text-charcoal)' }}>Your tray is empty</h2>
+            <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
+              Choose a Bengaluru dining institution to pre-order delicious meals.
+            </p>
+            <button className="btn btn-forest" onClick={() => navigate('/restaurants')}>
+              Explore Restaurants
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -116,76 +119,83 @@ export default function CheckoutPage({ setActivePage, setTrackedOrderId }) {
     : readyDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   const estimatedTimeSaved = Math.max(15, prepMinutes + 5);
 
+  const brandSlug = restaurant?.brand_slug || restaurant?.brand_id;
+  const restaurantPath = brandSlug ? `/restaurants/${brandSlug}/branches/${restaurant.id}` : '/restaurants';
+
   const breadcrumbs = [
     { label: 'Home', path: '/' },
-    { label: 'Browse', path: '/browse' },
-    ...(restaurant ? [{ label: restaurant.name, path: `/restaurant/${restaurant.id}` }] : []),
-    { label: 'Cart', path: '/cart' },
+    { label: 'Restaurants', path: '/restaurants' },
+    { label: restaurant.name, path: restaurantPath },
+    { label: 'Tray', path: '/cart' },
     { label: 'Checkout' }
   ];
 
   return (
-    <div style={{ padding: '2.5rem 0 6rem 0' }}>
+    <div className="bg-warm-canvas" style={{ padding: '2.5rem 0 6rem 0', minHeight: '90vh' }}>
       <div className="container" style={{ maxWidth: '920px' }}>
         <PageNavHeader
-          title="Pickup Checkout"
-          backLabel="Back to Cart"
+          title="Pre-Order Checkout"
+          backLabel="Back to Tray"
           fallbackPath="/cart"
           breadcrumbs={breadcrumbs}
         />
         <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', marginBottom: '1.5rem' }}>
-          Order before you arrive. Collect directly from the kitchen counter without waiting.
+          Arrive to a counter that's already preparing your feast. Zero waiting in line.
         </p>
+
+        {/* Visual Progress Steps */}
+        <CheckoutProgress currentStep={4} />
 
         {/* Time-Saving Hero Banner */}
         <div style={{
-          background: 'linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%)',
-          border: '1.5px solid var(--primary-border)',
+          background: 'linear-gradient(135deg, #0B2923 0%, #123C32 100%)',
+          border: '1px solid #C6A15B',
           borderRadius: 'var(--radius-lg)',
           padding: '1.25rem 1.5rem',
           marginBottom: '2rem',
+          color: '#F7F1E5',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
           flexWrap: 'wrap',
-          gap: '1rem'
+          gap: '1rem',
+          boxShadow: 'var(--shadow-sm)'
         }}>
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--primary)', fontWeight: 800, fontSize: '0.825rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#C6A15B', fontWeight: 800, fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.06em', fontFamily: 'var(--font-serif)' }}>
               <Clock size={16} /> Skip the Counter Queue
             </div>
-            <div style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--text-primary)', marginTop: '3px' }}>
-              Pickup Method: <strong>Self Pickup at Restaurant</strong>
+            <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#F7F1E5', marginTop: '3px', fontFamily: 'var(--font-serif)' }}>
+              Pickup Method: <strong>Self Pickup at Branch Counter</strong>
             </div>
-            <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
-              The restaurant prepares your order now. Walk in, show your QR code, and pick it up immediately.
+            <p style={{ fontSize: '0.85rem', color: '#E8DDC8', marginTop: '2px', maxWidth: '480px' }}>
+              The kitchen begins preparation immediately. Walk in, show your digital token, and collect fresh hot food.
             </p>
           </div>
           <div style={{
-            background: 'white',
+            background: 'rgba(247, 241, 229, 0.1)',
             borderRadius: 'var(--radius-md)',
             padding: '10px 18px',
             textAlign: 'center',
-            boxShadow: 'var(--shadow-sm)',
-            border: '1px solid var(--border-subtle)'
+            border: '1px solid #C6A15B'
           }}>
-            <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase' }}>
+            <div style={{ fontSize: '0.72rem', color: '#C6A15B', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
               Estimated Ready Time
             </div>
-            <div style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--primary)' }}>
+            <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#F7F1E5', fontFamily: 'var(--font-serif)' }}>
               {estimatedReadyTime}
             </div>
-            <div style={{ fontSize: '0.75rem', color: 'var(--accent-amber)', fontWeight: 700, marginTop: '2px' }}>
-              ⏱️ ~{estimatedTimeSaved} min saved waiting
+            <div style={{ fontSize: '0.75rem', color: '#C6A15B', fontWeight: 700, marginTop: '2px' }}>
+              ⏱️ ~{estimatedTimeSaved} min queue time saved
             </div>
           </div>
         </div>
 
         {error && (
           <div style={{
-            background: '#fff1f2',
-            border: '1.5px solid #fecdd3',
-            color: '#be123c',
+            background: '#FEF2F2',
+            border: '1.5px solid #F87171',
+            color: 'var(--accent-maroon)',
             padding: '1rem',
             borderRadius: 'var(--radius-md)',
             marginBottom: '1.5rem',
@@ -202,8 +212,8 @@ export default function CheckoutPage({ setActivePage, setTrackedOrderId }) {
           {/* Left Column: Pickup Preference & Payment Details */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
             {/* Pickup Preference */}
-            <div className="card" style={{ padding: '1.5rem' }}>
-              <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '1rem' }}>
+            <div className="heritage-card" style={{ padding: '1.5rem', background: 'white', borderRadius: 'var(--radius-lg)', border: '1px solid #E8DDC8', boxShadow: 'var(--shadow-sm)' }}>
+              <h3 style={{ fontSize: '1.15rem', fontWeight: 800, marginBottom: '1rem', color: 'var(--text-charcoal)', fontFamily: 'var(--font-serif)' }}>
                 Pickup Preference
               </h3>
 
@@ -213,15 +223,16 @@ export default function CheckoutPage({ setActivePage, setTrackedOrderId }) {
                   style={{
                     padding: '1rem',
                     borderRadius: 'var(--radius-md)',
-                    border: `1.5px solid ${pickupType === 'asap' ? 'var(--primary)' : 'var(--border-subtle)'}`,
-                    background: pickupType === 'asap' ? 'var(--primary-light)' : 'var(--bg-card)',
+                    border: `1.5px solid ${pickupType === 'asap' ? 'var(--bg-deep-green)' : '#E8DDC8'}`,
+                    background: pickupType === 'asap' ? '#F7F1E5' : 'white',
+                    boxShadow: pickupType === 'asap' ? '0 2px 8px rgba(18, 60, 50, 0.1)' : 'none',
                     cursor: 'pointer'
                   }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: pickupType === 'asap' ? 'var(--primary)' : 'var(--text-primary)', fontWeight: 700 }}>
-                    <Clock size={18} /> ASAP
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: pickupType === 'asap' ? 'var(--bg-deep-green)' : 'var(--text-charcoal)', fontWeight: 800, fontFamily: 'var(--font-serif)' }}>
+                    <Clock size={18} style={{ color: pickupType === 'asap' ? 'var(--bg-deep-green)' : 'var(--accent-gold)' }} /> ASAP
                   </div>
-                  <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '4px' }}>
+                  <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginTop: '4px' }}>
                     Ready in ~{restaurant.prep_time_minutes || 15} mins
                   </p>
                 </div>
@@ -231,15 +242,16 @@ export default function CheckoutPage({ setActivePage, setTrackedOrderId }) {
                   style={{
                     padding: '1rem',
                     borderRadius: 'var(--radius-md)',
-                    border: `1.5px solid ${pickupType === 'scheduled' ? 'var(--primary)' : 'var(--border-subtle)'}`,
-                    background: pickupType === 'scheduled' ? 'var(--primary-light)' : 'var(--bg-card)',
+                    border: `1.5px solid ${pickupType === 'scheduled' ? 'var(--bg-deep-green)' : '#E8DDC8'}`,
+                    background: pickupType === 'scheduled' ? '#F7F1E5' : 'white',
+                    boxShadow: pickupType === 'scheduled' ? '0 2px 8px rgba(18, 60, 50, 0.1)' : 'none',
                     cursor: 'pointer'
                   }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: pickupType === 'scheduled' ? 'var(--primary)' : 'var(--text-primary)', fontWeight: 700 }}>
-                    <Calendar size={18} /> Schedule
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: pickupType === 'scheduled' ? 'var(--bg-deep-green)' : 'var(--text-charcoal)', fontWeight: 800, fontFamily: 'var(--font-serif)' }}>
+                    <Calendar size={18} style={{ color: pickupType === 'scheduled' ? 'var(--bg-deep-green)' : 'var(--accent-gold)' }} /> Schedule
                   </div>
-                  <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '4px' }}>
+                  <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginTop: '4px' }}>
                     Choose future time today
                   </p>
                 </div>
@@ -247,10 +259,11 @@ export default function CheckoutPage({ setActivePage, setTrackedOrderId }) {
 
               {pickupType === 'scheduled' && (
                 <div style={{ marginTop: '0.5rem' }}>
-                  <label className="input-label">Pick up time today</label>
+                  <label className="input-label" style={{ fontWeight: 700, color: 'var(--text-charcoal)' }}>Pick up time today</label>
                   <input
                     type="time"
                     className="input-field"
+                    style={{ border: '1px solid #E8DDC8', borderRadius: 'var(--radius-md)' }}
                     value={scheduledTime}
                     onChange={(e) => setScheduledTime(e.target.value)}
                     required
@@ -260,8 +273,8 @@ export default function CheckoutPage({ setActivePage, setTrackedOrderId }) {
             </div>
 
             {/* Payment Method */}
-            <div className="card" style={{ padding: '1.5rem' }}>
-              <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '1rem' }}>
+            <div className="heritage-card" style={{ padding: '1.5rem', background: 'white', borderRadius: 'var(--radius-lg)', border: '1px solid #E8DDC8', boxShadow: 'var(--shadow-sm)' }}>
+              <h3 style={{ fontSize: '1.15rem', fontWeight: 800, marginBottom: '1rem', color: 'var(--text-charcoal)', fontFamily: 'var(--font-serif)' }}>
                 Payment Method
               </h3>
 
@@ -270,37 +283,42 @@ export default function CheckoutPage({ setActivePage, setTrackedOrderId }) {
                   { id: 'upi', label: 'Instant UPI (Google Pay, PhonePe, Paytm)', icon: <Smartphone size={18} /> },
                   { id: 'card', label: 'Debit / Credit Card', icon: <CreditCard size={18} /> },
                   { id: 'counter', label: 'Pay at Counter Upon Pickup', icon: <Banknote size={18} /> }
-                ].map((m) => (
-                  <div
-                    key={m.id}
-                    onClick={() => setPaymentMethod(m.id)}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '12px',
-                      padding: '0.85rem 1rem',
-                      borderRadius: 'var(--radius-md)',
-                      border: `1.5px solid ${paymentMethod === m.id ? 'var(--primary)' : 'var(--border-subtle)'}`,
-                      background: paymentMethod === m.id ? 'var(--primary-light)' : 'var(--bg-card)',
-                      cursor: 'pointer',
-                      fontSize: '0.9rem',
-                      fontWeight: paymentMethod === m.id ? 700 : 500
-                    }}
-                  >
-                    <span style={{ color: paymentMethod === m.id ? 'var(--primary)' : 'var(--text-muted)' }}>{m.icon}</span>
-                    <span style={{ flex: 1 }}>{m.label}</span>
-                  </div>
-                ))}
+                ].map((m) => {
+                  const isSelected = paymentMethod === m.id;
+                  return (
+                    <div
+                      key={m.id}
+                      onClick={() => setPaymentMethod(m.id)}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '12px',
+                        padding: '0.85rem 1rem',
+                        borderRadius: 'var(--radius-md)',
+                        border: `1.5px solid ${isSelected ? 'var(--bg-deep-green)' : '#E8DDC8'}`,
+                        background: isSelected ? '#F7F1E5' : 'white',
+                        cursor: 'pointer',
+                        fontSize: '0.9rem',
+                        fontWeight: isSelected ? 800 : 500,
+                        color: 'var(--text-charcoal)',
+                        transition: 'all 0.15s ease'
+                      }}
+                    >
+                      <span style={{ color: isSelected ? 'var(--bg-deep-green)' : 'var(--accent-gold)' }}>{m.icon}</span>
+                      <span style={{ flex: 1, fontFamily: isSelected ? 'var(--font-serif)' : 'inherit' }}>{m.label}</span>
+                    </div>
+                  );
+                })}
               </div>
 
               {/* Dev Simulation Toggle */}
               <div style={{
-                background: '#f8fafc',
+                background: '#F7F1E5',
                 padding: '0.65rem 0.85rem',
                 borderRadius: 'var(--radius-sm)',
-                border: '1px dashed var(--border-medium)',
+                border: '1px dashed #D9CBBA',
                 fontSize: '0.75rem',
-                color: 'var(--text-muted)'
+                color: 'var(--text-secondary)'
               }}>
                 <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
                   <input
@@ -314,12 +332,15 @@ export default function CheckoutPage({ setActivePage, setTrackedOrderId }) {
             </div>
 
             {/* Special Instructions */}
-            <div className="card" style={{ padding: '1.5rem' }}>
-              <label className="input-label" style={{ fontWeight: 700 }}>Kitchen Notes / Allergies (Optional)</label>
+            <div className="heritage-card" style={{ padding: '1.5rem', background: 'white', borderRadius: 'var(--radius-lg)', border: '1px solid #E8DDC8', boxShadow: 'var(--shadow-sm)' }}>
+              <label className="input-label" style={{ fontWeight: 800, color: 'var(--text-charcoal)', fontFamily: 'var(--font-serif)' }}>
+                Kitchen Notes / Special Requests (Optional)
+              </label>
               <textarea
                 className="input-field"
                 rows={2}
-                placeholder="e.g., Less spicy, no mayo on side..."
+                placeholder="e.g., Extra spicy, crispier dosa, sambar on the side..."
+                style={{ border: '1px solid #E8DDC8', borderRadius: 'var(--radius-md)' }}
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
               />
@@ -327,22 +348,24 @@ export default function CheckoutPage({ setActivePage, setTrackedOrderId }) {
           </div>
 
           {/* Right Column: Order Summary & Bill Details */}
-          <div className="card" style={{ padding: '1.5rem', background: 'white' }}>
+          <div className="heritage-card" style={{ padding: '1.75rem', background: 'white', borderRadius: 'var(--radius-lg)', border: '1px solid #E8DDC8', boxShadow: 'var(--shadow-sm)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
               <div>
-                <span style={{ fontSize: '0.75rem', textTransform: 'uppercase', fontWeight: 700, color: 'var(--text-muted)' }}>Restaurant</span>
-                <h3 style={{ fontSize: '1.2rem', fontWeight: 800 }}>{restaurant.name}</h3>
+                <span style={{ fontSize: '0.75rem', textTransform: 'uppercase', fontWeight: 800, color: 'var(--accent-gold-muted)', letterSpacing: '0.05em', fontFamily: 'var(--font-serif)' }}>
+                  Selected Restaurant
+                </span>
+                <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-charcoal)', fontFamily: 'var(--font-serif)' }}>{restaurant.name}</h3>
               </div>
             </div>
 
-            <hr style={{ border: 'none', borderTop: '1px solid var(--border-subtle)', margin: '1rem 0' }} />
+            <hr style={{ border: 'none', borderTop: '1px solid #E8DDC8', margin: '1rem 0' }} />
 
             {/* Items List */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '1.5rem' }}>
               {cartItems.map((item) => (
                 <div key={item.cartItemId} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.75rem' }}>
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: '0.925rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+                    <div style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-charcoal)', fontFamily: 'var(--font-serif)' }}>
                       {item.name}
                     </div>
 
@@ -358,17 +381,17 @@ export default function CheckoutPage({ setActivePage, setTrackedOrderId }) {
                     )}
 
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '6px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', border: '1px solid var(--border-medium)', borderRadius: '6px', padding: '1px 4px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', border: '1px solid #E8DDC8', borderRadius: '6px', padding: '1px 4px', background: '#F7F1E5' }}>
                         <button
                           onClick={() => updateQuantity(item.cartItemId, item.quantity - 1)}
-                          style={{ padding: '2px 4px', color: 'var(--text-secondary)' }}
+                          style={{ padding: '2px 4px', color: 'var(--text-secondary)', background: 'transparent', border: 'none', cursor: 'pointer' }}
                         >
                           <Minus size={12} />
                         </button>
-                        <span style={{ fontSize: '0.8rem', fontWeight: 700, padding: '0 6px' }}>{item.quantity}</span>
+                        <span style={{ fontSize: '0.8rem', fontWeight: 800, padding: '0 6px', fontFamily: 'var(--font-serif)' }}>{item.quantity}</span>
                         <button
                           onClick={() => updateQuantity(item.cartItemId, item.quantity + 1)}
-                          style={{ padding: '2px 4px', color: 'var(--text-secondary)' }}
+                          style={{ padding: '2px 4px', color: 'var(--text-secondary)', background: 'transparent', border: 'none', cursor: 'pointer' }}
                         >
                           <Plus size={12} />
                         </button>
@@ -376,62 +399,62 @@ export default function CheckoutPage({ setActivePage, setTrackedOrderId }) {
 
                       <button
                         onClick={() => removeItem(item.cartItemId)}
-                        style={{ color: 'var(--accent-rose)', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '2px' }}
+                        style={{ color: 'var(--accent-maroon)', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '2px', background: 'transparent', border: 'none', cursor: 'pointer' }}
                       >
                         <Trash2 size={12} /> Remove
                       </button>
                     </div>
                   </div>
 
-                  <div style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+                  <div style={{ fontSize: '0.95rem', fontWeight: 800, color: 'var(--bg-deep-green)', fontFamily: 'var(--font-serif)' }}>
                     ₹{item.totalPrice}
                   </div>
                 </div>
               ))}
             </div>
 
-            <hr style={{ border: 'none', borderTop: '1px solid var(--border-subtle)', margin: '1rem 0' }} />
+            <hr style={{ border: 'none', borderTop: '1px solid #E8DDC8', margin: '1rem 0' }} />
 
             {/* Bill Breakdown */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', fontSize: '0.875rem', marginBottom: '1.5rem' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-secondary)' }}>
                 <span>Subtotal</span>
-                <span>₹{subtotal}</span>
+                <span style={{ fontWeight: 700 }}>₹{subtotal}</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-secondary)' }}>
                 <span>Taxes & GST (5%)</span>
-                <span>₹{tax}</span>
+                <span style={{ fontWeight: 700 }}>₹{tax}</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-secondary)' }}>
                 <span>Convenience & Queue Skip Fee</span>
-                <span>₹{convenienceFee}</span>
+                <span style={{ fontWeight: 700 }}>₹{convenienceFee}</span>
               </div>
               {discount > 0 && (
-                <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--primary)', fontWeight: 600 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--bg-deep-green)', fontWeight: 700 }}>
                   <span>Discount</span>
                   <span>-₹{discount}</span>
                 </div>
               )}
-              <hr style={{ border: 'none', borderTop: '1px dashed var(--border-subtle)', margin: '0.25rem 0' }} />
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1.15rem', fontWeight: 800, color: 'var(--text-primary)' }}>
+              <hr style={{ border: 'none', borderTop: '1px dashed #E8DDC8', margin: '0.25rem 0' }} />
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-charcoal)', fontFamily: 'var(--font-serif)' }}>
                 <span>Total Amount</span>
-                <span>₹{total}</span>
+                <span style={{ color: 'var(--bg-deep-green)' }}>₹{total}</span>
               </div>
             </div>
 
             {/* Primary Action Button */}
             <button
-              className="btn btn-primary btn-lg"
-              style={{ width: '100%', padding: '0.9rem' }}
+              className="btn btn-gold btn-lg"
+              style={{ width: '100%', padding: '0.95rem', fontSize: '1rem' }}
               onClick={handlePlaceOrder}
               disabled={submitting}
             >
-              {submitting ? 'Placing Pre-Order...' : `Place Pickup Order • ₹${total}`}
+              {submitting ? 'Transmitting Pre-Order...' : `Place Pickup Order • ₹${total}`}
             </button>
 
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.85rem' }}>
-              <ShieldCheck size={14} style={{ color: 'var(--primary)' }} />
-              <span>Instant order transmission to kitchen</span>
+              <ShieldCheck size={14} style={{ color: 'var(--bg-deep-green)' }} />
+              <span>Instant direct transmission to Bengaluru kitchen</span>
             </div>
           </div>
         </div>

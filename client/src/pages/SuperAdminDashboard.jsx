@@ -66,7 +66,7 @@ export default function SuperAdminDashboard() {
   const metrics = overview?.metrics || {};
 
   return (
-    <div style={{ padding: '2rem 0 6rem 0' }}>
+    <div className="bg-warm-canvas" style={{ padding: '2rem 0 6rem 0', minHeight: '90vh' }}>
       <div className="container">
         <PageNavHeader
           backLabel="Back to Home"
@@ -78,44 +78,50 @@ export default function SuperAdminDashboard() {
         />
 
         {/* Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', marginBottom: '2rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', marginBottom: '2.5rem' }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Shield size={24} style={{ color: '#2563eb' }} />
-              <h1 style={{ fontSize: '1.8rem', fontWeight: 800, letterSpacing: '-0.02em', margin: 0 }}>
+              <Shield size={24} style={{ color: 'var(--accent-gold)' }} />
+              <h1 style={{ fontSize: '1.8rem', fontWeight: 800, letterSpacing: '-0.01em', margin: 0, fontFamily: 'var(--font-serif)', color: 'var(--text-charcoal)' }}>
                 Platform Super Admin
               </h1>
             </div>
             <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginTop: '4px' }}>
-              Global platform supervision, restaurant partners, user authorization, and financial volume.
+              Global platform supervision, Bengaluru dining partners, user accounts, and financial volume.
             </p>
           </div>
 
           {/* Navigation Sub-tabs */}
-          <div style={{ display: 'flex', gap: '0.5rem', background: 'var(--bg-subtle)', padding: '4px', borderRadius: 'var(--radius-lg)' }}>
+          <div style={{ display: 'flex', gap: '0.4rem', background: '#EDE4D4', padding: '4px', borderRadius: 'var(--radius-md)', border: '1px solid #D9CBBA' }}>
             {[
               { id: 'overview', label: 'Overview' },
-              { id: 'restaurants', label: `Restaurants (${restaurants.length})` },
+              { id: 'restaurants', label: `Branches (${restaurants.length})` },
               { id: 'users', label: `Users (${users.length})` },
               { id: 'orders', label: `Global Orders (${orders.length})` }
-            ].map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveView(tab.id)}
-                style={{
-                  padding: '0.5rem 0.95rem',
-                  borderRadius: 'var(--radius-md)',
-                  fontSize: '0.85rem',
-                  fontWeight: 700,
-                  border: 'none',
-                  background: activeView === tab.id ? 'white' : 'transparent',
-                  color: activeView === tab.id ? 'var(--text-primary)' : 'var(--text-muted)',
-                  boxShadow: activeView === tab.id ? 'var(--shadow-sm)' : 'none'
-                }}
-              >
-                {tab.label}
-              </button>
-            ))}
+            ].map((tab) => {
+              const isSelected = activeView === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveView(tab.id)}
+                  style={{
+                    padding: '0.55rem 1rem',
+                    borderRadius: 'var(--radius-sm)',
+                    fontSize: '0.85rem',
+                    fontWeight: 700,
+                    border: 'none',
+                    background: isSelected ? 'var(--bg-deep-green)' : 'transparent',
+                    color: isSelected ? '#F7F1E5' : 'var(--text-charcoal)',
+                    boxShadow: isSelected ? '0 2px 6px rgba(18, 60, 50, 0.2)' : 'none',
+                    fontFamily: 'var(--font-serif)',
+                    cursor: 'pointer',
+                    transition: 'all 0.15s ease'
+                  }}
+                >
+                  {tab.label}
+                </button>
+              );
+            })}
           </div>
         </div>
 
@@ -128,56 +134,56 @@ export default function SuperAdminDashboard() {
               gap: '1.25rem',
               marginBottom: '2.5rem'
             }}>
-              <div className="card" style={{ padding: '1.5rem', background: 'white' }}>
-                <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+              <div className="heritage-card" style={{ padding: '1.5rem', background: 'white', borderRadius: 'var(--radius-lg)', border: '1px solid #E8DDC8' }}>
+                <span style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: 'var(--font-serif)' }}>
                   Platform Gross Volume
                 </span>
-                <div style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--text-primary)', marginTop: '4px' }}>
+                <div style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--bg-deep-green)', marginTop: '4px', fontFamily: 'var(--font-serif)' }}>
                   ₹{metrics.grossVolume || 0}
                 </div>
-                <span style={{ fontSize: '0.75rem', color: 'var(--primary)', fontWeight: 600 }}>Total GMV across restaurants</span>
+                <span style={{ fontSize: '0.75rem', color: 'var(--accent-gold-muted)', fontWeight: 700 }}>Total GMV across restaurants</span>
               </div>
 
-              <div className="card" style={{ padding: '1.5rem', background: 'white' }}>
-                <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+              <div className="heritage-card" style={{ padding: '1.5rem', background: 'white', borderRadius: 'var(--radius-lg)', border: '1px solid #E8DDC8' }}>
+                <span style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: 'var(--font-serif)' }}>
                   Platform Convenience Fees
                 </span>
-                <div style={{ fontSize: '2rem', fontWeight: 800, color: '#2563eb', marginTop: '4px' }}>
+                <div style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--accent-gold-muted)', marginTop: '4px', fontFamily: 'var(--font-serif)' }}>
                   ₹{metrics.platformFees || 0}
                 </div>
-                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Cut the Queue platform revenue</span>
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Cut the Queue platform revenue</span>
               </div>
 
-              <div className="card" style={{ padding: '1.5rem', background: 'white' }}>
-                <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+              <div className="heritage-card" style={{ padding: '1.5rem', background: 'white', borderRadius: 'var(--radius-lg)', border: '1px solid #E8DDC8' }}>
+                <span style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: 'var(--font-serif)' }}>
                   Total Completed Orders
                 </span>
-                <div style={{ fontSize: '2rem', fontWeight: 800, color: '#059669', marginTop: '4px' }}>
+                <div style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--bg-deep-green)', marginTop: '4px', fontFamily: 'var(--font-serif)' }}>
                   {metrics.completedOrders || 0} / {metrics.totalOrders || 0}
                 </div>
-                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Successful pickups</span>
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Successful pickups</span>
               </div>
 
-              <div className="card" style={{ padding: '1.5rem', background: 'white' }}>
-                <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
-                  Active Restaurants
+              <div className="heritage-card" style={{ padding: '1.5rem', background: 'white', borderRadius: 'var(--radius-lg)', border: '1px solid #E8DDC8' }}>
+                <span style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: 'var(--font-serif)' }}>
+                  Active Branches
                 </span>
-                <div style={{ fontSize: '2rem', fontWeight: 800, color: '#d97706', marginTop: '4px' }}>
+                <div style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--accent-maroon)', marginTop: '4px', fontFamily: 'var(--font-serif)' }}>
                   {metrics.activeRestaurants || 0} / {metrics.totalRestaurants || 0}
                 </div>
-                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Approved campus kitchens</span>
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Approved Bengaluru kitchens</span>
               </div>
             </div>
 
             {/* Recent Orders Overview */}
-            <div className="card" style={{ padding: '1.75rem', background: 'white' }}>
-              <h3 style={{ fontSize: '1.2rem', fontWeight: 800, marginBottom: '1rem' }}>
+            <div className="heritage-card" style={{ padding: '1.75rem', background: 'white', borderRadius: 'var(--radius-lg)', border: '1px solid #E8DDC8', boxShadow: 'var(--shadow-sm)' }}>
+              <h3 style={{ fontSize: '1.2rem', fontWeight: 800, marginBottom: '1rem', fontFamily: 'var(--font-serif)', color: 'var(--text-charcoal)' }}>
                 Latest Platform Activity
               </h3>
               <div style={{ overflowX: 'auto' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.9rem' }}>
                   <thead>
-                    <tr style={{ borderBottom: '1.5px solid var(--border-subtle)', color: 'var(--text-muted)' }}>
+                    <tr style={{ borderBottom: '1.5px solid #E8DDC8', color: 'var(--text-muted)' }}>
                       <th style={{ padding: '0.75rem 0.5rem' }}>Order</th>
                       <th style={{ padding: '0.75rem 0.5rem' }}>Restaurant</th>
                       <th style={{ padding: '0.75rem 0.5rem' }}>Customer</th>
@@ -187,9 +193,9 @@ export default function SuperAdminDashboard() {
                   </thead>
                   <tbody>
                     {(overview?.recentOrders || []).map((ord) => (
-                      <tr key={ord.id} style={{ borderBottom: '1px solid var(--border-subtle)' }}>
-                        <td style={{ padding: '0.75rem 0.5rem', fontWeight: 700 }}>{ord.order_number}</td>
-                        <td style={{ padding: '0.75rem 0.5rem' }}>{ord.restaurant_name}</td>
+                      <tr key={ord.id} style={{ borderBottom: '1px solid #E8DDC8' }}>
+                        <td style={{ padding: '0.75rem 0.5rem', fontWeight: 700, fontFamily: 'var(--font-serif)', color: 'var(--bg-deep-green)' }}>{ord.order_number}</td>
+                        <td style={{ padding: '0.75rem 0.5rem', fontWeight: 600 }}>{ord.restaurant_name}</td>
                         <td style={{ padding: '0.75rem 0.5rem' }}>{ord.customer_name}</td>
                         <td style={{ padding: '0.75rem 0.5rem', fontWeight: 700 }}>₹{ord.total}</td>
                         <td style={{ padding: '0.75rem 0.5rem' }}>

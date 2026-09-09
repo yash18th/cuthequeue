@@ -129,13 +129,13 @@ export default function RestaurantDashboard({ setActivePage }) {
     });
 
   return (
-    <div style={{ padding: '2.5rem 0 6rem 0' }}>
+    <div className="bg-warm-canvas" style={{ padding: '2.5rem 0 6rem 0', minHeight: '90vh' }}>
       <div className="container">
         {/* Header Strip */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', marginBottom: '2rem' }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <h1 style={{ fontSize: '1.8rem', fontWeight: 800, letterSpacing: '-0.02em', margin: 0 }}>
+              <h1 style={{ fontSize: '1.8rem', fontWeight: 800, letterSpacing: '-0.01em', margin: 0, fontFamily: 'var(--font-serif)', color: 'var(--text-charcoal)' }}>
                 {restaurant.name} {restaurant.branch_name ? `(${restaurant.branch_name})` : ''} Kitchen
               </h1>
               <span className={`badge ${restaurant.is_open ? 'badge-open' : 'badge-closed'}`}>
@@ -143,21 +143,22 @@ export default function RestaurantDashboard({ setActivePage }) {
               </span>
             </div>
             <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginTop: '4px' }}>
-              Live Order Management & Real-Time Queue Operations • Order Before You Arrive
+              Live Order Management & Real-Time Queue Operations • Bengaluru Hospitality Concierge
             </p>
           </div>
 
           <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
             <button
               className="btn btn-secondary btn-sm"
+              style={{ border: '1px solid #E8DDC8', background: 'white' }}
               onClick={loadDashboardData}
               title="Refresh tickets"
             >
-              <RefreshCw size={14} /> Refresh
+              <RefreshCw size={14} style={{ color: 'var(--accent-gold)' }} /> Refresh
             </button>
             <button
-              className="btn btn-primary"
-              style={{ padding: '0.65rem 1.25rem', boxShadow: '0 4px 12px rgba(5,150,105,0.3)' }}
+              className="btn btn-gold"
+              style={{ padding: '0.65rem 1.25rem', display: 'flex', alignItems: 'center', gap: '6px' }}
               onClick={() => setIsQRModalOpen(true)}
             >
               <QrCode size={18} /> Verify Pickup QR
@@ -172,47 +173,47 @@ export default function RestaurantDashboard({ setActivePage }) {
           gap: '1.25rem',
           marginBottom: '2rem'
         }}>
-          <div className="card" style={{ padding: '1.25rem' }}>
-            <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+          <div className="heritage-card" style={{ padding: '1.25rem', background: 'white', borderRadius: 'var(--radius-lg)', border: '1px solid #E8DDC8' }}>
+            <span style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: 'var(--font-serif)' }}>
               Today's Orders
             </span>
-            <div style={{ fontSize: '1.8rem', fontWeight: 800, marginTop: '4px' }}>
+            <div style={{ fontSize: '1.8rem', fontWeight: 800, marginTop: '4px', color: 'var(--text-charcoal)', fontFamily: 'var(--font-serif)' }}>
               {orders.length}
             </div>
           </div>
 
-          <div className="card" style={{ padding: '1.25rem', borderLeft: '4px solid #f59e0b' }}>
-            <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#b45309', textTransform: 'uppercase' }}>
+          <div className="heritage-card" style={{ padding: '1.25rem', background: 'white', borderRadius: 'var(--radius-lg)', border: '1px solid #E8DDC8', borderLeft: '4px solid var(--accent-gold)' }}>
+            <span style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--accent-gold-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: 'var(--font-serif)' }}>
               New / Pending
             </span>
-            <div style={{ fontSize: '1.8rem', fontWeight: 800, color: '#b45309', marginTop: '4px' }}>
+            <div style={{ fontSize: '1.8rem', fontWeight: 800, color: 'var(--accent-gold-muted)', marginTop: '4px', fontFamily: 'var(--font-serif)' }}>
               {pendingCount}
             </div>
           </div>
 
-          <div className="card" style={{ padding: '1.25rem', borderLeft: '4px solid #8b5cf6' }}>
-            <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#6d28d9', textTransform: 'uppercase' }}>
+          <div className="heritage-card" style={{ padding: '1.25rem', background: 'white', borderRadius: 'var(--radius-lg)', border: '1px solid #E8DDC8', borderLeft: '4px solid var(--accent-maroon)' }}>
+            <span style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--accent-maroon)', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: 'var(--font-serif)' }}>
               In Kitchen (Prep)
             </span>
-            <div style={{ fontSize: '1.8rem', fontWeight: 800, color: '#6d28d9', marginTop: '4px' }}>
+            <div style={{ fontSize: '1.8rem', fontWeight: 800, color: 'var(--accent-maroon)', marginTop: '4px', fontFamily: 'var(--font-serif)' }}>
               {preparingCount}
             </div>
           </div>
 
-          <div className="card" style={{ padding: '1.25rem', borderLeft: '4px solid #10b981' }}>
-            <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#047857', textTransform: 'uppercase' }}>
+          <div className="heritage-card" style={{ padding: '1.25rem', background: 'white', borderRadius: 'var(--radius-lg)', border: '1px solid #E8DDC8', borderLeft: '4px solid var(--bg-deep-green)' }}>
+            <span style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--bg-deep-green)', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: 'var(--font-serif)' }}>
               Ready for Pickup
             </span>
-            <div style={{ fontSize: '1.8rem', fontWeight: 800, color: '#047857', marginTop: '4px' }}>
+            <div style={{ fontSize: '1.8rem', fontWeight: 800, color: 'var(--bg-deep-green)', marginTop: '4px', fontFamily: 'var(--font-serif)' }}>
               {readyCount}
             </div>
           </div>
 
-          <div className="card" style={{ padding: '1.25rem', borderLeft: '4px solid #059669' }}>
-            <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#047857', textTransform: 'uppercase' }}>
+          <div className="heritage-card" style={{ padding: '1.25rem', background: 'white', borderRadius: 'var(--radius-lg)', border: '1px solid #E8DDC8', borderLeft: '4px solid #C6A15B' }}>
+            <span style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--bg-deep-green)', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: 'var(--font-serif)' }}>
               Today's Revenue
             </span>
-            <div style={{ fontSize: '1.8rem', fontWeight: 800, color: 'var(--text-primary)', marginTop: '4px' }}>
+            <div style={{ fontSize: '1.8rem', fontWeight: 800, color: 'var(--bg-deep-green)', marginTop: '4px', fontFamily: 'var(--font-serif)' }}>
               ₹{metrics.todayRevenue || 0}
             </div>
           </div>
@@ -220,25 +221,27 @@ export default function RestaurantDashboard({ setActivePage }) {
 
         {/* CURRENT KITCHEN QUEUE */}
         {activeQueueOrders.length > 0 && (
-          <div className="card" style={{
+          <div className="heritage-card" style={{
             padding: '1.5rem',
             marginBottom: '2rem',
-            background: '#f8fafc',
-            border: '1.5px solid #cbd5e1'
+            background: '#F7F1E5',
+            borderRadius: 'var(--radius-lg)',
+            border: '1px solid #E8DDC8'
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.5rem' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Flame size={20} style={{ color: '#ef4444' }} />
-                <h2 style={{ fontSize: '1.15rem', fontWeight: 800, margin: 0, letterSpacing: '-0.02em' }}>
+                <Flame size={20} style={{ color: 'var(--accent-maroon)' }} />
+                <h2 style={{ fontSize: '1.2rem', fontWeight: 800, margin: 0, fontFamily: 'var(--font-serif)', color: 'var(--text-charcoal)' }}>
                   CURRENT KITCHEN QUEUE
                 </h2>
                 <span style={{
-                  background: '#e2e8f0',
-                  color: '#334155',
+                  background: '#E8DDC8',
+                  color: 'var(--text-charcoal)',
                   fontSize: '0.75rem',
                   fontWeight: 800,
                   padding: '2px 8px',
-                  borderRadius: '9999px'
+                  borderRadius: '4px',
+                  fontFamily: 'var(--font-serif)'
                 }}>
                   {activeQueueOrders.length} in queue
                 </span>

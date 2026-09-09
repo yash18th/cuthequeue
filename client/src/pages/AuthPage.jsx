@@ -83,8 +83,8 @@ export default function AuthPage({ setActivePage }) {
   };
 
   return (
-    <div style={{ padding: '3.5rem 0', minHeight: '80vh', display: 'flex', alignItems: 'center' }}>
-      <div className="container" style={{ maxWidth: '480px' }}>
+    <div className="bg-warm-canvas" style={{ padding: '3.5rem 0', minHeight: '85vh', display: 'flex', alignItems: 'center' }}>
+      <div className="container" style={{ maxWidth: '500px' }}>
         <button
           type="button"
           onClick={() => {
@@ -99,42 +99,46 @@ export default function AuthPage({ setActivePage }) {
             display: 'inline-flex',
             alignItems: 'center',
             gap: '6px',
-            marginBottom: '1rem'
+            marginBottom: '1rem',
+            background: 'rgba(18, 60, 50, 0.08)',
+            borderColor: 'rgba(198, 161, 91, 0.3)',
+            color: '#123C32'
           }}
         >
           <ArrowLeft size={15} /> Back
         </button>
 
-        <div className="card" style={{ padding: '2.25rem', boxShadow: 'var(--shadow-xl)', border: '1px solid var(--border-medium)' }}>
+        <div className="heritage-card" style={{ padding: '2.5rem 2.25rem', boxShadow: '0 12px 36px rgba(11, 41, 35, 0.12)' }}>
           {/* Brand header */}
           <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
             <div style={{
-              width: '48px',
-              height: '48px',
-              borderRadius: '14px',
-              background: 'linear-gradient(135deg, #059669 0%, #10b981 100%)',
-              color: 'white',
+              width: '56px',
+              height: '56px',
+              borderRadius: '12px',
+              background: 'linear-gradient(135deg, #0B2923 0%, #123C32 100%)',
+              border: '2px solid #C6A15B',
+              color: '#C6A15B',
               display: 'inline-flex',
               alignItems: 'center',
               justifyContent: 'center',
-              marginBottom: '0.75rem',
-              boxShadow: '0 4px 10px rgba(5, 150, 105, 0.3)'
+              marginBottom: '1rem',
+              boxShadow: '0 6px 16px rgba(11, 41, 35, 0.2)'
             }}>
-              <UtensilsCrossed size={24} />
+              <UtensilsCrossed size={28} />
             </div>
-            <h2 style={{ fontSize: '1.6rem', fontWeight: 800, letterSpacing: '-0.02em' }}>
+            <h2 className="font-royal" style={{ fontSize: '1.8rem', fontWeight: 700, color: '#123C32', letterSpacing: '0.02em' }}>
               {isForgotPassword
                 ? 'Reset Password'
                 : isLogin
                 ? 'Welcome Back'
                 : 'Create an Account'}
             </h2>
-            <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginTop: '0.35rem' }}>
+            <p style={{ fontSize: '0.9rem', color: '#42151B', opacity: 0.85, marginTop: '0.4rem', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
               {isForgotPassword
                 ? 'Enter your email to receive recovery instructions'
                 : isLogin
-                ? 'Sign in to place orders and skip restaurant waiting lines'
-                : 'Join Cut the Queue to order ahead and pick up instantly'}
+                ? 'Sign in to reserve your table and skip restaurant waiting queues'
+                : 'Join Cut the Queue for Bengaluru hospitality pre-ordering'}
             </p>
           </div>
 
@@ -317,8 +321,8 @@ export default function AuthPage({ setActivePage }) {
 
               <button
                 type="submit"
-                className="btn btn-primary"
-                style={{ width: '100%', padding: '0.85rem', marginTop: '0.5rem' }}
+                className="btn btn-forest"
+                style={{ width: '100%', padding: '0.85rem', marginTop: '0.5rem', fontWeight: 700 }}
                 disabled={loading}
               >
                 {loading
@@ -334,7 +338,7 @@ export default function AuthPage({ setActivePage }) {
                 {isForgotPassword ? (
                   <button
                     type="button"
-                    style={{ color: 'var(--primary)', fontWeight: 600 }}
+                    style={{ color: '#123C32', fontWeight: 600, background: 'none', border: 'none', cursor: 'pointer' }}
                     onClick={() => { setIsForgotPassword(false); setIsLogin(true); }}
                   >
                     Back to Sign In
@@ -344,7 +348,7 @@ export default function AuthPage({ setActivePage }) {
                     {isLogin ? "Don't have an account? " : "Already have an account? "}
                     <button
                       type="button"
-                      style={{ color: 'var(--primary)', fontWeight: 700 }}
+                      style={{ color: '#641F27', fontWeight: 700, background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}
                       onClick={() => { setIsLogin(!isLogin); setError(''); }}
                     >
                       {isLogin ? 'Sign Up' : 'Sign In'}
@@ -359,38 +363,38 @@ export default function AuthPage({ setActivePage }) {
           <div style={{
             marginTop: '2rem',
             paddingTop: '1.5rem',
-            borderTop: '1px dashed var(--border-medium)',
+            borderTop: '1px dashed rgba(198, 161, 91, 0.4)',
             textAlign: 'center'
           }}>
-            <span style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: '0.75rem' }}>
-              One-Click Demo Credentials
+            <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#A98242', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: '0.75rem', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+              One-Click Demo Access
             </span>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
               <button
-                className="btn btn-sm btn-secondary"
+                className="btn btn-sm"
                 onClick={() => handleDemoSelect('customer@demo.com', 'customer')}
-                style={{ fontSize: '0.75rem' }}
+                style={{ fontSize: '0.75rem', background: '#F7F1E5', border: '1px solid #C6A15B', color: '#123C32', fontWeight: 600 }}
               >
                 Alex (Customer)
               </button>
               <button
-                className="btn btn-sm btn-secondary"
+                className="btn btn-sm"
                 onClick={() => handleDemoSelect('campus@demo.com', 'restaurant_admin')}
-                style={{ fontSize: '0.75rem' }}
+                style={{ fontSize: '0.75rem', background: '#F7F1E5', border: '1px solid #C6A15B', color: '#123C32', fontWeight: 600 }}
               >
-                Campus Cafe (Kitchen)
+                Empire (Kitchen)
               </button>
               <button
-                className="btn btn-sm btn-secondary"
+                className="btn btn-sm"
                 onClick={() => handleDemoSelect('spice@demo.com', 'restaurant_admin')}
-                style={{ fontSize: '0.75rem' }}
+                style={{ fontSize: '0.75rem', background: '#F7F1E5', border: '1px solid #C6A15B', color: '#123C32', fontWeight: 600 }}
               >
-                Spice Corner (Kitchen)
+                Rameshwaram (Kitchen)
               </button>
               <button
-                className="btn btn-sm btn-secondary"
+                className="btn btn-sm"
                 onClick={() => handleDemoSelect('admin@cutthequeue.com', 'super_admin')}
-                style={{ fontSize: '0.75rem' }}
+                style={{ fontSize: '0.75rem', background: '#F7F1E5', border: '1px solid #C6A15B', color: '#123C32', fontWeight: 600 }}
               >
                 Super Admin
               </button>

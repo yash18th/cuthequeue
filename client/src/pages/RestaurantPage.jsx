@@ -156,7 +156,7 @@ export default function RestaurantPage({ restaurantId, setActivePage, onOpenCart
   };
 
   return (
-    <div style={{ background: 'var(--bg-heritage)', minHeight: '90vh', paddingBottom: '7rem' }}>
+    <div className="bg-warm-canvas" style={{ minHeight: '90vh', paddingBottom: '7rem' }}>
       {/* Top Nav Header with Back & Breadcrumb */}
       <div className="container" style={{ paddingTop: '1.5rem', paddingBottom: '0.5rem' }}>
         <PageNavHeader
@@ -171,30 +171,32 @@ export default function RestaurantPage({ restaurantId, setActivePage, onOpenCart
         position: 'relative',
         height: '280px',
         width: '100%',
-        background: '#1c1917',
-        overflow: 'hidden'
+        background: '#0B2923',
+        overflow: 'hidden',
+        borderBottom: '2px solid #C6A15B'
       }}>
         <img
           src={restaurant.cover_image}
           alt={restaurant.name}
-          style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.82 }}
+          style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.7 }}
         />
         <div style={{
           position: 'absolute',
           inset: 0,
-          background: 'linear-gradient(to top, rgba(28, 25, 23, 0.92) 0%, rgba(28, 25, 23, 0.3) 60%, transparent 100%)'
+          background: 'linear-gradient(to top, rgba(11, 41, 35, 0.95) 0%, rgba(18, 60, 50, 0.4) 60%, transparent 100%)'
         }} />
 
-        <div className="container" style={{ position: 'absolute', bottom: '24px', left: 0, right: 0, color: 'white' }}>
+        <div className="container" style={{ position: 'absolute', bottom: '24px', left: 0, right: 0, color: '#F7F1E5' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', marginBottom: '6px' }}>
             <span className={`badge ${isOpen ? 'badge-open' : 'badge-closed'}`}>
               {isOpen ? '🟢 Open for Pre-Order' : '🔴 Closed'}
             </span>
             <span style={{
-              background: 'rgba(28, 25, 23, 0.85)',
-              color: '#fbbf24',
+              background: 'rgba(11, 41, 35, 0.85)',
+              color: '#C6A15B',
+              border: '1px solid #C6A15B',
               padding: '3px 8px',
-              borderRadius: '6px',
+              borderRadius: '4px',
               fontSize: '0.78rem',
               fontWeight: 800,
               display: 'inline-flex',
@@ -202,17 +204,18 @@ export default function RestaurantPage({ restaurantId, setActivePage, onOpenCart
               gap: '4px',
               backdropFilter: 'blur(6px)'
             }}>
-              <Star size={13} fill="#fbbf24" strokeWidth={0} />
+              <Star size={13} fill="#C6A15B" strokeWidth={0} />
               {restaurant.rating ? Number(restaurant.rating).toFixed(1) : '4.8'}
             </span>
           </div>
 
           <h1 style={{
-            fontSize: 'clamp(1.8rem, 4vw, 2.6rem)',
+            fontSize: 'clamp(1.8rem, 4vw, 2.7rem)',
             fontWeight: 800,
-            letterSpacing: '-0.025em',
+            letterSpacing: '-0.01em',
             margin: '0.2rem 0',
-            color: 'white'
+            color: '#F7F1E5',
+            fontFamily: 'var(--font-serif)'
           }}>
             {restaurant.name}
           </h1>
@@ -222,16 +225,16 @@ export default function RestaurantPage({ restaurantId, setActivePage, onOpenCart
             alignItems: 'center',
             gap: '12px',
             fontSize: '0.875rem',
-            color: '#e7e5e4',
+            color: '#E8DDC8',
             flexWrap: 'wrap'
           }}>
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-              <MapPin size={14} style={{ color: '#fbbf24' }} />
+              <MapPin size={14} style={{ color: '#C6A15B' }} />
               {restaurant.address}
             </span>
             <span>•</span>
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-              <Clock size={14} style={{ color: '#fbbf24' }} />
+              <Clock size={14} style={{ color: '#C6A15B' }} />
               Ready in ~{restaurant.prep_time_minutes || 15} mins
             </span>
           </div>
@@ -243,10 +246,10 @@ export default function RestaurantPage({ restaurantId, setActivePage, onOpenCart
         {/* Live Queue & Preparation Indicator Box */}
         <div style={{
           background: 'white',
-          borderRadius: 'var(--radius-xl)',
+          borderRadius: 'var(--radius-lg)',
           padding: '1.25rem 1.5rem',
-          boxShadow: 'var(--shadow-heritage)',
-          border: '1px solid var(--border-heritage)',
+          boxShadow: 'var(--shadow-sm)',
+          border: '1px solid #E8DDC8',
           marginBottom: '2rem',
           display: 'flex',
           alignItems: 'center',
@@ -255,12 +258,12 @@ export default function RestaurantPage({ restaurantId, setActivePage, onOpenCart
           gap: '1rem'
         }}>
           <div>
-            <div style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--accent-brass)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+            <div style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--accent-gold-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: 'var(--font-serif)' }}>
               Live Counter Status
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
               {renderQueueBadge()}
-              <span style={{ fontSize: '0.85rem', color: 'var(--text-heritage-secondary)' }}>
+              <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
                 Order ahead to skip standing in counter queues
               </span>
             </div>
@@ -268,8 +271,8 @@ export default function RestaurantPage({ restaurantId, setActivePage, onOpenCart
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
             <div style={{ textAlign: 'right' }}>
-              <div style={{ fontSize: '0.75rem', color: 'var(--text-heritage-muted)' }}>Estimated Wait</div>
-              <div style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--text-heritage-dark)' }}>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Estimated Wait</div>
+              <div style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--bg-deep-green)', fontFamily: 'var(--font-serif)' }}>
                 ~{restaurant.prep_time_minutes || 15} mins
               </div>
             </div>
@@ -297,41 +300,48 @@ export default function RestaurantPage({ restaurantId, setActivePage, onOpenCart
               type="button"
               onClick={() => setActiveCategory(null)}
               style={{
-                padding: '0.45rem 1rem',
-                borderRadius: 'var(--radius-full)',
+                padding: '0.45rem 1.1rem',
+                borderRadius: 'var(--radius-md)',
                 fontSize: '0.825rem',
                 fontWeight: 700,
                 border: '1px solid',
-                borderColor: activeCategory === null ? 'var(--accent-brass)' : 'var(--border-heritage)',
-                background: activeCategory === null ? 'var(--accent-brass)' : 'white',
-                color: activeCategory === null ? 'white' : 'var(--text-heritage-secondary)',
+                borderColor: activeCategory === null ? 'var(--accent-gold)' : '#E8DDC8',
+                background: activeCategory === null ? 'var(--bg-deep-green)' : 'white',
+                color: activeCategory === null ? '#F7F1E5' : 'var(--text-charcoal)',
                 whiteSpace: 'nowrap',
-                transition: 'all 0.15s ease'
+                transition: 'all 0.15s ease',
+                cursor: 'pointer',
+                fontFamily: 'var(--font-serif)'
               }}
             >
               All Items ({allItems.length})
             </button>
-            {categories.map((cat) => (
-              <button
-                key={cat.id}
-                type="button"
-                onClick={() => setActiveCategory(cat.id)}
-                style={{
-                  padding: '0.45rem 1rem',
-                  borderRadius: 'var(--radius-full)',
-                  fontSize: '0.825rem',
-                  fontWeight: 700,
-                  border: '1px solid',
-                  borderColor: activeCategory === cat.id ? 'var(--accent-brass)' : 'var(--border-heritage)',
-                  background: activeCategory === cat.id ? 'var(--accent-brass)' : 'white',
-                  color: activeCategory === cat.id ? 'white' : 'var(--text-heritage-secondary)',
-                  whiteSpace: 'nowrap',
-                  transition: 'all 0.15s ease'
-                }}
-              >
-                {cat.name}
-              </button>
-            ))}
+            {categories.map((cat) => {
+              const isSelected = activeCategory === cat.id;
+              return (
+                <button
+                  key={cat.id}
+                  type="button"
+                  onClick={() => setActiveCategory(cat.id)}
+                  style={{
+                    padding: '0.45rem 1.1rem',
+                    borderRadius: 'var(--radius-md)',
+                    fontSize: '0.825rem',
+                    fontWeight: 700,
+                    border: '1px solid',
+                    borderColor: isSelected ? 'var(--accent-gold)' : '#E8DDC8',
+                    background: isSelected ? 'var(--bg-deep-green)' : 'white',
+                    color: isSelected ? '#F7F1E5' : 'var(--text-charcoal)',
+                    whiteSpace: 'nowrap',
+                    transition: 'all 0.15s ease',
+                    cursor: 'pointer',
+                    fontFamily: 'var(--font-serif)'
+                  }}
+                >
+                  {cat.name}
+                </button>
+              );
+            })}
           </div>
 
           {/* Search menu items & Veg toggle */}
@@ -345,9 +355,9 @@ export default function RestaurantPage({ restaurantId, setActivePage, onOpenCart
                 onChange={(e) => setMenuSearch(e.target.value)}
                 style={{
                   width: '100%',
-                  padding: '0.4rem 0.8rem 0.4rem 2rem',
-                  borderRadius: 'var(--radius-full)',
-                  border: '1px solid var(--border-heritage)',
+                  padding: '0.45rem 0.8rem 0.45rem 2rem',
+                  borderRadius: 'var(--radius-md)',
+                  border: '1px solid #E8DDC8',
                   background: 'white',
                   fontSize: '0.825rem'
                 }}
@@ -361,16 +371,16 @@ export default function RestaurantPage({ restaurantId, setActivePage, onOpenCart
               fontSize: '0.825rem',
               fontWeight: 700,
               cursor: 'pointer',
-              color: 'var(--text-heritage-dark)',
+              color: 'var(--text-charcoal)',
               userSelect: 'none'
             }}>
               <input
                 type="checkbox"
                 checked={vegOnly}
                 onChange={(e) => setVegOnly(e.target.checked)}
-                style={{ accentColor: '#059669', width: '15px', height: '15px' }}
+                style={{ accentColor: '#123C32', width: '15px', height: '15px' }}
               />
-              <span>Pure Veg</span>
+              <span>Pure Veg Only</span>
             </label>
           </div>
         </div>
@@ -379,16 +389,16 @@ export default function RestaurantPage({ restaurantId, setActivePage, onOpenCart
         {filteredItems.length === 0 ? (
           <div style={{
             background: 'white',
-            borderRadius: 'var(--radius-xl)',
+            borderRadius: 'var(--radius-lg)',
             padding: '3rem 2rem',
             textAlign: 'center',
-            border: '1px solid var(--border-heritage)'
+            border: '1px solid #E8DDC8'
           }}>
-            <Utensils size={36} style={{ color: 'var(--text-muted)', margin: '0 auto 1rem auto' }} />
-            <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--text-heritage-dark)' }}>
+            <Utensils size={36} style={{ color: 'var(--accent-gold)', margin: '0 auto 1rem auto' }} />
+            <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--text-charcoal)', fontFamily: 'var(--font-serif)' }}>
               No dishes found matching your filter
             </h3>
-            <p style={{ color: 'var(--text-heritage-secondary)', fontSize: '0.875rem', marginTop: '4px' }}>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', marginTop: '4px' }}>
               Try clearing search or toggling veg/non-veg filter.
             </p>
           </div>
@@ -406,7 +416,11 @@ export default function RestaurantPage({ restaurantId, setActivePage, onOpenCart
                   display: 'flex',
                   flexDirection: 'column',
                   padding: '1.25rem',
-                  position: 'relative'
+                  position: 'relative',
+                  background: 'white',
+                  border: '1px solid #E8DDC8',
+                  borderRadius: 'var(--radius-lg)',
+                  boxShadow: 'var(--shadow-sm)'
                 }}
               >
                 <div style={{ display: 'flex', gap: '1rem', flex: 1 }}>
@@ -417,7 +431,7 @@ export default function RestaurantPage({ restaurantId, setActivePage, onOpenCart
                         display: 'inline-block',
                         width: '14px',
                         height: '14px',
-                        border: item.is_veg ? '1.5px solid #059669' : '1.5px solid #dc2626',
+                        border: item.is_veg ? '1.5px solid #15803d' : '1.5px solid #b91c1c',
                         padding: '2px',
                         borderRadius: '2px',
                         textAlign: 'center',
@@ -428,10 +442,10 @@ export default function RestaurantPage({ restaurantId, setActivePage, onOpenCart
                           width: '6px',
                           height: '6px',
                           borderRadius: '50%',
-                          background: item.is_veg ? '#059669' : '#dc2626'
+                          background: item.is_veg ? '#15803d' : '#b91c1c'
                         }} />
                       </span>
-                      <span style={{ fontSize: '0.72rem', fontWeight: 700, color: item.is_veg ? '#059669' : '#dc2626' }}>
+                      <span style={{ fontSize: '0.72rem', fontWeight: 700, color: item.is_veg ? '#15803d' : '#b91c1c' }}>
                         {item.is_veg ? 'VEG' : 'NON-VEG'}
                       </span>
                     </div>
@@ -439,24 +453,26 @@ export default function RestaurantPage({ restaurantId, setActivePage, onOpenCart
                     <h3 style={{
                       fontSize: '1.05rem',
                       fontWeight: 800,
-                      color: 'var(--text-heritage-dark)',
-                      margin: '2px 0 4px 0'
+                      color: 'var(--text-charcoal)',
+                      margin: '2px 0 4px 0',
+                      fontFamily: 'var(--font-serif)'
                     }}>
                       {item.name}
                     </h3>
 
                     <div style={{
-                      fontSize: '1rem',
+                      fontSize: '1.05rem',
                       fontWeight: 800,
-                      color: 'var(--accent-brass)',
-                      marginBottom: '0.4rem'
+                      color: 'var(--bg-deep-green)',
+                      marginBottom: '0.4rem',
+                      fontFamily: 'var(--font-serif)'
                     }}>
                       ₹{item.price}
                     </div>
 
                     <p style={{
                       fontSize: '0.8rem',
-                      color: 'var(--text-heritage-secondary)',
+                      color: 'var(--text-secondary)',
                       lineHeight: 1.5,
                       margin: 0,
                       display: '-webkit-box',
@@ -478,7 +494,8 @@ export default function RestaurantPage({ restaurantId, setActivePage, onOpenCart
                         width: '100%',
                         height: '100%',
                         objectFit: 'cover',
-                        borderRadius: 'var(--radius-md)'
+                        borderRadius: 'var(--radius-md)',
+                        border: '1px solid #E8DDC8'
                       }}
                     />
                     <button
@@ -491,12 +508,12 @@ export default function RestaurantPage({ restaurantId, setActivePage, onOpenCart
                         left: '50%',
                         transform: 'translateX(-50%)',
                         background: 'white',
-                        border: '1.5px solid var(--accent-brass)',
-                        color: 'var(--accent-brass)',
+                        border: '1.5px solid var(--bg-deep-green)',
+                        color: 'var(--bg-deep-green)',
                         fontWeight: 800,
                         fontSize: '0.78rem',
-                        padding: '3px 12px',
-                        borderRadius: 'var(--radius-full)',
+                        padding: '4px 14px',
+                        borderRadius: 'var(--radius-md)',
                         boxShadow: '0 2px 6px rgba(0,0,0,0.12)',
                         whiteSpace: 'nowrap',
                         cursor: item.is_available ? 'pointer' : 'not-allowed',
@@ -535,12 +552,12 @@ export default function RestaurantPage({ restaurantId, setActivePage, onOpenCart
           transform: 'translateX(-50%)',
           width: 'calc(100% - 40px)',
           maxWidth: '680px',
-          background: 'linear-gradient(135deg, #1c1917 0%, #292524 100%)',
-          color: 'white',
+          background: 'linear-gradient(135deg, #0B2923 0%, #123C32 100%)',
+          color: '#F7F1E5',
           padding: '1rem 1.4rem',
-          borderRadius: 'var(--radius-xl)',
-          boxShadow: '0 10px 30px rgba(0,0,0,0.25)',
-          border: '1px solid rgba(217, 119, 6, 0.4)',
+          borderRadius: 'var(--radius-lg)',
+          boxShadow: '0 10px 30px rgba(0,0,0,0.3)',
+          border: '1px solid #C6A15B',
           zIndex: 999,
           display: 'flex',
           alignItems: 'center',
@@ -549,25 +566,23 @@ export default function RestaurantPage({ restaurantId, setActivePage, onOpenCart
           gap: '0.75rem'
         }}>
           <div>
-            <div style={{ fontSize: '0.78rem', color: '#fbbf24', fontWeight: 800, textTransform: 'uppercase' }}>
+            <div style={{ fontSize: '0.78rem', color: '#C6A15B', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: 'var(--font-serif)' }}>
               {cartRestaurant?.name || restaurant.name}
             </div>
-            <div style={{ fontSize: '1rem', fontWeight: 800 }}>
+            <div style={{ fontSize: '1rem', fontWeight: 800, fontFamily: 'var(--font-serif)' }}>
               {totalItemCount} {totalItemCount === 1 ? 'item' : 'items'} • ₹{cartTotal.toFixed(2)}
             </div>
           </div>
 
-          <div style={{ display: 'flex', gap: '0.5rem' }}>
+          <div style={{ display: 'flex', gap: '0.6rem' }}>
             <button
               type="button"
               onClick={() => navigate('/cart')}
-              className="btn btn-sm"
+              className="btn btn-sm btn-outline"
               style={{
-                background: 'rgba(255, 255, 255, 0.15)',
-                color: 'white',
-                fontWeight: 700,
-                border: '1px solid rgba(255, 255, 255, 0.25)',
-                padding: '0.5rem 0.9rem'
+                borderColor: '#C6A15B',
+                color: '#F7F1E5',
+                padding: '0.5rem 1rem'
               }}
             >
               View Tray
@@ -575,13 +590,9 @@ export default function RestaurantPage({ restaurantId, setActivePage, onOpenCart
             <button
               type="button"
               onClick={() => navigate('/checkout')}
-              className="btn btn-sm btn-primary"
+              className="btn btn-sm btn-gold"
               style={{
-                background: 'linear-gradient(135deg, #b45309 0%, #d97706 100%)',
-                border: 'none',
-                color: 'white',
-                fontWeight: 800,
-                padding: '0.5rem 1.1rem',
+                padding: '0.5rem 1.2rem',
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: '4px'

@@ -6,59 +6,59 @@ export function getStatusConfig(status) {
     case 'pending':
       return {
         label: 'Order Placed',
-        bg: '#fef3c7',
-        color: '#b45309',
-        border: '#fde68a',
+        bg: '#FEF6EC',
+        color: '#92400E',
+        border: '#E8DDC8',
         icon: <Clock size={14} />
       };
     case 'accepted':
       return {
         label: 'Accepted',
-        bg: '#eff6ff',
-        color: '#1d4ed8',
-        border: '#bfdbfe',
+        bg: '#EEF6F4',
+        color: '#123C32',
+        border: '#C7DED7',
         icon: <CheckCircle2 size={14} />
       };
     case 'preparing':
       return {
         label: 'Preparing',
-        bg: '#f3e8ff',
-        color: '#7e22ce',
-        border: '#e9d5ff',
+        bg: '#FEF6EC',
+        color: '#A98242',
+        border: '#E4CE9D',
         icon: <Flame size={14} />
       };
     case 'ready':
       return {
         label: 'Ready for Pickup',
-        bg: '#ecfdf5',
-        color: '#047857',
-        border: '#a7f3d0',
+        bg: '#EEF6F4',
+        color: '#0B2923',
+        border: '#A8CFC4',
         icon: <BellRing size={14} />,
         pulse: true
       };
     case 'completed':
       return {
         label: 'Collected',
-        bg: '#f1f5f9',
-        color: '#475569',
-        border: '#cbd5e1',
+        bg: '#F5EDE1',
+        color: '#57534E',
+        border: '#DDD2C0',
         icon: <CheckCircle2 size={14} />
       };
     case 'rejected':
     case 'cancelled':
       return {
         label: status === 'rejected' ? 'Declined' : 'Cancelled',
-        bg: '#ffe4e6',
-        color: '#be123c',
-        border: '#fecdd3',
+        bg: '#FAECEB',
+        color: '#641F27',
+        border: '#E8C4C2',
         icon: <XCircle size={14} />
       };
     default:
       return {
         label: status || 'Unknown',
-        bg: '#f1f5f9',
-        color: '#64748b',
-        border: '#e2e8f0',
+        bg: '#F5EDE1',
+        color: '#8C827A',
+        border: '#E8DDC8',
         icon: null
       };
   }

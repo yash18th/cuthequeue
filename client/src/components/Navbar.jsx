@@ -72,50 +72,150 @@ export default function Navbar({ activePage, setActivePage, onOpenCart }) {
   const isOrdersActive = pathname.startsWith('/orders') || pathname.startsWith('/queue');
   const isCartActive = pathname === '/cart';
 
+  const handleHowItWorksClick = () => {
+    setMobileMenuOpen(false);
+    if (pathname === '/') {
+      const el = document.getElementById('how-it-works');
+      if (el) el.scrollIntoView({ behavior: 'smooth' });
+    } else {
+      navigate('/#how-it-works');
+    }
+  };
+
   return (
-    <header className="navbar" style={{ position: 'sticky', top: 0, zIndex: 1000, background: 'rgba(255, 255, 255, 0.95)', backdropFilter: 'blur(10px)' }}>
-      <div className="container navbar-inner" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        {/* Brand */}
+    <header
+      className="navbar"
+      style={{
+        position: 'sticky',
+        top: 0,
+        zIndex: 1000,
+        background: 'linear-gradient(180deg, #0B2923 0%, #123C32 100%)',
+        borderBottom: '1px solid rgba(198, 161, 91, 0.3)',
+        boxShadow: '0 4px 20px rgba(11, 41, 35, 0.25)'
+      }}
+    >
+      <div className="container navbar-inner" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', minHeight: '68px' }}>
+        {/* Brand Logo */}
         <div
           className="brand-logo"
-          style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}
+          style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}
           onClick={handleBrandClick}
         >
-          <div className="brand-icon-box">
-            <UtensilsCrossed size={20} strokeWidth={2.5} />
+          <div
+            style={{
+              width: '38px',
+              height: '38px',
+              borderRadius: '8px',
+              background: 'linear-gradient(135deg, rgba(198, 161, 91, 0.25) 0%, rgba(169, 130, 66, 0.1) 100%)',
+              border: '1.5px solid #C6A15B',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: '#C6A15B',
+              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.2)'
+            }}
+          >
+            <UtensilsCrossed size={20} strokeWidth={2.2} />
           </div>
-          <span style={{ fontWeight: 800, letterSpacing: '-0.03em', fontSize: '1.2rem' }}>
-            Cut<span style={{ color: 'var(--primary)' }}>The</span>Queue
-          </span>
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <span
+              style={{
+                fontFamily: 'var(--font-serif)',
+                fontWeight: 800,
+                letterSpacing: '0.04em',
+                fontSize: '1.25rem',
+                color: '#F7F1E5'
+              }}
+            >
+              Cut<span style={{ color: '#C6A15B' }}>The</span>Queue
+            </span>
+            <span
+              style={{
+                fontSize: '0.62rem',
+                color: 'rgba(232, 221, 200, 0.75)',
+                letterSpacing: '0.14em',
+                textTransform: 'uppercase',
+                fontFamily: 'var(--font-sans)',
+                fontWeight: 600,
+                marginTop: '-2px'
+              }}
+            >
+              Bengaluru Dining Heritage
+            </span>
+          </div>
         </div>
 
         {/* Customer Desktop Navigation Links */}
         {(!user || isCustomer) && (
-          <nav className="desktop-links" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <nav className="desktop-links" style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
             <Link
               to="/"
               onClick={() => setActivePage?.('landing')}
-              className={`btn btn-sm ${isHomeActive ? 'btn-primary' : 'btn-ghost'}`}
-              style={{ textDecoration: 'none', fontWeight: 600 }}
+              style={{
+                textDecoration: 'none',
+                fontWeight: 600,
+                fontSize: '0.9rem',
+                padding: '0.45rem 0.9rem',
+                borderRadius: '6px',
+                color: isHomeActive ? '#C6A15B' : '#F7F1E5',
+                background: isHomeActive ? 'rgba(198, 161, 91, 0.14)' : 'transparent',
+                border: isHomeActive ? '1px solid rgba(198, 161, 91, 0.35)' : '1px solid transparent',
+                transition: 'all 0.2s ease'
+              }}
             >
               Home
             </Link>
             <Link
               to="/restaurants"
               onClick={() => setActivePage?.('restaurants')}
-              className={`btn btn-sm ${isBrowseActive ? 'btn-primary' : 'btn-ghost'}`}
-              style={{ textDecoration: 'none', fontWeight: 600 }}
+              style={{
+                textDecoration: 'none',
+                fontWeight: 600,
+                fontSize: '0.9rem',
+                padding: '0.45rem 0.9rem',
+                borderRadius: '6px',
+                color: isBrowseActive ? '#C6A15B' : '#F7F1E5',
+                background: isBrowseActive ? 'rgba(198, 161, 91, 0.14)' : 'transparent',
+                border: isBrowseActive ? '1px solid rgba(198, 161, 91, 0.35)' : '1px solid transparent',
+                transition: 'all 0.2s ease'
+              }}
             >
               Restaurants
             </Link>
+            <button
+              type="button"
+              onClick={handleHowItWorksClick}
+              style={{
+                fontWeight: 600,
+                fontSize: '0.9rem',
+                padding: '0.45rem 0.9rem',
+                borderRadius: '6px',
+                color: '#F7F1E5',
+                background: 'transparent',
+                border: '1px solid transparent',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease'
+              }}
+            >
+              How It Works
+            </button>
             {user && (
               <Link
                 to="/orders"
                 onClick={() => setActivePage?.('orders')}
-                className={`btn btn-sm ${isOrdersActive ? 'btn-primary' : 'btn-ghost'}`}
-                style={{ textDecoration: 'none', fontWeight: 600 }}
+                style={{
+                  textDecoration: 'none',
+                  fontWeight: 600,
+                  fontSize: '0.9rem',
+                  padding: '0.45rem 0.9rem',
+                  borderRadius: '6px',
+                  color: isOrdersActive ? '#C6A15B' : '#F7F1E5',
+                  background: isOrdersActive ? 'rgba(198, 161, 91, 0.14)' : 'transparent',
+                  border: isOrdersActive ? '1px solid rgba(198, 161, 91, 0.35)' : '1px solid transparent',
+                  transition: 'all 0.2s ease'
+                }}
               >
-                My Orders
+                Orders
               </Link>
             )}
           </nav>
@@ -174,42 +274,46 @@ export default function Navbar({ activePage, setActivePage, onOpenCart }) {
         )}
 
         {/* Right Side Actions: Cart, Role Switcher, Profile/Auth */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
           {/* Cart button for customers */}
           {(!user || isCustomer) && (
             <Link
               to="/cart"
               onClick={() => setActivePage?.('cart')}
-              className={`btn ${isCartActive ? 'btn-primary' : 'btn-secondary'}`}
               style={{
                 position: 'relative',
                 padding: '0.5rem 0.85rem',
-                borderRadius: 'var(--radius-md)',
+                borderRadius: '6px',
                 textDecoration: 'none',
                 display: 'inline-flex',
                 alignItems: 'center',
-                gap: '6px'
+                gap: '6px',
+                background: isCartActive ? '#C6A15B' : 'rgba(198, 161, 91, 0.15)',
+                color: isCartActive ? '#0B2923' : '#F7F1E5',
+                border: isCartActive ? '1px solid #A98242' : '1px solid rgba(198, 161, 91, 0.35)',
+                transition: 'all 0.2s ease'
               }}
-              title="View Cart"
+              title="View Tray"
             >
-              <ShoppingBag size={18} />
-              <span className="desktop-links" style={{ fontSize: '0.85rem', fontWeight: 600 }}>Cart</span>
+              <ShoppingBag size={17} />
+              <span className="desktop-links" style={{ fontSize: '0.85rem', fontWeight: 600 }}>Tray</span>
               {totalItemCount > 0 && (
                 <span style={{
                   position: 'absolute',
-                  top: '-5px',
-                  right: '-5px',
-                  background: isCartActive ? '#10b981' : 'var(--primary)',
-                  color: 'white',
-                  fontSize: '0.7rem',
-                  fontWeight: 800,
-                  width: '18px',
-                  height: '18px',
+                  top: '-6px',
+                  right: '-6px',
+                  background: '#C6A15B',
+                  color: '#0B2923',
+                  fontSize: '0.72rem',
+                  fontWeight: 900,
+                  width: '19px',
+                  height: '19px',
                   borderRadius: '50%',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  boxShadow: '0 2px 5px rgba(5,150,105,0.4)'
+                  boxShadow: '0 2px 6px rgba(0, 0, 0, 0.3)',
+                  border: '1.5px solid #0B2923'
                 }}>
                   {totalItemCount}
                 </span>
@@ -221,15 +325,25 @@ export default function Navbar({ activePage, setActivePage, onOpenCart }) {
           <div style={{ position: 'relative' }}>
             <button
               type="button"
-              className="btn btn-sm btn-secondary"
-              style={{ fontSize: '0.78rem', padding: '0.4rem 0.65rem', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+              style={{
+                fontSize: '0.78rem',
+                padding: '0.45rem 0.75rem',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '5px',
+                background: 'rgba(247, 241, 229, 0.1)',
+                border: '1px solid rgba(198, 161, 91, 0.35)',
+                color: '#F7F1E5',
+                borderRadius: '6px',
+                cursor: 'pointer'
+              }}
               onClick={() => setShowDemoMenu(!showDemoMenu)}
               aria-label="Switch Role"
             >
-              Role: <span style={{ color: 'var(--primary)', fontWeight: 700 }}>
+              Role: <span style={{ color: '#C6A15B', fontWeight: 700 }}>
                 {user ? (isCustomer ? 'Customer' : isRestaurantAdmin ? 'Kitchen' : 'Admin') : 'Guest'}
               </span>
-              <ChevronDown size={14} />
+              <ChevronDown size={14} style={{ color: '#C6A15B' }} />
             </button>
 
             {showDemoMenu && (
@@ -238,16 +352,24 @@ export default function Navbar({ activePage, setActivePage, onOpenCart }) {
                 top: '100%',
                 right: 0,
                 marginTop: '8px',
-                background: 'white',
-                borderRadius: '12px',
-                boxShadow: '0 10px 25px rgba(0,0,0,0.15)',
-                border: '1px solid var(--border-subtle)',
-                width: '240px',
-                padding: '8px',
+                background: '#FFFFFF',
+                borderRadius: '8px',
+                boxShadow: '0 12px 30px rgba(11, 41, 35, 0.25)',
+                border: '1px solid #E8DDC8',
+                width: '260px',
+                padding: '10px',
                 zIndex: 1100
               }}>
-                <div style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-muted)', padding: '4px 8px', textTransform: 'uppercase' }}>
-                  Switch Demo Account
+                <div style={{
+                  fontSize: '0.72rem',
+                  fontWeight: 800,
+                  color: 'var(--accent-gold-muted)',
+                  padding: '4px 8px',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.08em',
+                  fontFamily: 'var(--font-serif)'
+                }}>
+                  Demo Role Switcher
                 </div>
                 <button
                   type="button"
@@ -255,7 +377,7 @@ export default function Navbar({ activePage, setActivePage, onOpenCart }) {
                   style={{ width: '100%', textAlign: 'left', padding: '8px', borderRadius: '6px', fontSize: '0.85rem', display: 'flex', flexDirection: 'column', border: 'none', background: 'transparent', cursor: 'pointer' }}
                   className="hover-bg"
                 >
-                  <strong style={{ color: 'var(--text-primary)' }}>Alex Morgan (Customer)</strong>
+                  <strong style={{ color: 'var(--text-charcoal)' }}>Alex Morgan (Customer)</strong>
                   <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>customer@demo.com</span>
                 </button>
                 <button
@@ -264,8 +386,8 @@ export default function Navbar({ activePage, setActivePage, onOpenCart }) {
                   style={{ width: '100%', textAlign: 'left', padding: '8px', borderRadius: '6px', fontSize: '0.85rem', display: 'flex', flexDirection: 'column', border: 'none', background: 'transparent', cursor: 'pointer' }}
                   className="hover-bg"
                 >
-                  <strong style={{ color: 'var(--primary)' }}>Campus Cafe (Kitchen)</strong>
-                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>campus@demo.com</span>
+                  <strong style={{ color: 'var(--bg-deep-green)' }}>The Rameshwaram Cafe (Kitchen)</strong>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Indiranagar Branch</span>
                 </button>
                 <button
                   type="button"
@@ -273,8 +395,8 @@ export default function Navbar({ activePage, setActivePage, onOpenCart }) {
                   style={{ width: '100%', textAlign: 'left', padding: '8px', borderRadius: '6px', fontSize: '0.85rem', display: 'flex', flexDirection: 'column', border: 'none', background: 'transparent', cursor: 'pointer' }}
                   className="hover-bg"
                 >
-                  <strong style={{ color: '#d97706' }}>Spice Corner (Kitchen)</strong>
-                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>spice@demo.com</span>
+                  <strong style={{ color: 'var(--accent-gold)' }}>Empire Restaurant (Kitchen)</strong>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Church Street Branch</span>
                 </button>
                 <button
                   type="button"
@@ -282,7 +404,7 @@ export default function Navbar({ activePage, setActivePage, onOpenCart }) {
                   style={{ width: '100%', textAlign: 'left', padding: '8px', borderRadius: '6px', fontSize: '0.85rem', display: 'flex', flexDirection: 'column', border: 'none', background: 'transparent', cursor: 'pointer' }}
                   className="hover-bg"
                 >
-                  <strong style={{ color: '#2563eb' }}>Platform Super Admin</strong>
+                  <strong style={{ color: 'var(--bg-royal-maroon)' }}>Platform Super Admin</strong>
                   <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>admin@cutthequeue.com</span>
                 </button>
               </div>
@@ -295,19 +417,39 @@ export default function Navbar({ activePage, setActivePage, onOpenCart }) {
               <Link
                 to="/profile"
                 onClick={() => setActivePage?.('profile')}
-                className={`btn btn-sm ${pathname === '/profile' ? 'btn-primary' : 'btn-secondary'}`}
-                style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                style={{
+                  textDecoration: 'none',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  background: 'rgba(247, 241, 229, 0.12)',
+                  border: '1px solid rgba(198, 161, 91, 0.35)',
+                  color: '#F7F1E5',
+                  padding: '0.45rem 0.8rem',
+                  borderRadius: '6px',
+                  fontSize: '0.85rem',
+                  fontWeight: 600
+                }}
                 title="Profile & Settings"
               >
-                <User size={16} />
+                <User size={15} style={{ color: '#C6A15B' }} />
                 <span className="desktop-name">{user.name?.split(' ')[0] || 'Profile'}</span>
               </Link>
               <button
                 type="button"
-                className="btn btn-sm btn-secondary"
                 onClick={handleLogout}
                 title="Sign Out"
-                style={{ padding: '0.5rem' }}
+                style={{
+                  padding: '0.45rem',
+                  borderRadius: '6px',
+                  background: 'transparent',
+                  border: '1px solid rgba(198, 161, 91, 0.25)',
+                  color: '#F7F1E5',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
               >
                 <LogOut size={16} />
               </button>
@@ -316,8 +458,8 @@ export default function Navbar({ activePage, setActivePage, onOpenCart }) {
             <Link
               to="/signin"
               onClick={() => setActivePage?.('auth')}
-              className="btn btn-sm btn-primary"
-              style={{ textDecoration: 'none', fontWeight: 700 }}
+              className="btn btn-sm btn-gold"
+              style={{ textDecoration: 'none' }}
             >
               Sign In
             </Link>
@@ -331,13 +473,15 @@ export default function Navbar({ activePage, setActivePage, onOpenCart }) {
             style={{
               display: 'none',
               background: 'transparent',
-              border: 'none',
+              border: '1px solid rgba(198, 161, 91, 0.35)',
+              borderRadius: '6px',
               cursor: 'pointer',
-              padding: '4px'
+              padding: '6px',
+              color: '#C6A15B'
             }}
             aria-label="Toggle navigation menu"
           >
-            {mobileMenuOpen ? <X size={22} /> : <MenuIcon size={22} />}
+            {mobileMenuOpen ? <X size={20} /> : <MenuIcon size={20} />}
           </button>
         </div>
       </div>
@@ -345,35 +489,69 @@ export default function Navbar({ activePage, setActivePage, onOpenCart }) {
       {/* Mobile Responsive Navigation Drawer / Dropdown */}
       {mobileMenuOpen && (
         <div style={{
-          background: 'white',
-          borderTop: '1px solid var(--border-subtle)',
-          padding: '1rem',
-          boxShadow: 'var(--shadow-md)'
+          background: '#0B2923',
+          borderTop: '1px solid rgba(198, 161, 91, 0.3)',
+          padding: '1.25rem',
+          boxShadow: '0 8px 24px rgba(0, 0, 0, 0.3)'
         }}>
           {(!user || isCustomer) && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
               <Link
                 to="/"
                 onClick={() => { setMobileMenuOpen(false); setActivePage?.('landing'); }}
-                className={`btn btn-sm ${isHomeActive ? 'btn-primary' : 'btn-ghost'}`}
-                style={{ textAlign: 'left', justifyContent: 'flex-start' }}
+                style={{
+                  padding: '0.5rem 0.75rem',
+                  borderRadius: '6px',
+                  color: isHomeActive ? '#C6A15B' : '#F7F1E5',
+                  background: isHomeActive ? 'rgba(198, 161, 91, 0.15)' : 'transparent',
+                  textDecoration: 'none',
+                  fontWeight: 600
+                }}
               >
                 Home
               </Link>
               <Link
                 to="/restaurants"
                 onClick={() => { setMobileMenuOpen(false); setActivePage?.('restaurants'); }}
-                className={`btn btn-sm ${isBrowseActive ? 'btn-primary' : 'btn-ghost'}`}
-                style={{ textAlign: 'left', justifyContent: 'flex-start' }}
+                style={{
+                  padding: '0.5rem 0.75rem',
+                  borderRadius: '6px',
+                  color: isBrowseActive ? '#C6A15B' : '#F7F1E5',
+                  background: isBrowseActive ? 'rgba(198, 161, 91, 0.15)' : 'transparent',
+                  textDecoration: 'none',
+                  fontWeight: 600
+                }}
               >
                 Restaurants
               </Link>
+              <button
+                type="button"
+                onClick={handleHowItWorksClick}
+                style={{
+                  padding: '0.5rem 0.75rem',
+                  borderRadius: '6px',
+                  color: '#F7F1E5',
+                  background: 'transparent',
+                  border: 'none',
+                  textAlign: 'left',
+                  fontWeight: 600,
+                  cursor: 'pointer'
+                }}
+              >
+                How It Works
+              </button>
               {user && (
                 <Link
                   to="/orders"
                   onClick={() => { setMobileMenuOpen(false); setActivePage?.('orders'); }}
-                  className={`btn btn-sm ${isOrdersActive ? 'btn-primary' : 'btn-ghost'}`}
-                  style={{ textAlign: 'left', justifyContent: 'flex-start' }}
+                  style={{
+                    padding: '0.5rem 0.75rem',
+                    borderRadius: '6px',
+                    color: isOrdersActive ? '#C6A15B' : '#F7F1E5',
+                    background: isOrdersActive ? 'rgba(198, 161, 91, 0.15)' : 'transparent',
+                    textDecoration: 'none',
+                    fontWeight: 600
+                  }}
                 >
                   My Orders
                 </Link>
@@ -381,45 +559,78 @@ export default function Navbar({ activePage, setActivePage, onOpenCart }) {
               <Link
                 to="/cart"
                 onClick={() => { setMobileMenuOpen(false); setActivePage?.('cart'); }}
-                className={`btn btn-sm ${isCartActive ? 'btn-primary' : 'btn-ghost'}`}
-                style={{ textAlign: 'left', justifyContent: 'flex-start' }}
+                style={{
+                  padding: '0.5rem 0.75rem',
+                  borderRadius: '6px',
+                  color: isCartActive ? '#0B2923' : '#F7F1E5',
+                  background: isCartActive ? '#C6A15B' : 'rgba(198, 161, 91, 0.15)',
+                  textDecoration: 'none',
+                  fontWeight: 700,
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center'
+                }}
               >
-                Cart ({totalItemCount})
+                <span>Tray</span>
+                <span>{totalItemCount} items</span>
               </Link>
             </div>
           )}
-
           {isRestaurantAdmin && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
               <Link
                 to="/kitchen"
                 onClick={() => { setMobileMenuOpen(false); setActivePage?.('restaurant-dashboard'); }}
-                className="btn btn-sm btn-ghost"
-                style={{ textAlign: 'left', justifyContent: 'flex-start' }}
+                style={{
+                  padding: '0.5rem 0.75rem',
+                  borderRadius: '6px',
+                  color: pathname === '/kitchen' ? '#C6A15B' : '#F7F1E5',
+                  background: pathname === '/kitchen' ? 'rgba(198, 161, 91, 0.15)' : 'transparent',
+                  textDecoration: 'none',
+                  fontWeight: 600
+                }}
               >
                 Kitchen Orders
               </Link>
               <Link
                 to="/kitchen/menu"
                 onClick={() => { setMobileMenuOpen(false); setActivePage?.('restaurant-menu'); }}
-                className="btn btn-sm btn-ghost"
-                style={{ textAlign: 'left', justifyContent: 'flex-start' }}
+                style={{
+                  padding: '0.5rem 0.75rem',
+                  borderRadius: '6px',
+                  color: pathname === '/kitchen/menu' ? '#C6A15B' : '#F7F1E5',
+                  background: pathname === '/kitchen/menu' ? 'rgba(198, 161, 91, 0.15)' : 'transparent',
+                  textDecoration: 'none',
+                  fontWeight: 600
+                }}
               >
                 Menu Items
               </Link>
               <Link
                 to="/kitchen/analytics"
                 onClick={() => { setMobileMenuOpen(false); setActivePage?.('restaurant-analytics'); }}
-                className="btn btn-sm btn-ghost"
-                style={{ textAlign: 'left', justifyContent: 'flex-start' }}
+                style={{
+                  padding: '0.5rem 0.75rem',
+                  borderRadius: '6px',
+                  color: pathname === '/kitchen/analytics' ? '#C6A15B' : '#F7F1E5',
+                  background: pathname === '/kitchen/analytics' ? 'rgba(198, 161, 91, 0.15)' : 'transparent',
+                  textDecoration: 'none',
+                  fontWeight: 600
+                }}
               >
                 Analytics
               </Link>
               <Link
                 to="/kitchen/settings"
                 onClick={() => { setMobileMenuOpen(false); setActivePage?.('restaurant-settings'); }}
-                className="btn btn-sm btn-ghost"
-                style={{ textAlign: 'left', justifyContent: 'flex-start' }}
+                style={{
+                  padding: '0.5rem 0.75rem',
+                  borderRadius: '6px',
+                  color: pathname === '/kitchen/settings' ? '#C6A15B' : '#F7F1E5',
+                  background: pathname === '/kitchen/settings' ? 'rgba(198, 161, 91, 0.15)' : 'transparent',
+                  textDecoration: 'none',
+                  fontWeight: 600
+                }}
               >
                 Settings
               </Link>
@@ -427,12 +638,18 @@ export default function Navbar({ activePage, setActivePage, onOpenCart }) {
           )}
 
           {isSuperAdmin && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
               <Link
                 to="/admin"
                 onClick={() => { setMobileMenuOpen(false); setActivePage?.('superadmin'); }}
-                className="btn btn-sm btn-ghost"
-                style={{ textAlign: 'left', justifyContent: 'flex-start' }}
+                style={{
+                  padding: '0.5rem 0.75rem',
+                  borderRadius: '6px',
+                  color: pathname.startsWith('/admin') ? '#C6A15B' : '#F7F1E5',
+                  background: pathname.startsWith('/admin') ? 'rgba(198, 161, 91, 0.15)' : 'transparent',
+                  textDecoration: 'none',
+                  fontWeight: 600
+                }}
               >
                 Super Admin Dashboard
               </Link>

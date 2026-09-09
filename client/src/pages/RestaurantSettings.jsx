@@ -61,7 +61,7 @@ export default function RestaurantSettings() {
   };
 
   return (
-    <div style={{ padding: '2rem 0 6rem 0' }}>
+    <div className="bg-warm-canvas" style={{ padding: '2rem 0 6rem 0', minHeight: '90vh' }}>
       <div className="container" style={{ maxWidth: '720px' }}>
         <PageNavHeader
           backLabel="Back to Kitchen"
@@ -71,55 +71,55 @@ export default function RestaurantSettings() {
             { label: 'Settings' }
           ]}
         />
-        <h1 style={{ fontSize: '1.8rem', fontWeight: 800, letterSpacing: '-0.02em', marginBottom: '0.35rem' }}>
-          Restaurant Settings
+        <h1 className="font-royal" style={{ fontSize: '2rem', fontWeight: 700, color: '#123C32', marginBottom: '0.35rem' }}>
+          Restaurant & Kitchen Configuration
         </h1>
-        <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '2rem' }}>
+        <p style={{ color: '#42151B', opacity: 0.85, fontSize: '0.9rem', marginBottom: '2rem' }}>
           Configure live store availability, estimated prep time, and contact information.
         </p>
 
         {success && (
           <div style={{
             background: '#ecfdf5',
-            color: '#047857',
+            color: '#123C32',
             padding: '0.85rem 1rem',
-            borderRadius: 'var(--radius-md)',
-            border: '1px solid #a7f3d0',
+            borderRadius: '8px',
+            border: '1px solid #C6A15B',
             marginBottom: '1.5rem',
             display: 'flex',
             alignItems: 'center',
             gap: '8px'
           }}>
-            <CheckCircle2 size={18} />
+            <CheckCircle2 size={18} style={{ color: '#123C32' }} />
             <span>{success}</span>
           </div>
         )}
 
         {/* Master Open / Closed Toggle Card */}
-        <div className="card" style={{
+        <div className="heritage-card" style={{
           padding: '1.5rem',
           marginBottom: '1.5rem',
-          background: formData.is_open ? '#ecfdf5' : '#fff1f2',
-          border: `1.5px solid ${formData.is_open ? '#a7f3d0' : '#fecdd3'}`
+          background: formData.is_open ? 'rgba(18, 60, 50, 0.06)' : 'rgba(100, 31, 39, 0.06)',
+          borderColor: formData.is_open ? '#123C32' : '#641F27'
         }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Store size={20} style={{ color: formData.is_open ? '#047857' : '#be123c' }} />
-                <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: formData.is_open ? '#047857' : '#be123c' }}>
+                <Store size={20} style={{ color: formData.is_open ? '#123C32' : '#641F27' }} />
+                <h3 className="font-royal" style={{ fontSize: '1.25rem', fontWeight: 700, color: formData.is_open ? '#123C32' : '#641F27' }}>
                   Kitchen Order Status: {formData.is_open ? 'OPEN' : 'CLOSED'}
                 </h3>
               </div>
-              <p style={{ fontSize: '0.825rem', color: formData.is_open ? '#065f46' : '#9f1239', marginTop: '4px' }}>
+              <p style={{ fontSize: '0.85rem', color: '#42151B', opacity: 0.85, marginTop: '4px' }}>
                 {formData.is_open
-                  ? 'Customers can place instant pre-orders from their phones.'
-                  : 'Kitchen is currently closed. Customers will see "Currently Closed".'}
+                  ? 'Guests can place instant pre-orders from their phones.'
+                  : 'Kitchen is currently closed. Guests will see "Currently Closed".'}
               </p>
             </div>
 
             <button
               type="button"
-              className={`btn ${formData.is_open ? 'btn-danger' : 'btn-primary'}`}
+              className={`btn ${formData.is_open ? 'btn-danger' : 'btn-forest'}`}
               onClick={handleToggleOpenStatus}
               style={{ fontWeight: 700 }}
             >
@@ -130,8 +130,8 @@ export default function RestaurantSettings() {
 
         {/* Form settings */}
         <form onSubmit={handleSave}>
-          <div className="card" style={{ padding: '1.75rem', background: 'white', marginBottom: '1.5rem' }}>
-            <h3 style={{ fontSize: '1.15rem', fontWeight: 800, marginBottom: '1.25rem' }}>
+          <div className="heritage-card" style={{ padding: '1.75rem', marginBottom: '1.5rem' }}>
+            <h3 className="font-royal" style={{ fontSize: '1.25rem', fontWeight: 700, color: '#123C32', marginBottom: '1.25rem' }}>
               General Information
             </h3>
 
@@ -235,8 +235,8 @@ export default function RestaurantSettings() {
 
           <button
             type="submit"
-            className="btn btn-primary btn-lg"
-            style={{ width: '100%' }}
+            className="btn btn-forest btn-lg"
+            style={{ width: '100%', fontWeight: 700 }}
             disabled={saving}
           >
             {saving ? 'Saving...' : 'Save Settings'}

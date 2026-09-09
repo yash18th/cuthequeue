@@ -140,23 +140,25 @@ export default function RestaurantCard({
       </div>
 
       {/* Card Body */}
-      <div style={{ padding: '1.4rem', flex: 1, display: 'flex', flexDirection: 'column' }}>
+      <div style={{ padding: '1.5rem', flex: 1, display: 'flex', flexDirection: 'column' }}>
         {/* Brand / Area Title */}
-        <div style={{ marginBottom: '0.4rem' }}>
+        <div style={{ marginBottom: '0.45rem' }}>
           <span style={{
-            fontSize: '0.75rem',
+            fontSize: '0.72rem',
             fontWeight: 800,
-            color: 'var(--accent-brass)',
+            color: 'var(--accent-gold-muted)',
             textTransform: 'uppercase',
-            letterSpacing: '0.04em'
+            letterSpacing: '0.06em',
+            fontFamily: 'var(--font-serif)'
           }}>
             {restaurant.area || 'Bengaluru'}
           </span>
           <h3 style={{
-            fontSize: '1.2rem',
-            fontWeight: 800,
-            color: 'var(--text-heritage-dark)',
-            letterSpacing: '-0.02em',
+            fontSize: '1.22rem',
+            fontWeight: 700,
+            fontFamily: 'var(--font-serif)',
+            color: 'var(--text-charcoal)',
+            letterSpacing: '0.01em',
             margin: '2px 0 0 0'
           }}>
             {displayName}
@@ -166,7 +168,7 @@ export default function RestaurantCard({
         {/* Cuisine */}
         <p style={{
           fontSize: '0.825rem',
-          color: 'var(--text-heritage-secondary)',
+          color: 'var(--text-secondary)',
           marginBottom: '0.75rem',
           whiteSpace: 'nowrap',
           overflow: 'hidden',
@@ -181,15 +183,15 @@ export default function RestaurantCard({
           alignItems: 'center',
           gap: '6px',
           fontSize: '0.8rem',
-          color: 'var(--text-heritage-muted)',
+          color: 'var(--text-muted)',
           marginBottom: '1rem'
         }}>
-          <MapPin size={13} style={{ color: 'var(--accent-brass)', flexShrink: 0 }} />
+          <MapPin size={13} style={{ color: 'var(--accent-gold)', flexShrink: 0 }} />
           <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flex: 1 }}>
             {restaurant.address}
           </span>
           {displayDistance && (
-            <span style={{ fontWeight: 700, color: 'var(--text-heritage-dark)', flexShrink: 0 }}>
+            <span style={{ fontWeight: 700, color: 'var(--text-charcoal)', flexShrink: 0 }}>
               • {displayDistance}
             </span>
           )}
@@ -198,11 +200,11 @@ export default function RestaurantCard({
         {/* Live Queue & Preparation Strip */}
         <div style={{
           marginTop: 'auto',
-          padding: '0.7rem 0.85rem',
-          background: 'var(--bg-heritage-warm)',
-          borderRadius: 'var(--radius-md)',
+          padding: '0.65rem 0.85rem',
+          background: 'var(--bg-sand-light)',
+          borderRadius: '6px',
           marginBottom: '1rem',
-          border: '1px solid #e7e5e4',
+          border: '1px solid var(--border-subtle)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
@@ -215,12 +217,12 @@ export default function RestaurantCard({
           <div style={{
             fontSize: '0.78rem',
             fontWeight: 700,
-            color: 'var(--text-heritage-dark)',
+            color: 'var(--text-charcoal)',
             display: 'inline-flex',
             alignItems: 'center',
             gap: '4px'
           }}>
-            <Clock size={13} style={{ color: 'var(--accent-brass)' }} />
+            <Clock size={13} style={{ color: 'var(--accent-gold)' }} />
             Ready in ~{prepMinutes} min
           </div>
         </div>
@@ -228,7 +230,7 @@ export default function RestaurantCard({
         {/* Primary CTA */}
         <button
           type="button"
-          className="btn btn-primary"
+          className="btn btn-forest"
           onClick={(e) => {
             e.stopPropagation();
             onSelectRestaurant(restaurant.id);
@@ -238,19 +240,14 @@ export default function RestaurantCard({
             fontWeight: 700,
             fontSize: '0.88rem',
             padding: '0.65rem',
-            borderRadius: 'var(--radius-md)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            gap: '6px',
-            background: 'linear-gradient(135deg, #b45309 0%, #d97706 100%)',
-            border: 'none',
-            color: 'white',
-            boxShadow: '0 2px 6px rgba(180, 83, 9, 0.3)'
+            gap: '6px'
           }}
         >
-          <span>View Menu & Pre-Order</span>
-          <ChevronRight size={16} />
+          <span>Explore Menu & Pre-Order</span>
+          <ChevronRight size={16} style={{ color: 'var(--accent-gold)' }} />
         </button>
       </div>
     </div>

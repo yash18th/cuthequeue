@@ -32,7 +32,7 @@ export default function RestaurantAnalytics() {
   const maxPeakOrders = Math.max(...peakHours.map((p) => p.order_count), 5);
 
   return (
-    <div style={{ padding: '2rem 0 6rem 0' }}>
+    <div className="bg-warm-canvas" style={{ padding: '2rem 0 6rem 0', minHeight: '90vh' }}>
       <div className="container">
         <PageNavHeader
           backLabel="Back to Kitchen"
@@ -45,11 +45,11 @@ export default function RestaurantAnalytics() {
 
         {/* Header */}
         <div style={{ marginBottom: '2rem' }}>
-          <h1 style={{ fontSize: '1.8rem', fontWeight: 800, letterSpacing: '-0.02em', margin: 0 }}>
-            Restaurant Analytics & Revenue
+          <h1 className="font-royal" style={{ fontSize: '2rem', fontWeight: 700, color: '#123C32', margin: 0 }}>
+            Kitchen Performance & Revenue
           </h1>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginTop: '4px' }}>
-            Performance insights for {restaurant.name}
+          <p style={{ color: '#42151B', opacity: 0.85, fontSize: '0.9rem', marginTop: '4px' }}>
+            Culinary insights and throughput metrics for {restaurant.name}
           </p>
         </div>
 
@@ -60,54 +60,54 @@ export default function RestaurantAnalytics() {
           gap: '1.25rem',
           marginBottom: '2rem'
         }}>
-          <div className="card" style={{ padding: '1.5rem', background: 'white' }}>
-            <span style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+          <div className="heritage-card" style={{ padding: '1.5rem' }}>
+            <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#A98242', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
               Today's Gross Sales
             </span>
-            <div style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--primary)', marginTop: '4px' }}>
+            <div className="font-royal" style={{ fontSize: '2rem', fontWeight: 700, color: '#123C32', marginTop: '4px' }}>
               ₹{metrics.todayRevenue || 0}
             </div>
-            <span style={{ fontSize: '0.75rem', color: '#059669', fontWeight: 600 }}>Completed orders</span>
+            <span style={{ fontSize: '0.75rem', color: '#123C32', fontWeight: 600 }}>Completed orders</span>
           </div>
 
-          <div className="card" style={{ padding: '1.5rem', background: 'white' }}>
-            <span style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+          <div className="heritage-card" style={{ padding: '1.5rem' }}>
+            <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#A98242', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
               Last 7 Days Revenue
             </span>
-            <div style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--text-primary)', marginTop: '4px' }}>
+            <div className="font-royal" style={{ fontSize: '2rem', fontWeight: 700, color: '#123C32', marginTop: '4px' }}>
               ₹{metrics.weekRevenue || 0}
             </div>
-            <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Weekly turnaround</span>
+            <span style={{ fontSize: '0.75rem', color: '#641F27' }}>Weekly turnaround</span>
           </div>
 
-          <div className="card" style={{ padding: '1.5rem', background: 'white' }}>
-            <span style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+          <div className="heritage-card" style={{ padding: '1.5rem' }}>
+            <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#A98242', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
               This Month's Revenue
             </span>
-            <div style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--text-primary)', marginTop: '4px' }}>
+            <div className="font-royal" style={{ fontSize: '2rem', fontWeight: 700, color: '#123C32', marginTop: '4px' }}>
               ₹{metrics.monthRevenue || 0}
             </div>
-            <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>30-day cumulative</span>
+            <span style={{ fontSize: '0.75rem', color: '#641F27' }}>30-day cumulative</span>
           </div>
 
-          <div className="card" style={{ padding: '1.5rem', background: 'white' }}>
-            <span style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+          <div className="heritage-card" style={{ padding: '1.5rem' }}>
+            <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#A98242', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
               Order Fulfillment Rate
             </span>
-            <div style={{ fontSize: '2rem', fontWeight: 800, color: '#2563eb', marginTop: '4px' }}>
+            <div className="font-royal" style={{ fontSize: '2rem', fontWeight: 700, color: '#641F27', marginTop: '4px' }}>
               {metrics.todayOrders > 0 ? Math.round((metrics.completed / metrics.todayOrders) * 100) : 100}%
             </div>
-            <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Completed vs cancelled</span>
+            <span style={{ fontSize: '0.75rem', color: '#123C32' }}>Completed vs cancelled</span>
           </div>
         </div>
 
         {/* Charts & Popular Items Layout */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: '2rem', marginBottom: '2.5rem' }}>
           {/* Top Selling Food Items */}
-          <div className="card" style={{ padding: '1.75rem', background: 'white' }}>
+          <div className="heritage-card" style={{ padding: '1.75rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '1.25rem' }}>
-              <Award size={20} style={{ color: 'var(--primary)' }} />
-              <h3 style={{ fontSize: '1.2rem', fontWeight: 800 }}>Popular Items Sold</h3>
+              <Award size={20} style={{ color: '#C6A15B' }} />
+              <h3 className="font-royal" style={{ fontSize: '1.3rem', fontWeight: 700, color: '#123C32' }}>Popular Dishes Sold</h3>
             </div>
 
             {popularItems.length === 0 ? (
@@ -161,13 +161,13 @@ export default function RestaurantAnalytics() {
           </div>
 
           {/* Peak Ordering Hours Visual Bar Chart */}
-          <div className="card" style={{ padding: '1.75rem', background: 'white' }}>
+          <div className="heritage-card" style={{ padding: '1.75rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '1.25rem' }}>
-              <Clock size={20} style={{ color: '#2563eb' }} />
-              <h3 style={{ fontSize: '1.2rem', fontWeight: 800 }}>Peak Queue Hours</h3>
+              <Clock size={20} style={{ color: '#C6A15B' }} />
+              <h3 className="font-royal" style={{ fontSize: '1.3rem', fontWeight: 700, color: '#123C32' }}>Peak Queue Hours</h3>
             </div>
 
-            <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
+            <p style={{ fontSize: '0.85rem', color: '#42151B', opacity: 0.85, marginBottom: '1.5rem' }}>
               Order rush breakdown across the day.
             </p>
 
@@ -182,7 +182,7 @@ export default function RestaurantAnalytics() {
 
                   return (
                     <div key={idx} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', height: '100%', justifyContent: 'flex-end' }}>
-                      <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '4px' }}>
+                      <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#123C32', marginBottom: '4px' }}>
                         {slot.order_count}
                       </span>
                       <div
@@ -190,12 +190,12 @@ export default function RestaurantAnalytics() {
                           width: '100%',
                           maxWidth: '36px',
                           height: `${heightPercent}%`,
-                          background: 'linear-gradient(to top, #059669 0%, #34d399 100%)',
+                          background: 'linear-gradient(to top, #0B2923 0%, #123C32 50%, #C6A15B 100%)',
                           borderRadius: '6px 6px 0 0',
                           transition: 'height 0.4s ease'
                         }}
                       />
-                      <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '6px' }}>
+                      <span style={{ fontSize: '0.7rem', color: '#A98242', marginTop: '6px', fontWeight: 600 }}>
                         {slot.hour_slot}
                       </span>
                     </div>
@@ -207,10 +207,10 @@ export default function RestaurantAnalytics() {
         </div>
 
         {/* 7-Day Revenue Trend */}
-        <div className="card" style={{ padding: '1.75rem', background: 'white' }}>
+        <div className="heritage-card" style={{ padding: '1.75rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '1rem' }}>
-            <BarChart3 size={20} style={{ color: '#059669' }} />
-            <h3 style={{ fontSize: '1.2rem', fontWeight: 800 }}>Daily Sales Trend (Last 7 Days)</h3>
+            <BarChart3 size={20} style={{ color: '#123C32' }} />
+            <h3 className="font-royal" style={{ fontSize: '1.3rem', fontWeight: 700, color: '#123C32' }}>Daily Sales Trend (Last 7 Days)</h3>
           </div>
 
           <div style={{ overflowX: 'auto' }}>

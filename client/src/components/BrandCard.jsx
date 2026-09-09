@@ -74,10 +74,10 @@ export default function BrandCard({ brand }) {
           width: '56px',
           height: '56px',
           borderRadius: '50%',
-          background: 'white',
+          background: '#FFFFFF',
           padding: '3px',
-          boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-          border: '2px solid #d97706',
+          boxShadow: '0 4px 14px rgba(11, 41, 35, 0.25)',
+          border: '2px solid #C6A15B',
           zIndex: 3,
           overflow: 'hidden'
         }}>
@@ -90,13 +90,14 @@ export default function BrandCard({ brand }) {
       </div>
 
       {/* Brand Information */}
-      <div style={{ padding: '1.5rem 1.4rem 1.4rem 1.4rem', flex: 1, display: 'flex', flexDirection: 'column' }}>
+      <div style={{ padding: '1.6rem 1.4rem 1.4rem 1.4rem', flex: 1, display: 'flex', flexDirection: 'column' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
           <h2 style={{
             fontSize: '1.35rem',
             fontWeight: 800,
-            color: 'var(--text-heritage-dark)',
-            letterSpacing: '-0.02em',
+            fontFamily: 'var(--font-serif)',
+            color: 'var(--text-charcoal)',
+            letterSpacing: '0.01em',
             margin: 0
           }}>
             {brand.name}
@@ -105,7 +106,7 @@ export default function BrandCard({ brand }) {
 
         <p style={{
           fontSize: '0.825rem',
-          color: 'var(--accent-brass)',
+          color: 'var(--accent-gold-muted)',
           fontWeight: 700,
           marginBottom: '0.6rem',
           textTransform: 'uppercase',
@@ -116,7 +117,7 @@ export default function BrandCard({ brand }) {
 
         <p style={{
           fontSize: '0.875rem',
-          color: 'var(--text-heritage-secondary)',
+          color: 'var(--text-secondary)',
           lineHeight: 1.5,
           marginBottom: '1rem',
           display: '-webkit-box',
@@ -131,23 +132,23 @@ export default function BrandCard({ brand }) {
         <div style={{
           marginTop: 'auto',
           padding: '0.75rem 0.9rem',
-          background: 'var(--bg-heritage-warm)',
-          borderRadius: 'var(--radius-md)',
+          background: 'var(--bg-sand-light)',
+          borderRadius: '6px',
           marginBottom: '1rem',
-          border: '1px solid #e7e5e4'
+          border: '1px solid var(--border-subtle)'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
-            <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-heritage-dark)', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-              <MapPin size={13} style={{ color: 'var(--accent-brass)' }} />
+            <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-charcoal)', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+              <MapPin size={13} style={{ color: 'var(--accent-gold)' }} />
               {brand.branch_count || (brand.branches ? brand.branches.length : 0)} Bengaluru Branches
             </span>
-            <span style={{ fontSize: '0.72rem', color: 'var(--primary)', fontWeight: 700 }}>
+            <span style={{ fontSize: '0.72rem', color: 'var(--bg-deep-green)', fontWeight: 700 }}>
               Pre-Order Available
             </span>
           </div>
           <div style={{
             fontSize: '0.78rem',
-            color: 'var(--text-heritage-secondary)',
+            color: 'var(--text-secondary)',
             whiteSpace: 'nowrap',
             overflow: 'hidden',
             textOverflow: 'ellipsis'
@@ -165,25 +166,20 @@ export default function BrandCard({ brand }) {
             e.stopPropagation();
             handleOpenBrand();
           }}
-          className="btn btn-primary"
+          className="btn btn-forest"
           style={{
             width: '100%',
             fontWeight: 700,
             fontSize: '0.88rem',
             padding: '0.65rem',
-            borderRadius: 'var(--radius-md)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            gap: '6px',
-            background: 'linear-gradient(135deg, #b45309 0%, #d97706 100%)',
-            border: 'none',
-            color: 'white',
-            boxShadow: '0 2px 6px rgba(180, 83, 9, 0.3)'
+            gap: '6px'
           }}
         >
           <span>Choose Branch & Pre-Order</span>
-          <ChevronRight size={16} />
+          <ChevronRight size={16} style={{ color: 'var(--accent-gold)' }} />
         </button>
       </div>
     </div>

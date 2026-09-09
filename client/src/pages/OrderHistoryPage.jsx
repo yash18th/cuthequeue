@@ -192,7 +192,7 @@ export default function OrderHistoryPage({
   const currentOrderList = ordersTab === 'active' ? orders.active : orders.previous;
 
   return (
-    <div style={{ padding: '2rem 0 6rem 0' }}>
+    <div className="bg-warm-canvas" style={{ padding: '2rem 0 6rem 0', minHeight: '90vh' }}>
       <div className="container">
         <PageNavHeader
           backLabel="Back to Home"
@@ -207,15 +207,15 @@ export default function OrderHistoryPage({
         <div style={{
           display: 'flex',
           justifyContent: 'center',
-          marginBottom: '2rem'
+          marginBottom: '2.5rem'
         }}>
           <div style={{
             display: 'inline-flex',
-            background: 'var(--bg-subtle)',
-            borderRadius: 'var(--radius-xl)',
+            background: '#EDE4D4',
+            borderRadius: 'var(--radius-md)',
             padding: '5px',
-            border: '1px solid var(--border-subtle)',
-            boxShadow: 'var(--shadow-sm)',
+            border: '1px solid #D9CBBA',
+            boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.05)',
             maxWidth: '480px',
             width: '100%'
           }}>
@@ -225,21 +225,23 @@ export default function OrderHistoryPage({
               style={{
                 flex: 1,
                 padding: '0.75rem 1rem',
-                borderRadius: 'var(--radius-lg)',
+                borderRadius: 'var(--radius-sm)',
                 fontSize: '0.925rem',
                 fontWeight: 700,
                 border: 'none',
-                background: mainTab === 'browse' ? 'white' : 'transparent',
-                color: mainTab === 'browse' ? 'var(--primary)' : 'var(--text-secondary)',
-                boxShadow: mainTab === 'browse' ? 'var(--shadow-sm)' : 'none',
+                background: mainTab === 'browse' ? 'var(--bg-deep-green)' : 'transparent',
+                color: mainTab === 'browse' ? '#F7F1E5' : 'var(--text-charcoal)',
+                boxShadow: mainTab === 'browse' ? '0 2px 6px rgba(18, 60, 50, 0.2)' : 'none',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 gap: '8px',
-                transition: 'all 0.15s ease'
+                fontFamily: 'var(--font-serif)',
+                transition: 'all 0.15s ease',
+                cursor: 'pointer'
               }}
             >
-              <UtensilsCrossed size={17} /> Browse Restaurants
+              <UtensilsCrossed size={17} style={{ color: mainTab === 'browse' ? '#C6A15B' : 'inherit' }} /> Browse Restaurants
             </button>
 
             <button
@@ -248,26 +250,28 @@ export default function OrderHistoryPage({
               style={{
                 flex: 1,
                 padding: '0.75rem 1rem',
-                borderRadius: 'var(--radius-lg)',
+                borderRadius: 'var(--radius-sm)',
                 fontSize: '0.925rem',
                 fontWeight: 700,
                 border: 'none',
-                background: mainTab === 'orders' ? 'white' : 'transparent',
-                color: mainTab === 'orders' ? 'var(--primary)' : 'var(--text-secondary)',
-                boxShadow: mainTab === 'orders' ? 'var(--shadow-sm)' : 'none',
+                background: mainTab === 'orders' ? 'var(--bg-deep-green)' : 'transparent',
+                color: mainTab === 'orders' ? '#F7F1E5' : 'var(--text-charcoal)',
+                boxShadow: mainTab === 'orders' ? '0 2px 6px rgba(18, 60, 50, 0.2)' : 'none',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 gap: '8px',
+                fontFamily: 'var(--font-serif)',
                 transition: 'all 0.15s ease',
+                cursor: 'pointer',
                 position: 'relative'
               }}
             >
-              <ClipboardList size={17} /> My Orders
+              <ClipboardList size={17} style={{ color: mainTab === 'orders' ? '#C6A15B' : 'inherit' }} /> My Orders
               {orders.active.length > 0 && (
                 <span style={{
-                  background: 'var(--primary)',
-                  color: 'white',
+                  background: 'var(--accent-gold)',
+                  color: '#0B2923',
                   borderRadius: '9999px',
                   padding: '2px 7px',
                   fontSize: '0.75rem',
@@ -623,9 +627,10 @@ export default function OrderHistoryPage({
             {/* Sub-tab Switcher: Active Orders vs Past Orders */}
             <div style={{
               display: 'flex',
-              background: 'var(--bg-subtle)',
-              borderRadius: 'var(--radius-lg)',
+              background: '#EDE4D4',
+              borderRadius: 'var(--radius-md)',
               padding: '4px',
+              border: '1px solid #D9CBBA',
               marginBottom: '2rem',
               maxWidth: '380px'
             }}>
@@ -634,15 +639,17 @@ export default function OrderHistoryPage({
                 onClick={() => setOrdersTab('active')}
                 style={{
                   flex: 1,
-                  padding: '0.65rem',
-                  borderRadius: 'var(--radius-md)',
+                  padding: '0.6rem',
+                  borderRadius: 'var(--radius-sm)',
                   fontSize: '0.875rem',
                   fontWeight: 700,
                   border: 'none',
-                  background: ordersTab === 'active' ? 'white' : 'transparent',
-                  color: ordersTab === 'active' ? 'var(--text-primary)' : 'var(--text-muted)',
-                  boxShadow: ordersTab === 'active' ? 'var(--shadow-sm)' : 'none',
-                  transition: 'all 0.15s ease'
+                  background: ordersTab === 'active' ? 'var(--bg-deep-green)' : 'transparent',
+                  color: ordersTab === 'active' ? '#F7F1E5' : 'var(--text-charcoal)',
+                  boxShadow: ordersTab === 'active' ? '0 2px 6px rgba(18, 60, 50, 0.2)' : 'none',
+                  fontFamily: 'var(--font-serif)',
+                  transition: 'all 0.15s ease',
+                  cursor: 'pointer'
                 }}
               >
                 Active Orders ({orders.active.length})
@@ -652,15 +659,17 @@ export default function OrderHistoryPage({
                 onClick={() => setOrdersTab('previous')}
                 style={{
                   flex: 1,
-                  padding: '0.65rem',
-                  borderRadius: 'var(--radius-md)',
+                  padding: '0.6rem',
+                  borderRadius: 'var(--radius-sm)',
                   fontSize: '0.875rem',
                   fontWeight: 700,
                   border: 'none',
-                  background: ordersTab === 'previous' ? 'white' : 'transparent',
-                  color: ordersTab === 'previous' ? 'var(--text-primary)' : 'var(--text-muted)',
-                  boxShadow: ordersTab === 'previous' ? 'var(--shadow-sm)' : 'none',
-                  transition: 'all 0.15s ease'
+                  background: ordersTab === 'previous' ? 'var(--bg-deep-green)' : 'transparent',
+                  color: ordersTab === 'previous' ? '#F7F1E5' : 'var(--text-charcoal)',
+                  boxShadow: ordersTab === 'previous' ? '0 2px 6px rgba(18, 60, 50, 0.2)' : 'none',
+                  fontFamily: 'var(--font-serif)',
+                  transition: 'all 0.15s ease',
+                  cursor: 'pointer'
                 }}
               >
                 Past Orders ({orders.previous.length})
@@ -669,35 +678,36 @@ export default function OrderHistoryPage({
 
             {loadingOrders ? (
               <div style={{ textAlign: 'center', padding: '3rem 0', color: 'var(--text-muted)' }}>
-                <RefreshCw size={20} className="spin" style={{ marginBottom: '0.5rem' }} />
-                <div>Loading orders...</div>
+                <RefreshCw size={20} className="spin" style={{ marginBottom: '0.5rem', color: 'var(--accent-gold)' }} />
+                <div style={{ fontFamily: 'var(--font-serif)' }}>Loading orders...</div>
               </div>
             ) : currentOrderList.length === 0 ? (
-              <div className="card" style={{ padding: '3.5rem 1rem', textAlign: 'center', background: 'white' }}>
+              <div className="heritage-card" style={{ padding: '3.5rem 1rem', textAlign: 'center', background: 'white', borderRadius: 'var(--radius-lg)', border: '1px solid #E8DDC8' }}>
                 <div style={{
                   width: '56px',
                   height: '56px',
                   borderRadius: '50%',
-                  background: 'var(--bg-subtle)',
+                  background: '#F7F1E5',
+                  border: '1px solid #E8DDC8',
                   display: 'inline-flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  color: 'var(--text-muted)',
+                  color: 'var(--accent-gold)',
                   marginBottom: '1rem'
                 }}>
                   <ShoppingBag size={24} />
                 </div>
-                <h3 style={{ fontSize: '1.2rem', fontWeight: 700, marginBottom: '0.5rem' }}>
+                <h3 style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: '0.5rem', fontFamily: 'var(--font-serif)', color: 'var(--text-charcoal)' }}>
                   No {ordersTab === 'active' ? 'active' : 'past'} orders
                 </h3>
                 <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '1.5rem' }}>
                   {ordersTab === 'active'
-                    ? 'You have no pickup orders currently preparing in kitchen queues.'
+                    ? 'You have no pickup orders currently preparing in Bengaluru kitchen queues.'
                     : 'You haven’t completed any pickup orders yet.'}
                 </p>
                 <button
                   type="button"
-                  className="btn btn-primary"
+                  className="btn btn-forest"
                   onClick={() => setMainTab('browse')}
                 >
                   Order Ahead Now
@@ -714,12 +724,14 @@ export default function OrderHistoryPage({
                   return (
                     <div
                       key={order.id}
-                      className="card card-hover"
+                      className="heritage-card card-hover"
                       style={{
                         padding: '1.5rem',
                         background: 'white',
                         cursor: 'pointer',
-                        border: '1px solid var(--border-subtle)'
+                        borderRadius: 'var(--radius-lg)',
+                        border: '1px solid #E8DDC8',
+                        boxShadow: 'var(--shadow-sm)'
                       }}
                       onClick={() => {
                         setTrackedOrderId?.(order.id);
@@ -737,11 +749,11 @@ export default function OrderHistoryPage({
                       }}>
                         <div>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                            <span style={{ fontSize: '1.05rem', fontWeight: 800, color: 'var(--primary)' }}>
+                            <span style={{ fontSize: '1.05rem', fontWeight: 800, color: 'var(--bg-deep-green)', fontFamily: 'var(--font-serif)' }}>
                               Order #{order.order_number}
                             </span>
-                            <span style={{ color: 'var(--border)' }}>•</span>
-                            <h3 style={{ fontSize: '1.05rem', fontWeight: 700, margin: 0 }}>
+                            <span style={{ color: 'var(--accent-gold)' }}>•</span>
+                            <h3 style={{ fontSize: '1.05rem', fontWeight: 800, margin: 0, fontFamily: 'var(--font-serif)', color: 'var(--text-charcoal)' }}>
                               {order.restaurant_name}
                             </h3>
                           </div>

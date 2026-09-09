@@ -132,10 +132,10 @@ export default function CustomerHome({ setActivePage, setSelectedRestaurantId })
   const hasActiveFilters = Boolean(search.trim() || selectedArea !== 'All' || selectedBrandFilter !== 'All' || openOnly);
 
   return (
-    <div style={{ background: 'var(--bg-heritage)', minHeight: '90vh', padding: '2.5rem 0 6rem 0' }}>
+    <div className="bg-warm-canvas" style={{ minHeight: '90vh', padding: '3rem 0 6rem 0' }}>
       <div className="container">
         {/* ========================================================= */}
-        {/* HERO SECTION WITH HERITAGE & MODERN LUXURY AESTHETICS   */}
+        {/* HERO SECTION WITH ROYAL SOUTH INDIAN AESTHETICS          */}
         {/* ========================================================= */}
         <div style={{
           textAlign: 'center',
@@ -148,39 +148,45 @@ export default function CustomerHome({ setActivePage, setSelectedRestaurantId })
             alignItems: 'center',
             gap: '8px',
             padding: '0.4rem 1rem',
-            background: 'var(--accent-gold-light)',
-            border: '1px solid var(--accent-gold-border)',
-            borderRadius: '9999px',
-            fontSize: '0.825rem',
-            fontWeight: 700,
-            color: 'var(--accent-brass)',
+            background: '#FEF6EC',
+            border: '1px solid #E8DDC8',
+            borderRadius: '4px',
+            fontSize: '0.78rem',
+            fontWeight: 800,
+            letterSpacing: '0.08em',
+            textTransform: 'uppercase',
+            color: 'var(--accent-gold-muted)',
+            fontFamily: 'var(--font-serif)',
             marginBottom: '1rem'
           }}>
-            <Award size={15} />
+            <Award size={15} style={{ color: 'var(--accent-gold)' }} />
             <span>Bengaluru's Authentic Culinary Institutions • Zero Waiting</span>
           </div>
 
-          <h1 className="heritage-heading" style={{
-            fontSize: 'clamp(2rem, 4.5vw, 3.2rem)',
+          <h1 style={{
+            fontSize: 'clamp(2.2rem, 5vw, 3.4rem)',
             lineHeight: 1.15,
             marginBottom: '0.75rem',
-            color: 'var(--text-heritage-dark)'
+            fontFamily: 'var(--font-serif)',
+            color: 'var(--text-charcoal)',
+            letterSpacing: '-0.01em',
+            fontWeight: 800
           }}>
             Discover Bengaluru's Favourite Restaurants
           </h1>
 
           <p style={{
             fontSize: '1.15rem',
-            color: 'var(--text-heritage-secondary)',
+            color: 'var(--text-secondary)',
             lineHeight: 1.6,
-            maxWidth: '620px',
+            maxWidth: '640px',
             margin: '0 auto'
           }}>
-            Choose a restaurant near you, pre-order your meal, and skip the queue.
+            Pre-order ahead from legendary dining institutions across the city. Arrive to a table that's already waiting and collect hot with zero queue wait.
           </p>
 
           <div className="heritage-ornament">
-            <span style={{ color: 'var(--accent-brass)', fontSize: '0.8rem' }}>✦ ✦ ✦</span>
+            <span style={{ color: 'var(--accent-gold)', fontSize: '0.85rem' }}>✦ ✦ ✦</span>
           </div>
         </div>
 
@@ -246,7 +252,7 @@ export default function CustomerHome({ setActivePage, setSelectedRestaurantId })
             {/* Geolocation Button */}
             <button
               type="button"
-              className={`btn btn-sm ${locationStatus === 'granted' ? 'btn-primary' : 'btn-secondary'}`}
+              className={`btn btn-sm ${locationStatus === 'granted' ? 'btn-gold' : 'btn-forest'}`}
               onClick={handleRequestLocation}
               disabled={locationStatus === 'requesting'}
               title="Locate nearest branches"
@@ -255,7 +261,7 @@ export default function CustomerHome({ setActivePage, setSelectedRestaurantId })
                 alignItems: 'center',
                 gap: '6px',
                 height: '44px',
-                padding: '0 1rem',
+                padding: '0 1.25rem',
                 borderRadius: 'var(--radius-md)',
                 fontWeight: 700
               }}
@@ -265,7 +271,7 @@ export default function CustomerHome({ setActivePage, setSelectedRestaurantId })
                 style={{
                   transform: locationStatus === 'requesting' ? 'rotate(45deg)' : 'none',
                   transition: 'transform 0.3s ease',
-                  color: locationStatus === 'granted' ? 'white' : 'var(--accent-brass)'
+                  color: locationStatus === 'granted' ? '#0B2923' : '#C6A15B'
                 }}
               />
               <span>
@@ -282,11 +288,12 @@ export default function CustomerHome({ setActivePage, setSelectedRestaurantId })
           {locationMessage && (
             <div style={{
               fontSize: '0.825rem',
-              color: 'var(--accent-brass)',
+              color: 'var(--bg-deep-green)',
               marginBottom: '0.85rem',
               padding: '0.4rem 0.85rem',
               borderRadius: 'var(--radius-sm)',
-              background: 'var(--accent-gold-light)',
+              background: '#F0E6D2',
+              border: '1px solid #E8DDC8',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between'
@@ -295,7 +302,7 @@ export default function CustomerHome({ setActivePage, setSelectedRestaurantId })
               <button
                 type="button"
                 onClick={() => setLocationMessage('')}
-                style={{ color: 'inherit', padding: '2px' }}
+                style={{ color: 'inherit', padding: '2px', background: 'transparent', border: 'none', cursor: 'pointer' }}
               >
                 <X size={14} />
               </button>
@@ -309,33 +316,38 @@ export default function CustomerHome({ setActivePage, setSelectedRestaurantId })
             alignItems: 'center',
             flexWrap: 'wrap',
             gap: '0.75rem',
-            paddingTop: '0.5rem',
-            borderTop: '1px solid #f5f0e8'
+            paddingTop: '0.75rem',
+            borderTop: '1px solid #E8DDC8'
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
-              <span style={{ fontSize: '0.78rem', fontWeight: 800, color: 'var(--text-heritage-muted)', textTransform: 'uppercase', marginRight: '4px' }}>
+              <span style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginRight: '4px', fontFamily: 'var(--font-serif)' }}>
                 Area:
               </span>
-              {areas.map((area) => (
-                <button
-                  key={area}
-                  type="button"
-                  onClick={() => setSelectedArea(area)}
-                  style={{
-                    padding: '0.35rem 0.85rem',
-                    borderRadius: 'var(--radius-full)',
-                    fontSize: '0.78rem',
-                    fontWeight: 700,
-                    border: '1px solid',
-                    borderColor: selectedArea === area ? 'var(--accent-brass)' : 'var(--border-heritage)',
-                    background: selectedArea === area ? 'var(--accent-brass)' : 'white',
-                    color: selectedArea === area ? 'white' : 'var(--text-heritage-secondary)',
-                    transition: 'all 0.15s ease'
-                  }}
-                >
-                  {area}
-                </button>
-              ))}
+              {areas.map((area) => {
+                const isSelected = selectedArea === area;
+                return (
+                  <button
+                    key={area}
+                    type="button"
+                    onClick={() => setSelectedArea(area)}
+                    style={{
+                      padding: '0.35rem 0.85rem',
+                      borderRadius: 'var(--radius-md)',
+                      fontSize: '0.78rem',
+                      fontWeight: 700,
+                      border: '1px solid',
+                      borderColor: isSelected ? 'var(--accent-gold)' : '#E8DDC8',
+                      background: isSelected ? 'var(--bg-deep-green)' : 'white',
+                      color: isSelected ? '#F7F1E5' : 'var(--text-charcoal)',
+                      boxShadow: isSelected ? '0 2px 8px rgba(18, 60, 50, 0.25)' : 'none',
+                      transition: 'all 0.15s ease',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    {area}
+                  </button>
+                );
+              })}
             </div>
 
             {/* Open Now Only Toggle */}
@@ -346,7 +358,7 @@ export default function CustomerHome({ setActivePage, setSelectedRestaurantId })
               cursor: 'pointer',
               fontSize: '0.825rem',
               fontWeight: 700,
-              color: 'var(--text-heritage-dark)',
+              color: 'var(--text-charcoal)',
               userSelect: 'none'
             }}>
               <input
@@ -356,11 +368,11 @@ export default function CustomerHome({ setActivePage, setSelectedRestaurantId })
                 style={{
                   width: '16px',
                   height: '16px',
-                  accentColor: '#b45309',
+                  accentColor: 'var(--bg-deep-green)',
                   cursor: 'pointer'
                 }}
               />
-              <span>Open Now Only</span>
+              <span>Open Kitchens Only</span>
             </label>
           </div>
         </div>
@@ -379,24 +391,27 @@ export default function CustomerHome({ setActivePage, setSelectedRestaurantId })
           {/* Tabs */}
           <div style={{
             display: 'inline-flex',
-            background: 'white',
+            background: '#EDE4D4',
             padding: '4px',
-            borderRadius: 'var(--radius-full)',
-            border: '1px solid var(--border-heritage)',
-            boxShadow: 'var(--shadow-sm)'
+            borderRadius: 'var(--radius-md)',
+            border: '1px solid #D9CBBA',
+            boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.05)'
           }}>
             <button
               type="button"
               onClick={() => setActiveTab('brands')}
               style={{
-                padding: '0.5rem 1.25rem',
-                borderRadius: 'var(--radius-full)',
+                padding: '0.55rem 1.4rem',
+                borderRadius: 'var(--radius-sm)',
                 fontSize: '0.875rem',
                 fontWeight: 700,
                 border: 'none',
-                background: activeTab === 'brands' ? 'var(--accent-brass)' : 'transparent',
-                color: activeTab === 'brands' ? 'white' : 'var(--text-heritage-secondary)',
-                transition: 'all 0.15s ease'
+                background: activeTab === 'brands' ? 'var(--bg-deep-green)' : 'transparent',
+                color: activeTab === 'brands' ? '#F7F1E5' : 'var(--text-charcoal)',
+                boxShadow: activeTab === 'brands' ? '0 2px 6px rgba(18, 60, 50, 0.2)' : 'none',
+                fontFamily: 'var(--font-serif)',
+                transition: 'all 0.15s ease',
+                cursor: 'pointer'
               }}
             >
               Iconic Restaurant Brands ({brands.length})
@@ -405,14 +420,17 @@ export default function CustomerHome({ setActivePage, setSelectedRestaurantId })
               type="button"
               onClick={() => setActiveTab('branches')}
               style={{
-                padding: '0.5rem 1.25rem',
-                borderRadius: 'var(--radius-full)',
+                padding: '0.55rem 1.4rem',
+                borderRadius: 'var(--radius-sm)',
                 fontSize: '0.875rem',
                 fontWeight: 700,
                 border: 'none',
-                background: activeTab === 'branches' ? 'var(--accent-brass)' : 'transparent',
-                color: activeTab === 'branches' ? 'white' : 'var(--text-heritage-secondary)',
-                transition: 'all 0.15s ease'
+                background: activeTab === 'branches' ? 'var(--bg-deep-green)' : 'transparent',
+                color: activeTab === 'branches' ? '#F7F1E5' : 'var(--text-charcoal)',
+                boxShadow: activeTab === 'branches' ? '0 2px 6px rgba(18, 60, 50, 0.2)' : 'none',
+                fontFamily: 'var(--font-serif)',
+                transition: 'all 0.15s ease',
+                cursor: 'pointer'
               }}
             >
               All Bengaluru Branches ({restaurants.length})
@@ -427,7 +445,7 @@ export default function CustomerHome({ setActivePage, setSelectedRestaurantId })
               style={{
                 fontSize: '0.8rem',
                 fontWeight: 700,
-                color: 'var(--accent-terracotta)',
+                color: 'var(--accent-maroon)',
                 background: 'none',
                 border: 'none',
                 display: 'inline-flex',
@@ -454,7 +472,7 @@ export default function CustomerHome({ setActivePage, setSelectedRestaurantId })
               <div
                 key={idx}
                 className="heritage-card"
-                style={{ height: '380px', background: '#f5f0e8', position: 'relative' }}
+                style={{ height: '380px', background: '#E8DDC8', position: 'relative' }}
               />
             ))}
           </div>
@@ -463,21 +481,22 @@ export default function CustomerHome({ setActivePage, setSelectedRestaurantId })
         {error && !loading && (
           <div style={{
             background: 'white',
-            borderRadius: 'var(--radius-xl)',
+            borderRadius: 'var(--radius-lg)',
             padding: '3rem 2rem',
             textAlign: 'center',
-            border: '1px solid var(--border-heritage)',
+            border: '1px solid #E8DDC8',
             maxWidth: '500px',
-            margin: '2rem auto'
+            margin: '2rem auto',
+            boxShadow: 'var(--shadow-heritage)'
           }}>
-            <AlertCircle size={44} style={{ color: 'var(--accent-terracotta)', margin: '0 auto 1rem auto' }} />
-            <h3 style={{ fontSize: '1.3rem', fontWeight: 800, marginBottom: '0.5rem' }}>
+            <AlertCircle size={44} style={{ color: 'var(--accent-maroon)', margin: '0 auto 1rem auto' }} />
+            <h3 style={{ fontSize: '1.3rem', fontWeight: 800, marginBottom: '0.5rem', fontFamily: 'var(--font-serif)', color: 'var(--text-charcoal)' }}>
               Unable to load Bengaluru restaurants
             </h3>
-            <p style={{ color: 'var(--text-heritage-secondary)', fontSize: '0.9rem', marginBottom: '1.5rem' }}>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '1.5rem' }}>
               {error}
             </p>
-            <button type="button" className="btn btn-primary" onClick={loadDiscoveryData}>
+            <button type="button" className="btn btn-forest" onClick={loadDiscoveryData}>
               <RefreshCw size={15} /> Try Again
             </button>
           </div>
@@ -503,8 +522,9 @@ export default function CustomerHome({ setActivePage, setSelectedRestaurantId })
               marginTop: '3.5rem',
               padding: '1.75rem 2rem',
               background: 'white',
-              borderRadius: 'var(--radius-xl)',
-              border: '1px solid var(--border-heritage)',
+              borderRadius: 'var(--radius-lg)',
+              border: '1px solid #E8DDC8',
+              boxShadow: 'var(--shadow-sm)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
@@ -512,18 +532,18 @@ export default function CustomerHome({ setActivePage, setSelectedRestaurantId })
               gap: '1.25rem'
             }}>
               <div>
-                <h4 style={{ fontSize: '1.05rem', fontWeight: 800, color: 'var(--text-heritage-dark)', margin: 0 }}>
+                <h4 style={{ fontSize: '1.05rem', fontWeight: 800, color: 'var(--text-charcoal)', margin: 0, fontFamily: 'var(--font-serif)' }}>
                   Looking for a specific branch near you?
                 </h4>
-                <p style={{ fontSize: '0.85rem', color: 'var(--text-heritage-secondary)', margin: '2px 0 0 0' }}>
+                <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: '4px 0 0 0' }}>
                   Browse all 14 individual branches across Indiranagar, Koramangala, Church St, Jayanagar & Whitefield.
                 </p>
               </div>
               <button
                 type="button"
                 onClick={() => setActiveTab('branches')}
-                className="btn btn-sm btn-secondary"
-                style={{ fontWeight: 700, padding: '0.6rem 1.2rem', borderColor: 'var(--accent-brass)', color: 'var(--accent-brass)' }}
+                className="btn btn-sm btn-forest"
+                style={{ fontWeight: 700, padding: '0.65rem 1.4rem' }}
               >
                 View All Bengaluru Branches
               </button>
@@ -539,25 +559,24 @@ export default function CustomerHome({ setActivePage, setSelectedRestaurantId })
             {restaurants.length === 0 ? (
               <div style={{
                 background: 'white',
-                borderRadius: 'var(--radius-xl)',
+                borderRadius: 'var(--radius-lg)',
                 padding: '4rem 2rem',
                 textAlign: 'center',
-                border: '1px solid var(--border-heritage)',
+                border: '1px solid #E8DDC8',
                 maxWidth: '560px',
                 margin: '2rem auto'
               }}>
-                <Utensils size={40} style={{ color: 'var(--text-muted)', margin: '0 auto 1rem auto' }} />
-                <h3 style={{ fontSize: '1.3rem', fontWeight: 800, marginBottom: '0.5rem', color: 'var(--text-heritage-dark)' }}>
+                <Utensils size={40} style={{ color: 'var(--accent-gold)', margin: '0 auto 1rem auto' }} />
+                <h3 style={{ fontSize: '1.3rem', fontWeight: 800, marginBottom: '0.5rem', color: 'var(--text-charcoal)', fontFamily: 'var(--font-serif)' }}>
                   No branches found matching "{search || selectedArea}"
                 </h3>
-                <p style={{ color: 'var(--text-heritage-secondary)', fontSize: '0.9rem', marginBottom: '1.5rem' }}>
+                <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '1.5rem' }}>
                   Try searching another Bengaluru locality or clear your active filters.
                 </p>
                 <button
                   type="button"
-                  className="btn btn-primary"
+                  className="btn btn-forest"
                   onClick={handleClearFilters}
-                  style={{ background: 'var(--accent-brass)', border: 'none' }}
                 >
                   Clear Search & Filters
                 </button>

@@ -133,7 +133,7 @@ export default function BrandDetailPage({ setActivePage, setSelectedRestaurantId
   };
 
   return (
-    <div style={{ background: 'var(--bg-heritage)', minHeight: '85vh', padding: '2rem 0 6rem 0' }}>
+    <div className="bg-warm-canvas" style={{ minHeight: '85vh', padding: '2rem 0 6rem 0' }}>
       <div className="container" style={{ maxWidth: '1080px' }}>
         {/* Navigation Breadcrumb & Back */}
         <PageNavHeader
@@ -149,35 +149,35 @@ export default function BrandDetailPage({ setActivePage, setSelectedRestaurantId
         {/* Brand Banner with Heritage Styling */}
         <div style={{
           position: 'relative',
-          borderRadius: 'var(--radius-xl)',
+          borderRadius: 'var(--radius-lg)',
           overflow: 'hidden',
-          background: 'linear-gradient(135deg, #1c1917 0%, #292524 100%)',
-          color: 'white',
+          background: 'linear-gradient(135deg, #0B2923 0%, #123C32 100%)',
+          color: '#F7F1E5',
           marginBottom: '2.5rem',
-          boxShadow: 'var(--shadow-xl)',
-          border: '1px solid rgba(217, 119, 6, 0.25)'
+          boxShadow: 'var(--shadow-heritage)',
+          border: '1px solid #C6A15B'
         }}>
           {/* Subtle background image overlay */}
           <div style={{
             position: 'absolute',
             inset: 0,
-            opacity: 0.25,
+            opacity: 0.22,
             backgroundImage: `url(${brand.cover_image})`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
-            filter: 'blur(2px)'
+            filter: 'blur(1px)'
           }} />
 
           <div style={{ position: 'relative', zIndex: 2, padding: '2.5rem 2rem' }}>
             <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'flex-start', flexWrap: 'wrap' }}>
               <div style={{
-                width: '80px',
-                height: '80px',
+                width: '84px',
+                height: '84px',
                 borderRadius: '50%',
-                background: 'white',
+                background: '#F7F1E5',
                 padding: '4px',
-                border: '2px solid #d97706',
-                boxShadow: '0 4px 14px rgba(0,0,0,0.3)',
+                border: '2px solid #C6A15B',
+                boxShadow: '0 4px 14px rgba(0,0,0,0.4)',
                 flexShrink: 0,
                 overflow: 'hidden'
               }}>
@@ -190,8 +190,22 @@ export default function BrandDetailPage({ setActivePage, setSelectedRestaurantId
 
               <div style={{ flex: 1, minWidth: '280px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', marginBottom: '6px' }}>
-                  <span className="heritage-badge badge-gold">
-                    <Award size={13} style={{ color: 'var(--accent-brass)' }} />
+                  <span style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '5px',
+                    padding: '0.25rem 0.75rem',
+                    background: 'rgba(198, 161, 91, 0.15)',
+                    border: '1px solid #C6A15B',
+                    borderRadius: '4px',
+                    fontSize: '0.75rem',
+                    fontWeight: 800,
+                    letterSpacing: '0.06em',
+                    textTransform: 'uppercase',
+                    color: '#C6A15B',
+                    fontFamily: 'var(--font-serif)'
+                  }}>
+                    <Award size={13} style={{ color: '#C6A15B' }} />
                     Bengaluru Landmark {brand.heritage_since ? `• Est. ${brand.heritage_since}` : ''}
                   </span>
                   <span style={{
@@ -200,37 +214,39 @@ export default function BrandDetailPage({ setActivePage, setSelectedRestaurantId
                     gap: '4px',
                     fontSize: '0.85rem',
                     fontWeight: 800,
-                    color: '#fbbf24'
+                    color: '#C6A15B'
                   }}>
-                    <Star size={14} fill="#fbbf24" strokeWidth={0} />
+                    <Star size={14} fill="#C6A15B" strokeWidth={0} />
                     {brand.rating ? Number(brand.rating).toFixed(1) : '4.8'}
                   </span>
                 </div>
 
                 <h1 style={{
-                  fontSize: 'clamp(1.8rem, 4vw, 2.5rem)',
+                  fontSize: 'clamp(1.8rem, 4vw, 2.6rem)',
                   fontWeight: 800,
-                  letterSpacing: '-0.02em',
+                  letterSpacing: '-0.01em',
                   margin: '0.2rem 0 0.5rem 0',
-                  color: 'white'
+                  color: '#F7F1E5',
+                  fontFamily: 'var(--font-serif)'
                 }}>
                   {brand.name}
                 </h1>
 
                 <p style={{
                   fontSize: '0.925rem',
-                  color: '#fbbf24',
+                  color: '#C6A15B',
                   fontWeight: 700,
                   textTransform: 'uppercase',
-                  letterSpacing: '0.04em',
-                  marginBottom: '0.75rem'
+                  letterSpacing: '0.06em',
+                  marginBottom: '0.75rem',
+                  fontFamily: 'var(--font-serif)'
                 }}>
                   {brand.cuisine}
                 </p>
 
                 <p style={{
                   fontSize: '0.95rem',
-                  color: '#e7e5e4',
+                  color: '#E8DDC8',
                   lineHeight: 1.6,
                   maxWidth: '750px',
                   margin: 0
@@ -246,10 +262,10 @@ export default function BrandDetailPage({ setActivePage, setSelectedRestaurantId
         <div style={{ marginBottom: '1.5rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '1rem', marginBottom: '1.25rem' }}>
             <div>
-              <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-heritage-dark)', letterSpacing: '-0.02em', margin: 0 }}>
+              <h2 style={{ fontSize: '1.6rem', fontWeight: 800, color: 'var(--text-charcoal)', letterSpacing: '-0.01em', margin: 0, fontFamily: 'var(--font-serif)' }}>
                 Choose a Bengaluru Branch
               </h2>
-              <p style={{ fontSize: '0.9rem', color: 'var(--text-heritage-secondary)', marginTop: '4px' }}>
+              <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginTop: '4px' }}>
                 Select your nearest location to view the menu, track real-time queue, and place your pre-order.
               </p>
             </div>
@@ -265,8 +281,8 @@ export default function BrandDetailPage({ setActivePage, setSelectedRestaurantId
                 style={{
                   width: '100%',
                   padding: '0.55rem 1rem 0.55rem 2.4rem',
-                  borderRadius: 'var(--radius-full)',
-                  border: '1px solid var(--border-heritage)',
+                  borderRadius: 'var(--radius-md)',
+                  border: '1px solid #E8DDC8',
                   background: 'white',
                   fontSize: '0.875rem'
                 }}
@@ -277,24 +293,30 @@ export default function BrandDetailPage({ setActivePage, setSelectedRestaurantId
           {/* Area quick filter chips */}
           {allAreas.length > 2 && (
             <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '1.5rem' }}>
-              {allAreas.map((area) => (
-                <button
-                  key={area}
-                  type="button"
-                  onClick={() => setSelectedArea(area)}
-                  className={`btn btn-sm ${selectedArea === area ? 'btn-primary' : 'btn-secondary'}`}
-                  style={{
-                    borderRadius: 'var(--radius-full)',
-                    fontSize: '0.8rem',
-                    padding: '0.35rem 0.85rem',
-                    background: selectedArea === area ? '#b45309' : 'white',
-                    borderColor: selectedArea === area ? '#b45309' : 'var(--border-heritage)',
-                    color: selectedArea === area ? 'white' : 'var(--text-heritage-dark)'
-                  }}
-                >
-                  {area}
-                </button>
-              ))}
+              {allAreas.map((area) => {
+                const isSelected = selectedArea === area;
+                return (
+                  <button
+                    key={area}
+                    type="button"
+                    onClick={() => setSelectedArea(area)}
+                    style={{
+                      borderRadius: 'var(--radius-md)',
+                      fontSize: '0.8rem',
+                      fontWeight: 700,
+                      padding: '0.35rem 0.85rem',
+                      background: isSelected ? 'var(--bg-deep-green)' : 'white',
+                      border: '1px solid',
+                      borderColor: isSelected ? 'var(--accent-gold)' : '#E8DDC8',
+                      color: isSelected ? '#F7F1E5' : 'var(--text-charcoal)',
+                      cursor: 'pointer',
+                      transition: 'all 0.15s ease'
+                    }}
+                  >
+                    {area}
+                  </button>
+                );
+              })}
             </div>
           )}
 
@@ -305,15 +327,15 @@ export default function BrandDetailPage({ setActivePage, setSelectedRestaurantId
               padding: '3rem',
               borderRadius: 'var(--radius-lg)',
               textAlign: 'center',
-              border: '1px solid var(--border-heritage)'
+              border: '1px solid #E8DDC8'
             }}>
-              <p style={{ color: 'var(--text-heritage-secondary)', marginBottom: '1rem' }}>
+              <p style={{ color: 'var(--text-secondary)', marginBottom: '1rem' }}>
                 No branches match your search in "{searchBranch}".
               </p>
               <button
                 type="button"
                 onClick={() => { setSearchBranch(''); setSelectedArea('All'); }}
-                className="btn btn-sm btn-secondary"
+                className="btn btn-sm btn-forest"
               >
                 Clear Search
               </button>
@@ -338,7 +360,10 @@ export default function BrandDetailPage({ setActivePage, setSelectedRestaurantId
                       display: 'flex',
                       flexDirection: 'column',
                       cursor: 'pointer',
-                      border: '1.5px solid var(--border-heritage)'
+                      border: '1px solid #E8DDC8',
+                      background: 'white',
+                      borderRadius: 'var(--radius-lg)',
+                      boxShadow: 'var(--shadow-sm)'
                     }}
                     onClick={() => handleSelectBranch(branch)}
                     role="button"
@@ -352,10 +377,10 @@ export default function BrandDetailPage({ setActivePage, setSelectedRestaurantId
                   >
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.75rem' }}>
                       <div>
-                        <span style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--accent-brass)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                        <span style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--accent-gold-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: 'var(--font-serif)' }}>
                           {branch.area || 'Bengaluru'}
                         </span>
-                        <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--text-heritage-dark)', margin: '2px 0 0 0' }}>
+                        <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-charcoal)', margin: '2px 0 0 0', fontFamily: 'var(--font-serif)' }}>
                           {branch.branch_name}
                         </h3>
                       </div>
@@ -366,14 +391,14 @@ export default function BrandDetailPage({ setActivePage, setSelectedRestaurantId
 
                     <p style={{
                       fontSize: '0.825rem',
-                      color: 'var(--text-heritage-secondary)',
+                      color: 'var(--text-secondary)',
                       lineHeight: 1.5,
                       marginBottom: '1rem',
                       display: 'flex',
                       alignItems: 'flex-start',
                       gap: '5px'
                     }}>
-                      <MapPin size={14} style={{ color: 'var(--accent-brass)', flexShrink: 0, marginTop: '2px' }} />
+                      <MapPin size={14} style={{ color: 'var(--accent-gold)', flexShrink: 0, marginTop: '2px' }} />
                       <span>{branch.address}</span>
                     </p>
 
@@ -381,8 +406,9 @@ export default function BrandDetailPage({ setActivePage, setSelectedRestaurantId
                     <div style={{
                       marginTop: 'auto',
                       padding: '0.75rem',
-                      background: 'var(--bg-heritage-warm)',
+                      background: '#F7F1E5',
                       borderRadius: 'var(--radius-md)',
+                      border: '1px solid #E8DDC8',
                       marginBottom: '1.25rem',
                       display: 'flex',
                       alignItems: 'center',
@@ -393,8 +419,8 @@ export default function BrandDetailPage({ setActivePage, setSelectedRestaurantId
                       <div>
                         {renderQueueBadge(branch.queue_status, branch.queue_count)}
                       </div>
-                      <div style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-heritage-dark)', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                        <Clock size={13} style={{ color: 'var(--accent-brass)' }} />
+                      <div style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-charcoal)', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                        <Clock size={13} style={{ color: 'var(--accent-gold)' }} />
                         Ready in ~{branch.prep_time_minutes || 15}m
                       </div>
                     </div>
@@ -402,7 +428,7 @@ export default function BrandDetailPage({ setActivePage, setSelectedRestaurantId
                     {/* CTA */}
                     <button
                       type="button"
-                      className="btn btn-primary"
+                      className="btn btn-forest"
                       onClick={(e) => {
                         e.stopPropagation();
                         handleSelectBranch(branch);
@@ -411,19 +437,15 @@ export default function BrandDetailPage({ setActivePage, setSelectedRestaurantId
                         width: '100%',
                         fontWeight: 700,
                         fontSize: '0.88rem',
-                        padding: '0.65rem',
-                        borderRadius: 'var(--radius-md)',
+                        padding: '0.7rem',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        gap: '6px',
-                        background: 'linear-gradient(135deg, #b45309 0%, #d97706 100%)',
-                        border: 'none',
-                        color: 'white'
+                        gap: '6px'
                       }}
                     >
                       <span>View Menu & Pre-Order</span>
-                      <ChevronRight size={16} />
+                      <ChevronRight size={16} style={{ color: '#C6A15B' }} />
                     </button>
                   </div>
                 );
