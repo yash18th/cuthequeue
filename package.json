@@ -1,0 +1,29 @@
+{
+  "name": "cut-the-queue",
+  "version": "1.0.0",
+  "description": "Cut the Queue - Restaurant Pre-Ordering & Queue-Management Platform",
+  "main": "server/index.js",
+  "scripts": {
+    "server": "node server/index.js",
+    "seed": "node server/db/seed.js",
+    "client": "npm run dev --prefix client",
+    "dev": "node -e \"const { spawn } = require('child_process'); spawn('npm', ['run', 'server'], { stdio: 'inherit', shell: true }); spawn('npm', ['run', 'client'], { stdio: 'inherit', shell: true });\""
+  },
+  "keywords": [
+    "restaurant",
+    "pre-ordering",
+    "queue-management",
+    "realtime"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "better-sqlite3": "^13.0.3",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3",
+    "socket.io": "^4.8.3"
+  }
+}

@@ -1,0 +1,14 @@
+node_modules/
+client/node_modules/
+.env
+.env.local
+.env.production
+client/.env
+client/.env.local
+client/.env.production
+dist/
+client/dist/
+build/
+.vercel/
+.DS_Store
+*.log
