@@ -117,6 +117,17 @@ export default function RestaurantDashboard({ setActivePage }) {
   const readyCount = orders.filter((o) => o.status === 'ready').length;
   const completedCount = orders.filter((o) => o.status === 'completed').length;
 
+  // Prioritize Kitchen Queue
+  const activeQueueOrders = orders
+    .filter((o) => ['pending', 'accepted', 'preparing'].includes(o.status))
+    .sort((a, b) => {
+      const priority = { preparing: 1, accepted: 2, pending: 3 };
+      if (priority[a.status] !== priority[b.status]) {
+        return priority[a.status] - priority[b.status];
+      }
+      return new Date(a.created_at) - new Date(b.created_at);
+    });
+
   return (
     <div style={{ padding: '2.5rem 0 6rem 0' }}>
       <div className="container">
@@ -132,7 +143,7 @@ export default function RestaurantDashboard({ setActivePage }) {
               </span>
             </div>
             <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginTop: '4px' }}>
-              Live Order Management & Real-Time Queue Operations
+              Live Order Management & Real-Time Queue Operations • Order Before You Arrive
             </p>
           </div>
 
@@ -149,7 +160,7 @@ export default function RestaurantDashboard({ setActivePage }) {
               style={{ padding: '0.65rem 1.25rem', boxShadow: '0 4px 12px rgba(5,150,105,0.3)' }}
               onClick={() => setIsQRModalOpen(true)}
             >
-              <QrCode size={18} /> Scan / Verify Pickup QR
+              <QrCode size={18} /> Verify Pickup QR
             </button>
           </div>
         </div>
@@ -159,7 +170,7 @@ export default function RestaurantDashboard({ setActivePage }) {
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
           gap: '1.25rem',
-          marginBottom: '2.5rem'
+          marginBottom: '2rem'
         }}>
           <div className="card" style={{ padding: '1.25rem' }}>
             <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
@@ -206,6 +217,86 @@ export default function RestaurantDashboard({ setActivePage }) {
             </div>
           </div>
         </div>
+
+        {/* CURRENT KITCHEN QUEUE */}
+        {activeQueueOrders.length > 0 && (
+          <div className="card" style={{
+            padding: '1.5rem',
+            marginBottom: '2rem',
+            background: '#f8fafc',
+            border: '1.5px solid #cbd5e1'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Flame size={20} style={{ color: '#ef4444' }} />
+                <h2 style={{ fontSize: '1.15rem', fontWeight: 800, margin: 0, letterSpacing: '-0.02em' }}>
+                  CURRENT KITCHEN QUEUE
+                </h2>
+                <span style={{
+                  background: '#e2e8f0',
+                  color: '#334155',
+                  fontSize: '0.75rem',
+                  fontWeight: 800,
+                  padding: '2px 8px',
+                  borderRadius: '9999px'
+                }}>
+                  {activeQueueOrders.length} in queue
+                </span>
+              </div>
+              <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                Prioritized: Order Time • Requested Pickup Time • Kitchen Prep Duration
+              </span>
+            </div>
+
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))',
+              gap: '0.75rem'
+            }}>
+              {activeQueueOrders.map((qOrder) => (
+                <div
+                  key={qOrder.id}
+                  style={{
+                    background: 'white',
+                    borderRadius: 'var(--radius-md)',
+                    padding: '0.85rem 1rem',
+                    border: qOrder.status === 'pending' ? '1.5px solid #f59e0b' : qOrder.status === 'preparing' ? '1.5px solid #8b5cf6' : '1px solid var(--border-subtle)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
+                  }}
+                >
+                  <div>
+                    <div style={{ fontWeight: 800, fontSize: '0.95rem', color: 'var(--text-primary)' }}>
+                      #{qOrder.order_number}
+                    </div>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                      {qOrder.pickup_type === 'scheduled' ? `Scheduled: ${qOrder.scheduled_time}` : 'Ready ASAP'}
+                    </div>
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <span style={{
+                      display: 'inline-block',
+                      padding: '2px 8px',
+                      borderRadius: '4px',
+                      fontSize: '0.72rem',
+                      fontWeight: 800,
+                      textTransform: 'uppercase',
+                      background: qOrder.status === 'preparing' ? '#f5f3ff' : qOrder.status === 'accepted' ? '#eff6ff' : '#fef3c7',
+                      color: qOrder.status === 'preparing' ? '#7c3aed' : qOrder.status === 'accepted' ? '#2563eb' : '#b45309'
+                    }}>
+                      {qOrder.status}
+                    </span>
+                    <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '2px' }}>
+                      ~{qOrder.prep_time_minutes || 15}m prep
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Live Filter Tabs */}
         <div style={{
@@ -264,7 +355,8 @@ export default function RestaurantDashboard({ setActivePage }) {
           }}>
             {filteredOrders.map((order) => {
               const isPending = order.status === 'pending';
-              const isPreparing = order.status === 'preparing' || order.status === 'accepted';
+              const isAccepted = order.status === 'accepted';
+              const isPreparing = order.status === 'preparing';
               const isReady = order.status === 'ready';
 
               return (
@@ -285,12 +377,12 @@ export default function RestaurantDashboard({ setActivePage }) {
                     <div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary)' }}>
-                          {order.order_number}
+                          #{order.order_number}
                         </h3>
                         <StatusBadge status={order.status} />
                       </div>
                       <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '2px' }}>
-                        Placed at {new Date(order.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} • Customer: <strong>{order.customer_name}</strong>
+                        Order Time: {new Date(order.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} • Customer: <strong>{order.customer_name}</strong>
                       </p>
                     </div>
 
@@ -298,10 +390,23 @@ export default function RestaurantDashboard({ setActivePage }) {
                       <div style={{ fontSize: '1.15rem', fontWeight: 800 }}>
                         ₹{order.total}
                       </div>
-                      <span style={{ fontSize: '0.72rem', color: '#059669', fontWeight: 600 }}>
-                        {order.pickup_type === 'scheduled' ? `Sched: ${order.scheduled_time}` : 'Pickup: ASAP'}
+                      <span style={{ fontSize: '0.72rem', color: '#059669', fontWeight: 700 }}>
+                        {order.pickup_type === 'scheduled' ? `Scheduled: ${order.scheduled_time}` : 'Ready ASAP'}
                       </span>
                     </div>
+                  </div>
+
+                  {/* Preparation time indicator */}
+                  <div style={{
+                    fontSize: '0.78rem',
+                    color: 'var(--text-secondary)',
+                    marginBottom: '0.75rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px'
+                  }}>
+                    <Clock size={14} style={{ color: 'var(--primary)' }} />
+                    <span>Prep Time: <strong>~{order.prep_time_minutes || 15} min</strong></span>
                   </div>
 
                   {/* Customer Notes */}
@@ -349,19 +454,27 @@ export default function RestaurantDashboard({ setActivePage }) {
                   </div>
 
                   {/* Operational Action Buttons */}
-                  <div style={{ display: 'flex', gap: '0.5rem', marginTop: 'auto' }}>
+                  <div style={{ display: 'flex', gap: '0.5rem', marginTop: 'auto', flexWrap: 'wrap' }}>
                     {isPending && (
                       <>
                         <button
-                          className="btn btn-primary"
+                          className="btn btn-sm btn-primary"
                           style={{ flex: 1 }}
+                          disabled={actionLoading === order.id}
+                          onClick={() => handleUpdateStatus(order.id, 'accepted')}
+                        >
+                          Accept Order
+                        </button>
+                        <button
+                          className="btn btn-sm btn-primary"
+                          style={{ flex: 1, background: '#7c3aed' }}
                           disabled={actionLoading === order.id}
                           onClick={() => handleUpdateStatus(order.id, 'preparing')}
                         >
-                          Accept & Prep
+                          Start Preparing
                         </button>
                         <button
-                          className="btn btn-secondary"
+                          className="btn btn-sm btn-secondary"
                           style={{ color: 'var(--accent-rose)' }}
                           disabled={actionLoading === order.id}
                           onClick={() => handleUpdateStatus(order.id, 'rejected')}
@@ -371,6 +484,17 @@ export default function RestaurantDashboard({ setActivePage }) {
                       </>
                     )}
 
+                    {isAccepted && (
+                      <button
+                        className="btn btn-primary"
+                        style={{ width: '100%', background: '#7c3aed' }}
+                        disabled={actionLoading === order.id}
+                        onClick={() => handleUpdateStatus(order.id, 'preparing')}
+                      >
+                        Start Preparing
+                      </button>
+                    )}
+
                     {isPreparing && (
                       <button
                         className="btn btn-primary"
@@ -378,24 +502,33 @@ export default function RestaurantDashboard({ setActivePage }) {
                         disabled={actionLoading === order.id}
                         onClick={() => handleUpdateStatus(order.id, 'ready')}
                       >
-                        <Bell size={16} /> Mark as READY (Alert Customer)
+                        <Bell size={16} /> Mark Ready
                       </button>
                     )}
 
                     {isReady && (
-                      <button
-                        className="btn btn-secondary"
-                        style={{ width: '100%', border: '1.5px solid #10b981', color: '#047857', fontWeight: 700 }}
-                        disabled={actionLoading === order.id}
-                        onClick={() => handleUpdateStatus(order.id, 'completed')}
-                      >
-                        <CheckCircle2 size={16} /> Hand Over & Complete
-                      </button>
+                      <div style={{ display: 'flex', gap: '0.5rem', width: '100%' }}>
+                        <button
+                          className="btn btn-sm btn-secondary"
+                          style={{ flex: 1, border: '1.5px solid var(--primary)', color: 'var(--primary)' }}
+                          onClick={() => setIsQRModalOpen(true)}
+                        >
+                          <QrCode size={14} /> Verify Pickup
+                        </button>
+                        <button
+                          className="btn btn-sm btn-primary"
+                          style={{ flex: 1, background: '#059669' }}
+                          disabled={actionLoading === order.id}
+                          onClick={() => handleUpdateStatus(order.id, 'completed')}
+                        >
+                          <CheckCircle2 size={14} /> Hand Over
+                        </button>
+                      </div>
                     )}
 
                     {order.status === 'completed' && (
                       <div style={{ width: '100%', textAlign: 'center', fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 600 }}>
-                        ✓ Order Completed & Collected
+                        ✓ Order Picked Up Successfully
                       </div>
                     )}
                   </div>

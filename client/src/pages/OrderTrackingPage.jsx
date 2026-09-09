@@ -40,15 +40,33 @@ export default function OrderTrackingPage({ orderId, setActivePage }) {
       if (data.order_id === Number(orderId) || data.order_number === order?.order_number) {
         setOrder((prev) => (prev ? { ...prev, status: data.status } : prev));
 
-        if (data.status === 'ready') {
+        if (data.status === 'accepted') {
           notify({
-            title: 'Your order is ready! 🔔',
-            message: `Order ${data.order_number} is ready for pickup at ${data.restaurant_name}!`,
+            title: 'Your order has been accepted 👨‍🍳',
+            message: `${data.restaurant_name || 'Restaurant'} accepted your order. Kitchen prep starting soon!`,
+            type: 'info'
+          });
+        } else if (data.status === 'preparing') {
+          notify({
+            title: 'Your food is being prepared 🍳',
+            message: 'Kitchen is preparing your order now while you travel. Head over when ready!',
+            type: 'info'
+          });
+        } else if (data.status === 'ready') {
+          notify({
+            title: 'Your food is ready! 🎉',
+            message: `Order ${data.order_number} is ready. Head to ${data.restaurant_name || 'the restaurant'} and skip the queue!`,
             type: 'ready',
             sound: true,
             vibrate: true,
             soundType: 'ready',
             duration: 9000
+          });
+        } else if (data.status === 'completed') {
+          notify({
+            title: 'Order picked up successfully! ✅',
+            message: 'Nice! You skipped the queue and saved time.',
+            type: 'success'
           });
         }
       }
@@ -87,12 +105,18 @@ export default function OrderTrackingPage({ orderId, setActivePage }) {
     { key: 'accepted', label: 'Accepted' },
     { key: 'preparing', label: 'Preparing' },
     { key: 'ready', label: 'Ready for Pickup' },
-    { key: 'completed', label: 'Collected' }
+    { key: 'completed', label: 'Picked Up' }
   ];
 
   const statusOrder = ['pending', 'accepted', 'preparing', 'ready', 'completed'];
   const currentIndex = statusOrder.indexOf(order.status);
   const isRejectedOrCancelled = ['rejected', 'cancelled'].includes(order.status);
+
+  const prepTime = order.prep_time_minutes || 15;
+  const timeSaved = prepTime + 3;
+  const orderDate = new Date(order.created_at);
+  const readyDate = new Date(orderDate.getTime() + prepTime * 60000);
+  const readyTimeFormatted = readyDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
   return (
     <div style={{ padding: '2.5rem 0 6rem 0' }}>
@@ -107,8 +131,62 @@ export default function OrderTrackingPage({ orderId, setActivePage }) {
           </button>
           <span style={{ fontSize: '0.8rem', color: 'var(--primary)', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '6px' }}>
             <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--primary)', animation: 'pulse 1.5s infinite' }} />
-            Live Real-Time Sync
+            Live Kitchen Tracking
           </span>
+        </div>
+
+        {/* HERO TIME-SAVING BADGE */}
+        <div style={{
+          background: 'linear-gradient(135deg, rgba(16,185,129,0.08) 0%, rgba(5,150,105,0.14) 100%)',
+          border: '1.5px solid rgba(16,185,129,0.3)',
+          borderRadius: 'var(--radius-xl)',
+          padding: '1.1rem 1.4rem',
+          marginBottom: '1.5rem',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '1rem',
+          flexWrap: 'wrap'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+            <div style={{
+              width: '44px',
+              height: '44px',
+              borderRadius: '50%',
+              background: '#10b981',
+              color: 'white',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '1.3rem',
+              boxShadow: '0 4px 12px rgba(16,185,129,0.3)'
+            }}>
+              ⏱️
+            </div>
+            <div>
+              <div style={{ fontWeight: 800, color: '#065f46', fontSize: '1rem', letterSpacing: '-0.01em' }}>
+                {order.status === 'completed'
+                  ? `Nice! You skipped the queue and saved ~${timeSaved} minutes.`
+                  : `You saved approximately ${timeSaved} minutes.`}
+              </div>
+              <div style={{ fontSize: '0.825rem', color: '#047857', marginTop: '2px' }}>
+                {order.status === 'completed'
+                  ? 'Your order was prepared before you arrived. Walked in, picked up, done!'
+                  : 'Food prepares while you travel. Walk in and collect immediately when ready.'}
+              </div>
+            </div>
+          </div>
+          <div style={{
+            background: '#047857',
+            color: 'white',
+            padding: '0.4rem 0.85rem',
+            borderRadius: '9999px',
+            fontSize: '0.8rem',
+            fontWeight: 800,
+            letterSpacing: '0.04em'
+          }}>
+            ~{timeSaved} MIN SAVED
+          </div>
         </div>
 
         {/* Big Ready Notification Banner when status is 'ready' */}
@@ -142,9 +220,9 @@ export default function OrderTrackingPage({ orderId, setActivePage }) {
                 <Bell size={28} />
               </div>
               <div>
-                <h2 style={{ fontSize: '1.4rem', fontWeight: 800, margin: 0 }}>Your order is ready! 🔔</h2>
-                <p style={{ fontSize: '0.95rem', color: '#ecfdf5', margin: '4px 0 0 0' }}>
-                  Order {order.order_number} is waiting at the counter. Show your QR code below to collect.
+                <h2 style={{ fontSize: '1.5rem', fontWeight: 800, margin: 0 }}>Your food is ready! 🎉</h2>
+                <p style={{ fontSize: '1rem', color: '#ecfdf5', margin: '4px 0 0 0', fontWeight: 600 }}>
+                  Head to the restaurant and skip the queue. Order {order.order_number} is waiting at the counter.
                 </p>
               </div>
             </div>
@@ -153,7 +231,7 @@ export default function OrderTrackingPage({ orderId, setActivePage }) {
               className="btn btn-sm"
               style={{ background: 'white', color: '#047857', fontWeight: 800, padding: '0.65rem 1.25rem' }}
             >
-              Show QR Code &darr;
+              Show Pickup Pass &darr;
             </a>
           </div>
         )}
@@ -228,39 +306,46 @@ export default function OrderTrackingPage({ orderId, setActivePage }) {
             </div>
           )}
 
-          {/* Estimated Preparation Time Info */}
+          {/* Estimated Ready Time & Queue Progress Info */}
           {order.status !== 'completed' && !isRejectedOrCancelled && (
             <div style={{
               background: 'var(--bg-subtle)',
-              borderRadius: 'var(--radius-md)',
-              padding: '0.85rem 1rem',
+              borderRadius: 'var(--radius-lg)',
+              padding: '1rem 1.25rem',
               display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              fontSize: '0.875rem'
+              flexDirection: 'column',
+              gap: '0.5rem',
+              fontSize: '0.9rem',
+              border: '1px solid var(--border-subtle)'
             }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-secondary)' }}>
-                <Clock size={16} style={{ color: 'var(--primary)' }} />
-                <span>Estimated kitchen preparation time:</span>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-secondary)' }}>
+                  <Clock size={16} style={{ color: 'var(--primary)' }} />
+                  <span>Estimated Ready Time:</span>
+                </div>
+                <strong style={{ color: 'var(--text-primary)', fontSize: '1.05rem', fontWeight: 800 }}>
+                  {readyTimeFormatted} (~{order.prep_time_minutes || 15} min prep)
+                </strong>
               </div>
-              <strong style={{ color: 'var(--text-primary)' }}>
-                ~{order.prep_time_minutes || 15} minutes
-              </strong>
+              <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#10b981' }} />
+                We'll notify you the moment your food is ready so you can pick it up hot with zero queue wait.
+              </div>
             </div>
           )}
         </div>
 
         {/* QR Code Pickup Section */}
         <div id="qr-section" className="card" style={{ padding: '2rem', textAlign: 'center', marginBottom: '1.5rem', background: 'white' }}>
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', color: 'var(--primary)', fontSize: '0.78rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.5rem' }}>
-            <QrCode size={16} /> Pickup Verification Pass
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', color: 'var(--primary)', fontSize: '0.8rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.5rem' }}>
+            <QrCode size={16} /> Pickup Counter Pass
           </div>
 
-          <h3 style={{ fontSize: '1.3rem', fontWeight: 800, marginBottom: '0.5rem' }}>
-            Show this QR Code at the Counter
+          <h3 style={{ fontSize: '1.4rem', fontWeight: 800, marginBottom: '0.35rem', letterSpacing: '-0.02em' }}>
+            {order.status === 'ready' ? 'Ready for Pickup!' : 'Pickup Pass for Counter'}
           </h3>
-          <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', maxWidth: '420px', margin: '0 auto 1.5rem auto', lineHeight: 1.5 }}>
-            Present this code to the restaurant staff. Once scanned and verified, they will hand over your freshly packed order.
+          <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', maxWidth: '460px', margin: '0 auto 1.25rem auto', lineHeight: 1.5 }}>
+            Show this QR code at the <strong>{order.restaurant_name}</strong> pickup counter. The kitchen staff will verify and hand over your fresh order.
           </p>
 
           <div style={{
@@ -280,27 +365,35 @@ export default function OrderTrackingPage({ orderId, setActivePage }) {
             />
           </div>
 
-          <div style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '0.25rem' }}>
-            {order.order_number}
+          <div style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '0.25rem' }}>
+            Order {order.order_number}
           </div>
-          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontFamily: 'monospace' }}>
-            Token: {order.qr_code_token}
+          <div style={{ fontSize: '0.825rem', color: 'var(--text-muted)', fontFamily: 'monospace', marginBottom: '0.5rem' }}>
+            Pickup Code: <strong>{order.qr_code_token?.substring(0, 8).toUpperCase()}</strong>
+          </div>
+          <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 600 }}>
+            Counter: {order.restaurant_name}
           </div>
 
           {order.status === 'completed' && (
             <div style={{
-              marginTop: '1.25rem',
+              marginTop: '1.5rem',
               display: 'inline-flex',
+              flexDirection: 'column',
               alignItems: 'center',
-              gap: '8px',
+              gap: '6px',
               background: '#ecfdf5',
               color: '#047857',
-              padding: '0.5rem 1rem',
-              borderRadius: '9999px',
-              fontSize: '0.85rem',
-              fontWeight: 700
+              padding: '0.85rem 1.5rem',
+              borderRadius: 'var(--radius-lg)',
+              border: '1px solid rgba(16,185,129,0.3)'
             }}>
-              <CheckCircle2 size={16} /> Order Successfully Verified & Collected
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.95rem', fontWeight: 800 }}>
+                <CheckCircle2 size={18} /> Order Picked Up Successfully
+              </div>
+              <div style={{ fontSize: '0.8rem', color: '#065f46' }}>
+                Nice! You skipped the queue and saved ~{timeSaved} minutes.
+              </div>
             </div>
           )}
         </div>

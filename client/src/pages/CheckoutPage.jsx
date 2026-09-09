@@ -82,8 +82,8 @@ export default function CheckoutPage({ setActivePage, setTrackedOrderId }) {
 
       // 4. Success: Clear cart & play success sound
       notify({
-        title: 'Order Confirmed! 🎉',
-        message: `Order ${newOrder.order_number} sent to ${restaurant.name}. Live queue tracking started.`,
+        title: 'Your order is being prepared! 🎉',
+        message: `Order #${newOrder.order_number} is in the kitchen at ${restaurant.name}. Head to the restaurant when you're ready!`,
         type: 'info',
         sound: true,
         soundType: 'success'
@@ -100,21 +100,74 @@ export default function CheckoutPage({ setActivePage, setTrackedOrderId }) {
     }
   };
 
+  const prepMinutes = restaurant?.prep_time_minutes || 15;
+  const readyDate = new Date(Date.now() + prepMinutes * 60000);
+  const estimatedReadyTime = pickupType === 'scheduled' && scheduledTime
+    ? scheduledTime
+    : readyDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  const estimatedTimeSaved = Math.max(15, prepMinutes + 5);
+
   return (
     <div style={{ padding: '2.5rem 0 6rem 0' }}>
       <div className="container" style={{ maxWidth: '920px' }}>
-        {/* Back Link */}
         <button
           className="btn btn-sm btn-secondary"
-          style={{ marginBottom: '1.5rem' }}
           onClick={() => setActivePage('restaurant-menu-view')}
+          style={{ marginBottom: '1.5rem' }}
         >
           <ArrowLeft size={16} /> Back to Menu
         </button>
 
-        <h1 style={{ fontSize: '1.8rem', fontWeight: 800, letterSpacing: '-0.02em', marginBottom: '1.5rem' }}>
-          Checkout & Pre-Order
+        <h1 style={{ fontSize: '1.8rem', fontWeight: 800, letterSpacing: '-0.02em', marginBottom: '0.5rem' }}>
+          Pickup Checkout
         </h1>
+        <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', marginBottom: '1.5rem' }}>
+          Order before you arrive. Collect directly from the kitchen counter without waiting.
+        </p>
+
+        {/* Time-Saving Hero Banner */}
+        <div style={{
+          background: 'linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%)',
+          border: '1.5px solid var(--primary-border)',
+          borderRadius: 'var(--radius-lg)',
+          padding: '1.25rem 1.5rem',
+          marginBottom: '2rem',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: '1rem'
+        }}>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--primary)', fontWeight: 800, fontSize: '0.825rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+              <Clock size={16} /> Skip the Counter Queue
+            </div>
+            <div style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--text-primary)', marginTop: '3px' }}>
+              Pickup Method: <strong>Self Pickup at Restaurant</strong>
+            </div>
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
+              The restaurant prepares your order now. Walk in, show your QR code, and pick it up immediately.
+            </p>
+          </div>
+          <div style={{
+            background: 'white',
+            borderRadius: 'var(--radius-md)',
+            padding: '10px 18px',
+            textAlign: 'center',
+            boxShadow: 'var(--shadow-sm)',
+            border: '1px solid var(--border-subtle)'
+          }}>
+            <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase' }}>
+              Estimated Ready Time
+            </div>
+            <div style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--primary)' }}>
+              {estimatedReadyTime}
+            </div>
+            <div style={{ fontSize: '0.75rem', color: 'var(--accent-amber)', fontWeight: 700, marginTop: '2px' }}>
+              ⏱️ ~{estimatedTimeSaved} min saved waiting
+            </div>
+          </div>
+        </div>
 
         {error && (
           <div style={{
@@ -361,7 +414,7 @@ export default function CheckoutPage({ setActivePage, setTrackedOrderId }) {
               onClick={handlePlaceOrder}
               disabled={submitting}
             >
-              {submitting ? 'Placing Pre-Order...' : `Place Order • ₹${total}`}
+              {submitting ? 'Placing Pre-Order...' : `Place Pickup Order • ₹${total}`}
             </button>
 
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.85rem' }}>

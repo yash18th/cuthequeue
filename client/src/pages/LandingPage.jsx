@@ -24,16 +24,19 @@ export default function LandingPage({ setActivePage, onOpenCart }) {
       }}>
         <div className="container" style={{ textAlign: 'center', maxWidth: '840px' }}>
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '0.4rem 1rem', background: 'var(--primary-light)', border: '1px solid var(--primary-border)', borderRadius: '9999px', fontSize: '0.85rem', fontWeight: 700, color: 'var(--primary)', marginBottom: '1.5rem' }}>
-            <Sparkles size={16} /> The Smart Food Pre-Ordering Platform
+            <Sparkles size={16} /> Restaurant Pre-Ordering & Queue Elimination
           </div>
 
-          <h1 style={{ fontSize: 'clamp(2.4rem, 5vw, 3.8rem)', fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1.15, letterSpacing: '-0.03em', marginBottom: '1.5rem' }}>
-            Order before you arrive.<br />
-            <span style={{ color: 'var(--primary)' }}>Pick up without waiting.</span>
+          <h1 style={{ fontSize: 'clamp(2.4rem, 5vw, 3.8rem)', fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1.15, letterSpacing: '-0.03em', marginBottom: '1rem' }}>
+            Order before you arrive.
           </h1>
 
-          <p style={{ fontSize: '1.2rem', color: 'var(--text-secondary)', lineHeight: 1.6, maxWidth: '640px', margin: '0 auto 2.5rem auto' }}>
-            Skip the queue. Order your favorite food in advance and get notified the exact second it’s hot and ready.
+          <h2 style={{ fontSize: 'clamp(1.4rem, 3vw, 2rem)', fontWeight: 700, color: 'var(--primary)', lineHeight: 1.25, letterSpacing: '-0.02em', marginBottom: '1.5rem' }}>
+            Skip the queue. Pick up your food when it's ready.
+          </h2>
+
+          <p style={{ fontSize: '1.2rem', color: 'var(--text-secondary)', lineHeight: 1.6, maxWidth: '680px', margin: '0 auto 2.5rem auto' }}>
+            Place your order before reaching the restaurant. We'll let you know when it's ready, so you can walk in, pick it up, and get on with your day.
           </p>
 
           <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap', marginBottom: '3rem' }}>
@@ -41,7 +44,7 @@ export default function LandingPage({ setActivePage, onOpenCart }) {
               className="btn btn-primary btn-lg"
               onClick={() => setActivePage('home')}
             >
-              Order Now <ArrowRight size={18} />
+              Order Ahead <ArrowRight size={18} />
             </button>
             <button
               className="btn btn-secondary btn-lg"
@@ -116,11 +119,11 @@ export default function LandingPage({ setActivePage, onOpenCart }) {
             position: 'relative'
           }}>
             {[
-              { num: '01', title: 'Choose Restaurant', desc: 'Browse live menus, ratings, and preparation times.', icon: <UtensilsCrossed size={22} /> },
-              { num: '02', title: 'Place & Pay Ahead', desc: 'Customize sides, select ASAP or scheduled pickup.', icon: <Smartphone size={22} /> },
-              { num: '03', title: 'Kitchen Prepares', desc: 'Watch real-time prep status without waiting around.', icon: <Clock size={22} /> },
-              { num: '04', title: 'Instant Notification', desc: 'Get chime, vibration, and push alert when food is ready.', icon: <Bell size={22} /> },
-              { num: '05', title: 'QR Code Pick Up', desc: 'Flash your unique QR code at the counter and pick up.', icon: <QrCode size={22} /> },
+              { num: '01', title: 'Order Remotely', desc: 'Order from home, office, campus, or on the way before arriving.', icon: <Smartphone size={22} /> },
+              { num: '02', title: 'Kitchen Prepares', desc: 'The restaurant cooks and boxes your meal while you travel.', icon: <Clock size={22} /> },
+              { num: '03', title: 'Instant Ready Alert', desc: 'Receive chime and push notification the second it is ready.', icon: <Bell size={22} /> },
+              { num: '04', title: 'Walk In & Show QR', desc: 'Skip the line, walk up to the pickup counter, and scan your QR code.', icon: <QrCode size={22} /> },
+              { num: '05', title: 'Zero Waiting Time', desc: 'Collect your food immediately and save up to 20 minutes.', icon: <Sparkles size={22} /> },
             ].map((step, idx) => (
               <div
                 key={idx}

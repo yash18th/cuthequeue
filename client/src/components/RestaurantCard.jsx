@@ -1,5 +1,5 @@
 import React from 'react';
-import { Star, Clock, MapPin, ChevronRight } from 'lucide-react';
+import { Star, Clock, MapPin, ChevronRight, Zap, ShoppingBag } from 'lucide-react';
 
 export default function RestaurantCard({
   restaurant,
@@ -15,18 +15,17 @@ export default function RestaurantCard({
     ? `${restaurant.opening_time} – ${restaurant.closing_time}`
     : null;
 
-  // Determine distance display: use calculated distance from geolocation if provided, otherwise distance_km if available
+  // Calculate dynamic ready time based on prep time
+  const prepMinutes = restaurant.prep_time_minutes || 15;
+  const readyDate = new Date(Date.now() + prepMinutes * 60000);
+  const readyByTime = readyDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+  // Determine distance display
   const displayDistance = calculatedDistance !== undefined && calculatedDistance !== null
     ? `${calculatedDistance} km away`
     : restaurant.distance_km
     ? `${restaurant.distance_km} km away`
     : null;
-
-  const minOrderText = restaurant.min_order_amount > 0
-    ? `Min ₹${restaurant.min_order_amount}`
-    : 'No min order';
-
-  const prepTimeText = `${restaurant.prep_time_minutes || 15}–${(restaurant.prep_time_minutes || 15) + 5} min`;
 
   return (
     <div
@@ -61,31 +60,50 @@ export default function RestaurantCard({
         {/* Top Badges */}
         <div style={{ position: 'absolute', top: '12px', right: '12px', display: 'flex', gap: '6px', zIndex: 2 }}>
           <span className={`badge ${isOpen ? 'badge-open' : 'badge-closed'}`}>
-            {isOpen ? '🟢 Open Now' : '🔴 Closed'}
+            {isOpen ? '🟢 OPEN' : '🔴 CLOSED'}
           </span>
         </div>
 
-        {/* Distance Badge */}
-        {displayDistance && (
+        {/* Pickup & Queue Badges */}
+        <div style={{
+          position: 'absolute',
+          bottom: '12px',
+          left: '12px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '5px',
+          zIndex: 2
+        }}>
           <div style={{
-            position: 'absolute',
-            bottom: '12px',
-            left: '12px',
-            background: 'rgba(15, 23, 42, 0.78)',
-            color: 'white',
+            background: 'rgba(15, 23, 42, 0.82)',
+            color: '#a7f3d0',
             padding: '3px 8px',
             borderRadius: '6px',
             fontSize: '0.75rem',
-            fontWeight: 600,
-            display: 'flex',
+            fontWeight: 700,
+            display: 'inline-flex',
             alignItems: 'center',
             gap: '4px',
-            backdropFilter: 'blur(6px)',
-            zIndex: 2
+            backdropFilter: 'blur(6px)'
           }}>
-            <MapPin size={12} /> {displayDistance}
+            <ShoppingBag size={12} /> Pickup Available
           </div>
-        )}
+
+          <div style={{
+            background: 'rgba(15, 23, 42, 0.82)',
+            color: '#fef08a',
+            padding: '3px 8px',
+            borderRadius: '6px',
+            fontSize: '0.72rem',
+            fontWeight: 700,
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '4px',
+            backdropFilter: 'blur(6px)'
+          }}>
+            <Zap size={11} /> Low queue • Ready faster
+          </div>
+        </div>
 
         {/* Floating Restaurant Logo Thumbnail */}
         {restaurant.logo && (
@@ -155,39 +173,44 @@ export default function RestaurantCard({
           {restaurant.description}
         </p>
 
-        {/* Address and Hours Info */}
+        {/* Pickup & Preparation Callout */}
         <div style={{
           fontSize: '0.78rem',
-          color: 'var(--text-muted)',
           display: 'flex',
           flexDirection: 'column',
-          gap: '4px',
+          gap: '5px',
           marginBottom: '0.85rem',
-          padding: '0.5rem 0.65rem',
-          background: 'var(--bg-subtle)',
+          padding: '0.6rem 0.75rem',
+          background: 'var(--primary-light)',
+          border: '1px solid var(--primary-border)',
           borderRadius: 'var(--radius-sm)'
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-            <MapPin size={13} style={{ color: 'var(--primary)', flexShrink: 0 }} />
-            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              {restaurant.address}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '4px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '5px', fontWeight: 700, color: 'var(--primary)' }}>
+              <Clock size={13} />
+              <span>Preparing in ~{prepMinutes} min</span>
+            </div>
+            <span style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', fontWeight: 600 }}>
+              Ready by ~{readyByTime}
             </span>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '4px' }}>
-            {hoursDisplay && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <Clock size={12} style={{ color: 'var(--accent-amber)', flexShrink: 0 }} />
-                <span>Hours: {hoursDisplay}</span>
-              </div>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '5px', color: 'var(--text-secondary)', fontSize: '0.75rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', overflow: 'hidden' }}>
+              <MapPin size={12} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
+              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {restaurant.address}
+              </span>
+            </div>
+            {displayDistance && (
+              <span style={{ flexShrink: 0, fontWeight: 600 }}>
+                {displayDistance}
+              </span>
             )}
-            <span style={{ fontWeight: 600, color: 'var(--text-secondary)' }}>
-              {minOrderText}
-            </span>
           </div>
         </div>
 
-        {/* Metadata & Actions Footer */}
+        {/* Action Footer */}
         <div style={{
           display: 'flex',
           alignItems: 'center',
@@ -196,13 +219,10 @@ export default function RestaurantCard({
           borderTop: '1px solid var(--border-subtle)',
           gap: '0.5rem'
         }}>
-          {/* Prep Time Estimate */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '0.825rem', fontWeight: 700, color: 'var(--text-secondary)' }}>
-            <Clock size={15} style={{ color: 'var(--primary)' }} />
-            <span>{prepTimeText}</span>
-          </div>
+          <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600 }}>
+            {hoursDisplay ? `Open ${hoursDisplay}` : 'Walk-in Counter Pickup'}
+          </span>
 
-          {/* Action Buttons */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             <button
               type="button"
@@ -224,7 +244,7 @@ export default function RestaurantCard({
                 onSelectRestaurant(restaurant.id);
               }}
             >
-              Order Now <ChevronRight size={13} />
+              Order Ahead <ChevronRight size={13} />
             </button>
           </div>
         </div>

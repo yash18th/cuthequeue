@@ -55,21 +55,54 @@ export function SocketProvider({ children }) {
     // Customer order ready notification
     const handleOrderReady = (data) => {
       notify({
-        title: 'Your order is ready! 🔔',
-        message: data.notification?.message || `Order ${data.order_number} is ready for pickup at ${data.restaurant_name}!`,
+        title: 'Your order is ready! 🎉',
+        message: data.notification?.message || `Head to ${data.restaurant_name || 'the restaurant'} for pickup. Order ${data.order_number} is ready!`,
         type: 'ready',
         sound: true,
         vibrate: true,
         soundType: 'ready',
-        duration: 8000
+        duration: 9000
       });
+    };
+
+    // Customer order status notifications
+    const handleStatusUpdated = (data) => {
+      if (data.status === 'accepted') {
+        notify({
+          title: 'Order Accepted 👨‍🍳',
+          message: `${data.restaurant_name || 'Restaurant'} accepted your order. Kitchen prep starting soon!`,
+          type: 'info'
+        });
+      } else if (data.status === 'preparing') {
+        notify({
+          title: 'Food is Being Prepared 🍳',
+          message: 'Kitchen is preparing your order now while you travel. Head over when ready!',
+          type: 'info'
+        });
+      } else if (data.status === 'ready') {
+        notify({
+          title: 'Your order is ready! 🎉',
+          message: `Head to ${data.restaurant_name || 'the restaurant'} for pickup. Skip the queue!`,
+          type: 'ready',
+          sound: true,
+          vibrate: true,
+          soundType: 'ready',
+          duration: 9000
+        });
+      } else if (data.status === 'completed') {
+        notify({
+          title: 'Order picked up successfully! ✅',
+          message: 'Nice! You skipped the queue and saved time.',
+          type: 'success'
+        });
+      }
     };
 
     // Restaurant incoming new order alert
     const handleNewOrder = (data) => {
       notify({
-        title: 'NEW ORDER 🔔',
-        message: `Incoming order ${data.order?.order_number} for ₹${data.order?.total}!`,
+        title: 'NEW KITCHEN ORDER 🔔',
+        message: `Incoming pre-order ${data.order?.order_number} for ₹${data.order?.total}! Prepare ahead.`,
         type: 'info',
         sound: true,
         vibrate: true,
@@ -79,10 +112,12 @@ export function SocketProvider({ children }) {
     };
 
     socket.on('order:ready', handleOrderReady);
+    socket.on('order:status_updated', handleStatusUpdated);
     socket.on('order:created', handleNewOrder);
 
     return () => {
       socket.off('order:ready', handleOrderReady);
+      socket.off('order:status_updated', handleStatusUpdated);
       socket.off('order:created', handleNewOrder);
     };
   }, [socket, notify]);

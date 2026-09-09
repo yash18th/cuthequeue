@@ -43,23 +43,34 @@ export default function Navbar({ activePage, setActivePage, onOpenCart, ordersIn
 
         {/* Navigation Links for Desktop */}
         <nav style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
-          {isCustomer && (
-            <div style={{ display: 'flex', gap: '0.75rem' }} className="desktop-links">
+          {(!user || isCustomer) && (
+            <div style={{ display: 'flex', gap: '0.6rem' }} className="desktop-links">
               <button
-                className={`btn btn-sm ${activePage === 'home' ? 'btn-primary' : 'btn-secondary'}`}
+                className={`btn btn-sm ${activePage === 'home' || activePage === 'landing' ? 'btn-primary' : 'btn-secondary'}`}
                 onClick={() => setActivePage('home')}
               >
-                Restaurants
+                Home
               </button>
               <button
-                className={`btn btn-sm ${activePage === 'orders' ? 'btn-primary' : 'btn-secondary'}`}
+                className={`btn btn-sm ${activePage === 'orders' && ordersInitialTab === 'browse' ? 'btn-primary' : 'btn-secondary'}`}
                 onClick={() => {
-                  if (setOrdersInitialTab) setOrdersInitialTab('orders');
+                  if (setOrdersInitialTab) setOrdersInitialTab('browse');
                   setActivePage('orders');
                 }}
               >
-                My Orders
+                Browse
               </button>
+              {user && (
+                <button
+                  className={`btn btn-sm ${activePage === 'orders' && ordersInitialTab === 'orders' ? 'btn-primary' : 'btn-secondary'}`}
+                  onClick={() => {
+                    if (setOrdersInitialTab) setOrdersInitialTab('orders');
+                    setActivePage('orders');
+                  }}
+                >
+                  My Orders
+                </button>
+              )}
             </div>
           )}
 

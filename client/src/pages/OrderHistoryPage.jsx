@@ -597,7 +597,7 @@ export default function OrderHistoryPage({
               My Orders
             </h1>
 
-            {/* Sub-tab Switcher: Active Pre-Orders vs Previous Orders */}
+            {/* Sub-tab Switcher: Active Orders vs Past Orders */}
             <div style={{
               display: 'flex',
               background: 'var(--bg-subtle)',
@@ -622,7 +622,7 @@ export default function OrderHistoryPage({
                   transition: 'all 0.15s ease'
                 }}
               >
-                Active Pre-Orders ({orders.active.length})
+                Active Orders ({orders.active.length})
               </button>
               <button
                 type="button"
@@ -640,7 +640,7 @@ export default function OrderHistoryPage({
                   transition: 'all 0.15s ease'
                 }}
               >
-                Previous Orders ({orders.previous.length})
+                Past Orders ({orders.previous.length})
               </button>
             </div>
 
@@ -665,108 +665,157 @@ export default function OrderHistoryPage({
                   <ShoppingBag size={24} />
                 </div>
                 <h3 style={{ fontSize: '1.2rem', fontWeight: 700, marginBottom: '0.5rem' }}>
-                  No {ordersTab} orders
+                  No {ordersTab === 'active' ? 'active' : 'past'} orders
                 </h3>
                 <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '1.5rem' }}>
                   {ordersTab === 'active'
-                    ? 'You don’t have any food currently in the queue.'
-                    : 'You have not placed any completed orders yet.'}
+                    ? 'You have no pickup orders currently preparing in kitchen queues.'
+                    : 'You haven’t completed any pickup orders yet.'}
                 </p>
                 <button
                   type="button"
                   className="btn btn-primary"
                   onClick={() => setMainTab('browse')}
                 >
-                  Browse Campus Restaurants
+                  Order Ahead Now
                 </button>
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-                {currentOrderList.map((order) => (
-                  <div
-                    key={order.id}
-                    className="card card-hover"
-                    style={{
-                      padding: '1.5rem',
-                      background: 'white',
-                      cursor: 'pointer'
-                    }}
-                    onClick={() => {
-                      setTrackedOrderId(order.id);
-                      setActivePage('order-tracking');
-                    }}
-                  >
-                    <div style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'flex-start',
-                      flexWrap: 'wrap',
-                      gap: '0.75rem',
-                      marginBottom: '1rem'
-                    }}>
-                      <div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                          <h3 style={{ fontSize: '1.15rem', fontWeight: 800 }}>
-                            {order.restaurant_name}
-                          </h3>
-                          <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--primary)' }}>
-                            {order.order_number}
-                          </span>
+                {currentOrderList.map((order) => {
+                  const prepMinutes = order.prep_time_minutes || 15;
+                  const estimatedReadyDate = new Date(new Date(order.created_at).getTime() + prepMinutes * 60000);
+                  const readyTimeStr = estimatedReadyDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                  const timeSavedMinutes = prepMinutes + 3;
+
+                  return (
+                    <div
+                      key={order.id}
+                      className="card card-hover"
+                      style={{
+                        padding: '1.5rem',
+                        background: 'white',
+                        cursor: 'pointer',
+                        border: '1px solid var(--border-subtle)'
+                      }}
+                      onClick={() => {
+                        setTrackedOrderId(order.id);
+                        setActivePage('order-tracking');
+                      }}
+                    >
+                      <div style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'flex-start',
+                        flexWrap: 'wrap',
+                        gap: '0.75rem',
+                        marginBottom: '0.75rem'
+                      }}>
+                        <div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                            <span style={{ fontSize: '1.05rem', fontWeight: 800, color: 'var(--primary)' }}>
+                              Order #{order.order_number}
+                            </span>
+                            <span style={{ color: 'var(--border)' }}>•</span>
+                            <h3 style={{ fontSize: '1.05rem', fontWeight: 700, margin: 0 }}>
+                              {order.restaurant_name}
+                            </h3>
+                          </div>
+                          <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: 0 }}>
+                            {order.status === 'completed'
+                              ? `Picked up ${new Date(order.created_at).toLocaleDateString([], { month: 'short', day: 'numeric' })}`
+                              : `Placed ${new Date(order.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`}
+                          </p>
                         </div>
-                        <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                          {new Date(order.created_at).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })} at{' '}
-                          {new Date(order.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                        </p>
+
+                        <StatusBadge status={order.status} />
                       </div>
 
-                      <StatusBadge status={order.status} />
-                    </div>
-
-                    {/* Items preview */}
-                    <div style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '1.25rem', lineHeight: 1.5 }}>
-                      {(order.items || []).map((i) => `${i.item_name} (×${i.quantity})`).join(', ')}
-                    </div>
-
-                    {/* Action footer */}
-                    <div style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      paddingTop: '0.85rem',
-                      borderTop: '1px solid var(--border-subtle)'
-                    }}>
-                      <div style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--text-primary)' }}>
-                        ₹{order.total}
+                      {/* Items preview */}
+                      <div style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '1rem', lineHeight: 1.5 }}>
+                        <strong>{(order.items || []).length} items:</strong> {(order.items || []).map((i) => `${i.item_name} (×${i.quantity})`).join(', ')}
                       </div>
 
-                      <div style={{ display: 'flex', gap: '0.5rem' }}>
-                        {order.status === 'completed' && (
+                      {/* Pickup & Ready Time Info */}
+                      <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        background: 'var(--bg-subtle)',
+                        borderRadius: 'var(--radius-md)',
+                        padding: '0.65rem 0.9rem',
+                        marginBottom: '1rem',
+                        fontSize: '0.825rem',
+                        flexWrap: 'wrap',
+                        gap: '0.5rem'
+                      }}>
+                        {order.status !== 'completed' && order.status !== 'rejected' && order.status !== 'cancelled' ? (
+                          <>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-secondary)' }}>
+                              <span>⏱️ Estimated ready:</span>
+                              <strong style={{ color: 'var(--text-primary)' }}>{readyTimeStr}</strong>
+                            </div>
+                            <span style={{ color: 'var(--primary)', fontWeight: 700 }}>
+                              Self-Pickup Counter
+                            </span>
+                          </>
+                        ) : order.status === 'completed' ? (
+                          <>
+                            <span style={{ color: '#047857', fontWeight: 700 }}>
+                              ✅ Picked up at counter
+                            </span>
+                            <span style={{ color: '#065f46', fontWeight: 700 }}>
+                              ~{timeSavedMinutes} min wait saved
+                            </span>
+                          </>
+                        ) : (
+                          <span style={{ color: 'var(--accent-rose)', fontWeight: 600 }}>
+                            Order ended ({order.status})
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Action footer */}
+                      <div style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        paddingTop: '0.85rem',
+                        borderTop: '1px solid var(--border-subtle)'
+                      }}>
+                        <div style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--text-primary)' }}>
+                          ₹{order.total}
+                        </div>
+
+                        <div style={{ display: 'flex', gap: '0.5rem' }}>
+                          {order.status === 'completed' && (
+                            <button
+                              type="button"
+                              className="btn btn-sm btn-secondary"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleOrderAgain(order);
+                              }}
+                            >
+                              <RotateCcw size={14} /> Order Ahead Again
+                            </button>
+                          )}
                           <button
                             type="button"
-                            className="btn btn-sm btn-secondary"
+                            className="btn btn-sm btn-primary"
                             onClick={(e) => {
                               e.stopPropagation();
-                              handleOrderAgain(order);
+                              setTrackedOrderId(order.id);
+                              setActivePage('order-tracking');
                             }}
                           >
-                            <RotateCcw size={14} /> Order Again
+                            {order.status === 'completed' ? 'View Order' : 'Track Order'} <ChevronRight size={14} />
                           </button>
-                        )}
-                        <button
-                          type="button"
-                          className="btn btn-sm btn-primary"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setTrackedOrderId(order.id);
-                            setActivePage('order-tracking');
-                          }}
-                        >
-                          View Order <ChevronRight size={14} />
-                        </button>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>

@@ -44,11 +44,14 @@ export default function CartDrawer({ isOpen, onClose, setActivePage }) {
           borderBottom: '1px solid var(--border-subtle)',
           display: 'flex',
           justifyContent: 'space-between',
-          alignItems: 'center'
+          alignItems: 'center',
+          background: 'var(--primary-light)'
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <ShoppingBag size={20} style={{ color: 'var(--primary)' }} />
-            <h3 style={{ fontSize: '1.2rem', fontWeight: 800 }}>
+          <div>
+            <span style={{ fontSize: '0.72rem', fontWeight: 800, color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              🛍️ PICKUP ORDER
+            </span>
+            <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--text-primary)' }}>
               Your Tray ({totalItemCount})
             </h3>
           </div>
@@ -75,21 +78,41 @@ export default function CartDrawer({ isOpen, onClose, setActivePage }) {
               </div>
               <p style={{ fontWeight: 600, fontSize: '0.95rem' }}>Your tray is empty</p>
               <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '4px' }}>
-                Add delicious food from campus kitchens to get started.
+                Add food from kitchens before arriving to skip the line.
               </p>
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-primary)' }}>
-                  From: {restaurant?.name}
-                </span>
-                <button
-                  onClick={clearCart}
-                  style={{ fontSize: '0.75rem', color: 'var(--accent-rose)', fontWeight: 600 }}
-                >
-                  Clear Tray
-                </button>
+              {/* Pickup Callout Card */}
+              <div style={{
+                padding: '0.85rem 1rem',
+                borderRadius: 'var(--radius-md)',
+                background: '#f0fdf4',
+                border: '1px solid var(--primary-border)',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '4px'
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: '0.72rem', fontWeight: 800, color: 'var(--primary)', textTransform: 'uppercase' }}>
+                    Self-Pickup Order
+                  </span>
+                  <button
+                    onClick={clearCart}
+                    style={{ fontSize: '0.75rem', color: 'var(--accent-rose)', fontWeight: 600 }}
+                  >
+                    Clear Tray
+                  </button>
+                </div>
+                <div style={{ fontWeight: 800, fontSize: '0.95rem', color: 'var(--text-primary)' }}>
+                  Restaurant: {restaurant?.name}
+                </div>
+                <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                  Pickup: <strong>Collect from restaurant counter</strong>
+                </div>
+                <div style={{ fontSize: '0.8rem', color: 'var(--primary)', fontWeight: 700 }}>
+                  Estimated preparation: <strong>Ready in approximately {restaurant?.prep_time_minutes || 15} minutes</strong>
+                </div>
               </div>
 
               {cartItems.map((item) => (
@@ -183,7 +206,7 @@ export default function CartDrawer({ isOpen, onClose, setActivePage }) {
               style={{ width: '100%', padding: '0.85rem', fontSize: '0.95rem' }}
               onClick={handleGoToCheckout}
             >
-              Proceed to Checkout <ArrowRight size={16} />
+              Proceed to Pickup Checkout <ArrowRight size={16} />
             </button>
           </div>
         )}

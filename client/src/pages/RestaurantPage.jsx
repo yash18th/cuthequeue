@@ -95,12 +95,49 @@ export default function RestaurantPage({ restaurantId, setActivePage, onOpenCart
                   {restaurant.is_open ? '🟢 Open Now' : '🔴 Currently Closed'}
                 </span>
               </div>
-              <p style={{ color: '#e2e8f0', fontSize: '0.95rem' }}>
+              <p style={{ color: '#e2e8f0', fontSize: '0.95rem', marginBottom: '0.5rem' }}>
                 {restaurant.cuisine} • {restaurant.address}
               </p>
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                <span style={{
+                  background: 'rgba(255,255,255,0.2)',
+                  color: '#a7f3d0',
+                  padding: '3px 8px',
+                  borderRadius: '6px',
+                  fontSize: '0.75rem',
+                  fontWeight: 700,
+                  backdropFilter: 'blur(4px)'
+                }}>
+                  🛍️ Self-Pickup Counter
+                </span>
+                <span style={{
+                  background: 'rgba(255,255,255,0.2)',
+                  color: '#fef08a',
+                  padding: '3px 8px',
+                  borderRadius: '6px',
+                  fontSize: '0.75rem',
+                  fontWeight: 700,
+                  backdropFilter: 'blur(4px)'
+                }}>
+                  ⚡ Low Queue • Ready on Arrival
+                </span>
+                {restaurant.opening_time && restaurant.closing_time && (
+                  <span style={{
+                    background: 'rgba(255,255,255,0.2)',
+                    color: 'white',
+                    padding: '3px 8px',
+                    borderRadius: '6px',
+                    fontSize: '0.75rem',
+                    fontWeight: 600,
+                    backdropFilter: 'blur(4px)'
+                  }}>
+                    Hours: {restaurant.opening_time} – {restaurant.closing_time}
+                  </span>
+                )}
+              </div>
             </div>
 
-            <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+            <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
               <div style={{
                 background: 'rgba(255,255,255,0.15)',
                 backdropFilter: 'blur(8px)',
@@ -113,7 +150,7 @@ export default function RestaurantPage({ restaurantId, setActivePage, onOpenCart
                 <Clock size={18} style={{ color: '#34d399' }} />
                 <div>
                   <div style={{ fontSize: '0.72rem', color: '#cbd5e1', textTransform: 'uppercase', fontWeight: 700 }}>Prep Time</div>
-                  <div style={{ fontSize: '0.95rem', fontWeight: 800 }}>{restaurant.prep_time_minutes || 15}–{(restaurant.prep_time_minutes || 15) + 5} min</div>
+                  <div style={{ fontSize: '0.95rem', fontWeight: 800 }}>~{restaurant.prep_time_minutes || 15} min</div>
                 </div>
               </div>
 
@@ -183,13 +220,22 @@ export default function RestaurantPage({ restaurantId, setActivePage, onOpenCart
 
       {/* Menu Items List */}
       <div className="container" style={{ marginTop: '2rem' }}>
+        <div style={{ marginBottom: '2rem', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '1rem' }}>
+          <h2 style={{ fontSize: '1.6rem', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.02em', marginBottom: '0.25rem' }}>
+            Today's Menu
+          </h2>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem' }}>
+            Order ahead before you arrive. Pick up freshly prepared food at the counter.
+          </p>
+        </div>
+
         {categories
           .filter((cat) => !activeCategory || cat.id === activeCategory)
           .map((category) => (
             <div key={category.id} style={{ marginBottom: '3rem' }}>
-              <h2 style={{ fontSize: '1.4rem', fontWeight: 800, marginBottom: '1.25rem', color: 'var(--text-primary)' }}>
+              <h3 style={{ fontSize: '1.3rem', fontWeight: 800, marginBottom: '1.25rem', color: 'var(--text-primary)' }}>
                 {category.name}
-              </h2>
+              </h3>
 
               {category.items.length === 0 ? (
                 <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>No items in this category yet.</p>
@@ -258,12 +304,12 @@ export default function RestaurantPage({ restaurantId, setActivePage, onOpenCart
                               style={{
                                 width: '100%',
                                 padding: '0.35rem 0.5rem',
-                                fontSize: '0.8rem',
+                                fontSize: '0.78rem',
                                 boxShadow: '0 4px 8px rgba(0,0,0,0.2)'
                               }}
                               onClick={() => setSelectedItemForModal(item)}
                             >
-                              <Plus size={14} /> Add
+                              <Plus size={13} /> Add to Order
                             </button>
                           ) : (
                             <span style={{

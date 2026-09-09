@@ -23,14 +23,25 @@ export default function BottomNav({ activePage, setActivePage, onOpenCart, order
       </button>
 
       <button
-        className={`bottom-nav-item ${activePage === 'orders' ? 'active' : ''}`}
+        className={`bottom-nav-item ${activePage === 'orders' && ordersInitialTab === 'browse' ? 'active' : ''}`}
         onClick={() => {
           if (setOrdersInitialTab) setOrdersInitialTab('browse');
           setActivePage('orders');
         }}
       >
         <ClipboardList size={20} />
-        <span>Orders</span>
+        <span>Browse</span>
+      </button>
+
+      <button
+        className={`bottom-nav-item ${activePage === 'orders' && ordersInitialTab === 'orders' ? 'active' : ''}`}
+        onClick={() => {
+          if (setOrdersInitialTab) setOrdersInitialTab('orders');
+          setActivePage('orders');
+        }}
+      >
+        <ClipboardList size={20} />
+        <span>My Orders</span>
       </button>
 
       <button
@@ -68,7 +79,7 @@ export default function BottomNav({ activePage, setActivePage, onOpenCart, order
         onClick={() => setActivePage('profile')}
       >
         <User size={20} />
-        <span>Profile</span>
+        <span>Account</span>
       </button>
     </nav>
   );

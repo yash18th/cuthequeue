@@ -115,7 +115,6 @@ export default function CustomerHome({ setActivePage, setSelectedRestaurantId })
   let processedRestaurants = [...restaurants];
 
   if (userCoords && hasCoordinatesInDB) {
-    // Sort by calculated distance
     processedRestaurants = processedRestaurants.map((r) => {
       if (r.latitude && r.longitude) {
         const dist = calculateDistance(userCoords.latitude, userCoords.longitude, r.latitude, r.longitude);
@@ -123,24 +122,32 @@ export default function CustomerHome({ setActivePage, setSelectedRestaurantId })
       }
       return { ...r, calculatedDistance: null };
     });
-
-    processedRestaurants.sort((a, b) => {
-      if (a.calculatedDistance !== null && b.calculatedDistance !== null) {
-        return a.calculatedDistance - b.calculatedDistance;
-      }
-      return 0;
-    });
   }
+
+  // Sort by: 1. Availability (open first), 2. Preparation time (fastest kitchen first), 3. Distance
+  processedRestaurants.sort((a, b) => {
+    const aOpen = a.is_currently_open !== undefined ? (a.is_currently_open ? 1 : 0) : (a.is_open ? 1 : 0);
+    const bOpen = b.is_currently_open !== undefined ? (b.is_currently_open ? 1 : 0) : (b.is_open ? 1 : 0);
+    if (aOpen !== bOpen) return bOpen - aOpen;
+
+    const aPrep = a.prep_time_minutes || 15;
+    const bPrep = b.prep_time_minutes || 15;
+    if (aPrep !== bPrep) return aPrep - bPrep;
+
+    const aDist = a.calculatedDistance !== null && a.calculatedDistance !== undefined ? a.calculatedDistance : (a.distance_km || 999);
+    const bDist = b.calculatedDistance !== null && b.calculatedDistance !== undefined ? b.calculatedDistance : (b.distance_km || 999);
+    return aDist - bDist;
+  });
 
   // Section title dynamically adjusts based on location state and DB schema
   const getSectionTitle = () => {
     if (locationStatus === 'granted' && hasCoordinatesInDB) {
-      return 'Nearest Restaurants';
+      return 'Nearest Kitchens for Pickup';
     }
     if (locationStatus === 'granted' && !hasCoordinatesInDB) {
-      return 'Available Restaurants';
+      return 'Available Kitchens for Pickup';
     }
-    return 'Nearby & Available Restaurants';
+    return 'Nearby & Available Kitchens';
   };
 
   const handleClearFilters = () => {
@@ -180,7 +187,7 @@ export default function CustomerHome({ setActivePage, setSelectedRestaurantId })
             {getGreeting()}, {user ? user.name.split(' ')[0] : 'Foodie'} 👋
           </h1>
           <p style={{ color: 'var(--text-secondary)', fontSize: '1rem' }}>
-            Choose a kitchen, order ahead, and skip the counter lines.
+            Order before you arrive. The kitchen prepares your food while you travel so you skip the line.
           </p>
         </div>
 
