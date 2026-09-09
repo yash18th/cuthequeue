@@ -97,16 +97,19 @@ export default function OrderHistoryPage({
       const data = await restaurantAPI.getAll({
         search: debouncedSearch || undefined,
         cuisine: selectedCuisine !== 'All' ? selectedCuisine : undefined,
-        open_only: openOnly ? 'true' : undefined
+        open_only: openOnly ? 'true' : undefined,
+        lat: userCoords?.latitude,
+        lng: userCoords?.longitude
       });
-      setRestaurants(Array.isArray(data) ? data : []);
+      const list = Array.isArray(data) ? data : (data?.restaurants || []);
+      setRestaurants(list);
     } catch (err) {
       console.error('Failed to load all restaurants:', err);
       setRestaurantError(err.message || 'Unable to load restaurants');
     } finally {
       setLoadingRestaurants(false);
     }
-  }, [debouncedSearch, selectedCuisine, openOnly]);
+  }, [debouncedSearch, selectedCuisine, openOnly, userCoords]);
 
   useEffect(() => {
     loadOrders();
@@ -138,7 +141,7 @@ export default function OrderHistoryPage({
       (err) => {
         console.warn('Location permission denied:', err.message);
         setLocationStatus('denied');
-        setLocationMessage('Location permission denied. Showing all available restaurants.');
+        setLocationMessage('Location permission denied. Showing all restaurants.');
       },
       { timeout: 10000, enableHighAccuracy: true }
     );
@@ -181,7 +184,7 @@ export default function OrderHistoryPage({
   };
 
   const hasActiveFilters = Boolean(search.trim() || selectedCuisine !== 'All' || openOnly);
-  const cuisines = ['All', 'Burgers', 'Fast Food', 'South Indian', 'Sandwiches', 'Beverages'];
+  const cuisines = ['All', 'Cafe', 'South Indian', 'Burgers', 'Pizza', 'Indian', 'Fast Food', 'Beverages'];
   const currentOrderList = ordersTab === 'active' ? orders.active : orders.previous;
 
   return (
@@ -548,12 +551,18 @@ export default function OrderHistoryPage({
             {!loadingRestaurants && !restaurantError && processedRestaurants.length === 0 && (
               <div className="card" style={{ padding: '3.5rem 1.5rem', textAlign: 'center', background: 'white' }}>
                 <h3 style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: '0.5rem', color: 'var(--text-primary)' }}>
-                  {hasActiveFilters ? 'No restaurants match your search.' : 'No restaurants available right now.'}
+                  {debouncedSearch
+                    ? `No restaurants found for "${debouncedSearch}".`
+                    : hasActiveFilters
+                    ? 'No restaurants match your filters.'
+                    : 'No restaurants available right now.'}
                 </h3>
-                <p style={{ color: 'var(--text-secondary)', fontSize: '0.925rem', marginBottom: '1.5rem', maxWidth: '420px', margin: '0 auto 1.5rem auto' }}>
-                  {hasActiveFilters
-                    ? 'Try adjusting your search query, switching cuisine categories, or unchecking "Open Now Only".'
-                    : 'There are currently no dining kitchens available. Please check back shortly.'}
+                <p style={{ color: 'var(--text-secondary)', fontSize: '0.925rem', marginBottom: '1.5rem', maxWidth: '440px', margin: '0 auto 1.5rem auto' }}>
+                  {debouncedSearch
+                    ? 'Try another restaurant name, cuisine, or area (e.g., "Indiranagar", "cafe", "dosa", "pizza", "burger").'
+                    : hasActiveFilters
+                    ? 'Try clearing your cuisine filter or unchecking "Open Now Only".'
+                    : 'There are currently no dining restaurants available. Please check back shortly.'}
                 </p>
                 {hasActiveFilters && (
                   <button

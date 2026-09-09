@@ -65,16 +65,19 @@ export default function CustomerHome({ setActivePage, setSelectedRestaurantId })
       const data = await restaurantAPI.getAll({
         search: debouncedSearch || undefined,
         cuisine: selectedCuisine !== 'All' ? selectedCuisine : undefined,
-        open_only: openOnly ? 'true' : undefined
+        open_only: openOnly ? 'true' : undefined,
+        lat: userCoords?.latitude,
+        lng: userCoords?.longitude
       });
-      setRestaurants(Array.isArray(data) ? data : []);
+      const list = Array.isArray(data) ? data : (data?.restaurants || []);
+      setRestaurants(list);
     } catch (err) {
       console.error('Failed to load restaurants:', err);
       setError(err.message || 'Unable to load restaurants');
     } finally {
       setLoading(false);
     }
-  }, [debouncedSearch, selectedCuisine, openOnly]);
+  }, [debouncedSearch, selectedCuisine, openOnly, userCoords]);
 
   useEffect(() => {
     loadRestaurants();
@@ -158,7 +161,7 @@ export default function CustomerHome({ setActivePage, setSelectedRestaurantId })
 
   const hasActiveFilters = Boolean(search.trim() || selectedCuisine !== 'All' || openOnly);
 
-  const cuisines = ['All', 'Burgers', 'Fast Food', 'South Indian', 'Sandwiches', 'Beverages'];
+  const cuisines = ['All', 'Cafe', 'South Indian', 'Burgers', 'Pizza', 'Indian', 'Fast Food', 'Beverages'];
 
   return (
     <div style={{ padding: '2rem 0 5rem 0' }}>
@@ -361,7 +364,7 @@ export default function CustomerHome({ setActivePage, setSelectedRestaurantId })
           </h2>
           {!loading && !error && (
             <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)' }}>
-              {processedRestaurants.length} {processedRestaurants.length === 1 ? 'kitchen' : 'kitchens'} ready
+              {processedRestaurants.length} {processedRestaurants.length === 1 ? 'restaurant' : 'restaurants'} ready for pre-order
             </span>
           )}
         </div>
@@ -453,12 +456,18 @@ export default function CustomerHome({ setActivePage, setSelectedRestaurantId })
         {!loading && !error && processedRestaurants.length === 0 && (
           <div className="card" style={{ padding: '3.5rem 1.5rem', textAlign: 'center', background: 'white' }}>
             <h3 style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: '0.5rem', color: 'var(--text-primary)' }}>
-              {hasActiveFilters ? 'No restaurants match your search.' : 'No restaurants available right now.'}
+              {debouncedSearch
+                ? `No restaurants found for "${debouncedSearch}".`
+                : hasActiveFilters
+                ? 'No restaurants match your filters.'
+                : 'No restaurants available right now.'}
             </h3>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.925rem', marginBottom: '1.5rem', maxWidth: '420px', margin: '0 auto 1.5rem auto' }}>
-              {hasActiveFilters
-                ? 'Try adjusting your search query, switching cuisine categories, or unchecking "Open Now Only".'
-                : 'There are currently no active dining kitchens registered on campus. Please check back shortly.'}
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.925rem', marginBottom: '1.5rem', maxWidth: '440px', margin: '0 auto 1.5rem auto' }}>
+              {debouncedSearch
+                ? 'Try another restaurant name, cuisine, or area (e.g., "Indiranagar", "cafe", "dosa", "pizza", "burger").'
+                : hasActiveFilters
+                ? 'Try clearing your cuisine filter or unchecking "Open Now Only".'
+                : 'There are currently no active restaurants available. Please check back shortly.'}
             </p>
             {hasActiveFilters && (
               <button

@@ -30,58 +30,127 @@ function checkIsCurrentlyOpen(r) {
   }
 }
 
+// Helper to calculate Haversine distance in km
+function calculateHaversineKm(lat1, lon1, lat2, lon2) {
+  if (lat1 === null || lon1 === null || lat2 === null || lon2 === null) return null;
+  const R = 6371; // Earth radius in km
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return Math.round(R * c * 10) / 10;
+}
+
 // Get all restaurants (Public, filterable)
 router.get('/', (req, res) => {
   try {
-    const { search, cuisine, open_only } = req.query;
+    const rawSearch = req.query.q || req.query.search;
+    const rawCuisine = req.query.category || req.query.cuisine;
+    const rawLocation = req.query.location;
+    const openNow = req.query.openNow === 'true' || req.query.open_only === 'true';
+    const userLat = req.query.lat ? parseFloat(req.query.lat) : null;
+    const userLng = req.query.lng ? parseFloat(req.query.lng) : null;
 
     let query = 'SELECT * FROM restaurants WHERE is_approved = 1 AND is_suspended = 0';
     const params = [];
 
-    // Filter out invalid/empty strings
-    const validSearch = search && typeof search === 'string' && search.trim() !== '' && search !== 'undefined' && search !== 'null' ? search.trim() : null;
-    const validCuisine = cuisine && typeof cuisine === 'string' && cuisine.trim() !== '' && cuisine !== 'All' && cuisine !== 'undefined' && cuisine !== 'null' ? cuisine.trim() : null;
-
-    if (validSearch) {
-      query += ` AND (
-        restaurants.name LIKE ? 
-        OR restaurants.cuisine LIKE ? 
-        OR restaurants.description LIKE ? 
-        OR restaurants.address LIKE ? 
-        OR EXISTS (
-          SELECT 1 FROM menu_items mi 
-          WHERE mi.restaurant_id = restaurants.id 
-          AND (mi.name LIKE ? OR mi.description LIKE ?)
-        )
-        OR EXISTS (
-          SELECT 1 FROM categories c 
-          WHERE c.restaurant_id = restaurants.id 
-          AND c.name LIKE ?
-        )
-      )`;
-      const term = `%${validSearch}%`;
-      params.push(term, term, term, term, term, term, term);
+    // 1. Multi-token partial search across name, cuisine, location, address, description, menu_items, categories
+    if (rawSearch && typeof rawSearch === 'string') {
+      const searchStr = rawSearch.trim();
+      if (searchStr !== '' && searchStr !== 'undefined' && searchStr !== 'null') {
+        const tokens = searchStr.toLowerCase().split(/\s+/).filter(Boolean);
+        
+        tokens.forEach(token => {
+          const isGenericRestaurantWord = token === 'restaurant' || token === 'restaurants' || token === 'kitchen' || token === 'kitchens';
+          const isBangalore = token === 'bangalore' || token === 'bengaluru';
+          
+          if (isGenericRestaurantWord) {
+            // General intent word for all dining establishments on the platform
+            query += ' AND 1=1';
+          } else if (isBangalore) {
+            query += ` AND (
+              LOWER(restaurants.name) LIKE '%bangalore%' OR LOWER(restaurants.name) LIKE '%bengaluru%'
+              OR LOWER(COALESCE(restaurants.location, '')) LIKE '%bangalore%' OR LOWER(COALESCE(restaurants.location, '')) LIKE '%bengaluru%'
+              OR LOWER(restaurants.address) LIKE '%bangalore%' OR LOWER(restaurants.address) LIKE '%bengaluru%'
+              OR LOWER(restaurants.cuisine) LIKE '%bangalore%' OR LOWER(restaurants.cuisine) LIKE '%bengaluru%'
+              OR LOWER(COALESCE(restaurants.description, '')) LIKE '%bangalore%' OR LOWER(COALESCE(restaurants.description, '')) LIKE '%bengaluru%'
+            )`;
+          } else {
+            const pattern = `%${token}%`;
+            query += ` AND (
+              LOWER(restaurants.name) LIKE ?
+              OR LOWER(restaurants.cuisine) LIKE ?
+              OR LOWER(COALESCE(restaurants.location, '')) LIKE ?
+              OR LOWER(restaurants.address) LIKE ?
+              OR LOWER(COALESCE(restaurants.description, '')) LIKE ?
+              OR EXISTS (
+                SELECT 1 FROM menu_items mi 
+                WHERE mi.restaurant_id = restaurants.id 
+                AND (LOWER(mi.name) LIKE ? OR LOWER(COALESCE(mi.description, '')) LIKE ?)
+              )
+              OR EXISTS (
+                SELECT 1 FROM categories c 
+                WHERE c.restaurant_id = restaurants.id 
+                AND LOWER(c.name) LIKE ?
+              )
+            )`;
+            params.push(pattern, pattern, pattern, pattern, pattern, pattern, pattern, pattern);
+          }
+        });
+      }
     }
 
-    if (validCuisine) {
-      query += ` AND (
-        restaurants.cuisine LIKE ?
-        OR EXISTS (
-          SELECT 1 FROM categories c 
-          WHERE c.restaurant_id = restaurants.id 
-          AND c.name LIKE ?
-        )
-        OR EXISTS (
-          SELECT 1 FROM menu_items mi 
-          WHERE mi.restaurant_id = restaurants.id 
-          AND (mi.name LIKE ? OR mi.description LIKE ?)
-        )
-      )`;
-      const cuisineTerm = `%${validCuisine}%`;
-      params.push(cuisineTerm, cuisineTerm, cuisineTerm, cuisineTerm);
+    // 2. Specific Location Filter
+    if (rawLocation && typeof rawLocation === 'string') {
+      const loc = rawLocation.trim().toLowerCase();
+      if (loc !== '' && loc !== 'all' && loc !== 'undefined' && loc !== 'null') {
+        if (loc === 'bangalore' || loc === 'bengaluru') {
+          query += ` AND (
+            LOWER(COALESCE(restaurants.location, '')) LIKE '%bangalore%' 
+            OR LOWER(COALESCE(restaurants.location, '')) LIKE '%bengaluru%'
+            OR LOWER(restaurants.address) LIKE '%bangalore%' 
+            OR LOWER(restaurants.address) LIKE '%bengaluru%'
+          )`;
+        } else {
+          const locPattern = `%${loc}%`;
+          query += ` AND (
+            LOWER(COALESCE(restaurants.location, '')) LIKE ? 
+            OR LOWER(restaurants.address) LIKE ?
+          )`;
+          params.push(locPattern, locPattern);
+        }
+      }
     }
 
-    if (open_only === 'true') {
+    // 3. Category / Cuisine Filter
+    if (rawCuisine && typeof rawCuisine === 'string') {
+      const c = rawCuisine.trim().toLowerCase();
+      if (c !== '' && c !== 'all' && c !== 'undefined' && c !== 'null') {
+        const cPattern = `%${c}%`;
+        query += ` AND (
+          LOWER(restaurants.cuisine) LIKE ?
+          OR EXISTS (
+            SELECT 1 FROM categories c 
+            WHERE c.restaurant_id = restaurants.id 
+            AND LOWER(c.name) LIKE ?
+          )
+          OR EXISTS (
+            SELECT 1 FROM menu_items mi 
+            WHERE mi.restaurant_id = restaurants.id 
+            AND (LOWER(mi.name) LIKE ? OR LOWER(COALESCE(mi.description, '')) LIKE ?)
+          )
+        )`;
+        params.push(cPattern, cPattern, cPattern, cPattern);
+      }
+    }
+
+    // 4. Open status
+    if (openNow) {
       query += ' AND is_open = 1';
     }
 
@@ -89,20 +158,44 @@ router.get('/', (req, res) => {
 
     const restaurants = db.prepare(query).all(...params);
 
-    // Attach active item counts and computed live open status
+    // Attach active item counts, computed live open status, distance, and CutTheQueue badge
     const countStmt = db.prepare('SELECT COUNT(*) as count FROM menu_items WHERE restaurant_id = ? AND is_available = 1');
-    let result = restaurants.map(r => ({
-      ...r,
-      is_currently_open: checkIsCurrentlyOpen(r),
-      available_items_count: countStmt.get(r.id).count
-    }));
+    let result = restaurants.map(r => {
+      const isCurrentlyOpen = checkIsCurrentlyOpen(r);
+      let calculatedDist = null;
+      if (userLat !== null && userLng !== null && !isNaN(userLat) && !isNaN(userLng) && r.latitude && r.longitude) {
+        calculatedDist = calculateHaversineKm(userLat, userLng, r.latitude, r.longitude);
+      }
 
-    // If open_only requested, additionally filter out closed by hours
-    if (open_only === 'true') {
+      return {
+        ...r,
+        isOpen: isCurrentlyOpen,
+        is_currently_open: isCurrentlyOpen,
+        available_items_count: countStmt.get(r.id).count,
+        available_on_cutthequeue: true,
+        calculatedDistance: calculatedDist !== null ? calculatedDist : (r.distance_km || null)
+      };
+    });
+
+    if (openNow) {
       result = result.filter(r => r.is_currently_open);
     }
 
-    res.json(result);
+    if (userLat !== null && userLng !== null && !isNaN(userLat) && !isNaN(userLng)) {
+      result.sort((a, b) => {
+        const distA = a.calculatedDistance !== null ? a.calculatedDistance : 999;
+        const distB = b.calculatedDistance !== null ? b.calculatedDistance : 999;
+        return distA - distB;
+      });
+    }
+
+    console.log(`[Restaurants] Search: ${rawSearch ? `"${rawSearch}"` : 'none'} | Results: ${result.length}`);
+
+    // Return structured JSON with restaurants array and total count
+    res.json({
+      restaurants: result,
+      total: result.length
+    });
   } catch (err) {
     console.error('Fetch restaurants error:', err);
     res.status(500).json({ error: 'Failed to fetch restaurants.' });

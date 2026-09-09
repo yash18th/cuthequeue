@@ -58,6 +58,24 @@ export default function RestaurantCard({
         />
 
         {/* Top Badges */}
+        <div style={{ position: 'absolute', top: '12px', left: '12px', zIndex: 2 }}>
+          <span style={{
+            background: 'rgba(15, 23, 42, 0.88)',
+            color: '#38bdf8',
+            padding: '3px 8px',
+            borderRadius: '6px',
+            fontSize: '0.7rem',
+            fontWeight: 700,
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '4px',
+            backdropFilter: 'blur(6px)',
+            border: '1px solid rgba(56, 189, 248, 0.35)'
+          }}>
+            ⚡ Available on CutTheQueue
+          </span>
+        </div>
+
         <div style={{ position: 'absolute', top: '12px', right: '12px', display: 'flex', gap: '6px', zIndex: 2 }}>
           <span className={`badge ${isOpen ? 'badge-open' : 'badge-closed'}`}>
             {isOpen ? '🟢 OPEN' : '🔴 CLOSED'}
@@ -199,7 +217,7 @@ export default function RestaurantCard({
             <div style={{ display: 'flex', alignItems: 'center', gap: '4px', overflow: 'hidden' }}>
               <MapPin size={12} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
               <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                {restaurant.address}
+                {restaurant.location ? `${restaurant.location} • ${restaurant.address}` : restaurant.address}
               </span>
             </div>
             {displayDistance && (
@@ -244,7 +262,7 @@ export default function RestaurantCard({
                 onSelectRestaurant(restaurant.id);
               }}
             >
-              Order Ahead <ChevronRight size={13} />
+              Pre-Order Now <ChevronRight size={13} />
             </button>
           </div>
         </div>

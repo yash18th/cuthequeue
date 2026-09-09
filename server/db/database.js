@@ -38,9 +38,12 @@ function initDatabase() {
       logo TEXT,
       cover_image TEXT,
       address TEXT NOT NULL,
+      location TEXT,
+      latitude REAL,
+      longitude REAL,
       contact_phone TEXT,
-      opening_time TEXT DEFAULT '09:00',
-      closing_time TEXT DEFAULT '22:00',
+      opening_time TEXT DEFAULT '08:00',
+      closing_time TEXT DEFAULT '23:30',
       is_open INTEGER DEFAULT 1,
       is_approved INTEGER DEFAULT 1,
       is_suspended INTEGER DEFAULT 0,
@@ -136,6 +139,18 @@ function initDatabase() {
       FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE
     );
   `);
+
+  // Run migrations for backwards compatibility with existing SQLite files
+  const restaurantCols = db.prepare("PRAGMA table_info(restaurants)").all().map(c => c.name);
+  if (!restaurantCols.includes('location')) {
+    db.exec('ALTER TABLE restaurants ADD COLUMN location TEXT;');
+  }
+  if (!restaurantCols.includes('latitude')) {
+    db.exec('ALTER TABLE restaurants ADD COLUMN latitude REAL;');
+  }
+  if (!restaurantCols.includes('longitude')) {
+    db.exec('ALTER TABLE restaurants ADD COLUMN longitude REAL;');
+  }
 }
 
 initDatabase();

@@ -54,13 +54,32 @@ export const authAPI = {
 };
 
 export const restaurantAPI = {
-  getAll: (params = {}) => {
-    const cleanParams = Object.entries(params).reduce((acc, [key, val]) => {
-      if (val !== undefined && val !== null && val !== '') {
-        acc[key] = val;
+  getAll: async (params = {}) => {
+    const cleanParams = {};
+    if (params.search || params.q) {
+      const q = (params.q || params.search).trim();
+      if (q) {
+        cleanParams.q = q;
+        cleanParams.search = q;
       }
-      return acc;
-    }, {});
+    }
+    if (params.cuisine || params.category) {
+      const c = params.category || params.cuisine;
+      if (c && c !== 'All') {
+        cleanParams.category = c;
+        cleanParams.cuisine = c;
+      }
+    }
+    if (params.location && params.location !== 'All') {
+      cleanParams.location = params.location;
+    }
+    if (params.open_only || params.openNow) {
+      cleanParams.openNow = 'true';
+      cleanParams.open_only = 'true';
+    }
+    if (params.lat) cleanParams.lat = params.lat;
+    if (params.lng) cleanParams.lng = params.lng;
+
     const query = new URLSearchParams(cleanParams).toString();
     return apiRequest(`/restaurants${query ? `?${query}` : ''}`);
   },

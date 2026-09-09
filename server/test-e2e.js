@@ -45,10 +45,38 @@ async function runTests() {
   const superToken = superData.token;
   console.log('5. Super Admin login:', superToken ? '✅ PASS' : '❌ FAIL');
 
-  // 6. Restaurants list
+  // 6. Restaurants discovery and search tests
   const restListRes = await fetch(`${API}/restaurants`);
-  const restaurants = await restListRes.json();
-  console.log(`6. Fetch restaurants: ✅ PASS (${restaurants.length} approved kitchens found)`);
+  const restData = await restListRes.json();
+  const allRestaurants = restData.restaurants || restData;
+  console.log(`6a. Fetch all restaurants: ✅ PASS (${allRestaurants.length} onboarded restaurants found)`);
+
+  // 6b. Search tests
+  const searchQueries = [
+    { q: 'bangalore cafe', min: 1 },
+    { q: 'Bangalore', min: 1 },
+    { q: 'bengaluru', min: 1 },
+    { q: 'cafe', min: 1 },
+    { q: 'restaurant', min: 1 },
+    { q: 'pizza', min: 1 },
+    { q: 'burger', min: 1 },
+    { q: 'south indian', min: 1 },
+    { q: 'indiranagar', min: 1 },
+    { q: 'koramangala', min: 1 },
+    { q: 'whitefield', min: 1 },
+    { q: 'xyznonexistent', min: 0, max: 0 }
+  ];
+
+  for (const sq of searchQueries) {
+    const sRes = await fetch(`${API}/restaurants?q=${encodeURIComponent(sq.q)}`);
+    const sData = await sRes.json();
+    const count = sData.total !== undefined ? sData.total : (sData.restaurants?.length || 0);
+    const pass = (sq.max !== undefined) ? (count === sq.max) : (count >= sq.min);
+    if (!pass) {
+      throw new Error(`Search failed for query "${sq.q}": got ${count}`);
+    }
+    console.log(`6b. Search "${sq.q.padEnd(16)}": ✅ PASS (${count} found)`);
+  }
 
   // 7. Fetch single restaurant menu
   const menuRes = await fetch(`${API}/restaurants/${restId}`);
