@@ -45,6 +45,22 @@
   --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
   --shadow-card: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
   
+  /* Bengaluru Indian Heritage & Modern Luxury Palette */
+  --bg-heritage: #faf8f5;
+  --bg-heritage-warm: #f5f0e8;
+  --bg-heritage-card: #ffffff;
+  --text-heritage-dark: #1c1917;
+  --text-heritage-secondary: #57534e;
+  --text-heritage-muted: #78716c;
+  --accent-brass: #b45309;
+  --accent-gold: #d97706;
+  --accent-gold-light: #fef3c7;
+  --accent-gold-border: rgba(217, 119, 6, 0.35);
+  --accent-terracotta: #9a3412;
+  --accent-cardamom: #065f46;
+  --border-heritage: #e7e5e4;
+  --shadow-heritage: 0 4px 20px -2px rgba(28, 25, 23, 0.06), 0 2px 6px -1px rgba(28, 25, 23, 0.04);
+  
   --transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
   --transition-normal: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -504,5 +520,109 @@ input, textarea, select {
 
 .spin {
   animation: spin 1s linear infinite;
+}
+
+/* ==============================================================
+   INDIAN HERITAGE & MODERN LUXURY UTILITIES
+============================================================== */
+
+.heritage-card {
+  background: var(--bg-heritage-card);
+  border: 1px solid var(--border-heritage);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-heritage);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+}
+
+.heritage-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 14px 30px -4px rgba(28, 25, 23, 0.12), 0 4px 10px -2px rgba(28, 25, 23, 0.06);
+  border-color: var(--accent-gold-border);
+}
+
+.heritage-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.badge-gold {
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fde68a;
+}
+
+.badge-terracotta {
+  background: #ffedd5;
+  color: #9a3412;
+  border: 1px solid #fed7aa;
+}
+
+/* Queue visualization pill states */
+.queue-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.queue-pill-low {
+  background: #ecfdf5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+}
+
+.queue-pill-moderate {
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fde68a;
+}
+
+.queue-pill-busy {
+  background: #ffedd5;
+  color: #9a3412;
+  border: 1px solid #fed7aa;
+}
+
+.queue-pill-very-busy {
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+}
+
+/* Subtle ornamental divider */
+.heritage-ornament {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin: 1.5rem 0;
+}
+
+.heritage-ornament::before,
+.heritage-ornament::after {
+  content: '';
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #d97706, transparent);
+  flex: 1;
+  max-width: 120px;
+}
+
+.heritage-heading {
+  font-family: var(--font-sans);
+  color: var(--text-heritage-dark);
+  font-weight: 800;
+  letter-spacing: -0.025em;
 }
 

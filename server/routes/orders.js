@@ -236,12 +236,19 @@ router.get('/my-orders', authenticate, (req, res) => {
 router.get('/:id', authenticate, (req, res) => {
   try {
     const order = db.prepare(`
-      SELECT o.*, r.name as restaurant_name, r.logo as restaurant_logo, r.cover_image as restaurant_cover,
+      SELECT o.*, r.name as restaurant_name, r.branch_name, r.area, r.queue_status, r.queue_count,
+             r.logo as restaurant_logo, r.cover_image as restaurant_cover,
              r.address as restaurant_address, r.contact_phone as restaurant_phone, r.prep_time_minutes,
+             b.name as brand_name, b.slug as brand_slug,
              u.name as customer_name, u.phone as customer_phone, u.email as customer_email,
-             p.status as payment_status, p.method as payment_method, p.transaction_ref
+             p.status as payment_status, p.method as payment_method, p.transaction_ref,
+             (SELECT COUNT(*) FROM orders ahead 
+              WHERE ahead.restaurant_id = o.restaurant_id 
+                AND ahead.status IN ('pending', 'accepted', 'preparing') 
+                AND ahead.id < o.id) as orders_ahead
       FROM orders o
       JOIN restaurants r ON o.restaurant_id = r.id
+      LEFT JOIN brands b ON r.brand_id = b.id
       JOIN users u ON o.customer_id = u.id
       LEFT JOIN payments p ON o.id = p.order_id
       WHERE o.id = ? OR o.order_number = ?

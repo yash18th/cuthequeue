@@ -323,9 +323,10 @@ export default function OrderTrackingPage({ orderId, setActivePage }) {
               padding: '1rem 1.25rem',
               display: 'flex',
               flexDirection: 'column',
-              gap: '0.5rem',
+              gap: '0.75rem',
               fontSize: '0.9rem',
-              border: '1px solid var(--border-subtle)'
+              border: '1px solid var(--border-subtle)',
+              marginTop: '1rem'
             }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-secondary)' }}>
@@ -336,6 +337,39 @@ export default function OrderTrackingPage({ orderId, setActivePage }) {
                   {readyTimeFormatted} (~{order.prep_time_minutes || 15} min prep)
                 </strong>
               </div>
+
+              {/* Live Kitchen Queue Counter */}
+              <div style={{
+                background: 'rgba(217, 119, 6, 0.06)',
+                border: '1px solid rgba(217, 119, 6, 0.2)',
+                borderRadius: 'var(--radius-md)',
+                padding: '0.75rem 1rem',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                flexWrap: 'wrap',
+                gap: '0.75rem'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <span className={`queue-pill-${order.queue_status || 'moderate'}`}>
+                    <span className="dot" />
+                    {order.queue_status === 'low' ? 'Low Queue' :
+                     order.queue_status === 'busy' ? 'Busy Queue' :
+                     order.queue_status === 'very_busy' ? 'Very Busy' : 'Moderate Queue'}
+                  </span>
+                  <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-heritage-dark)' }}>
+                    {order.orders_ahead !== undefined && order.orders_ahead > 0
+                      ? `${order.orders_ahead} ${order.orders_ahead === 1 ? 'order' : 'orders'} ahead in kitchen queue`
+                      : 'Priority: Preparing next at kitchen counter'}
+                  </span>
+                </div>
+                {order.branch_name && (
+                  <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600 }}>
+                    Branch: {order.branch_name}
+                  </span>
+                )}
+              </div>
+
               <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#10b981' }} />
                 We'll notify you the moment your food is ready so you can pick it up hot with zero queue wait.

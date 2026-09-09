@@ -3,89 +3,84 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { restaurantAPI } from '../utils/api';
 import RestaurantCard from '../components/RestaurantCard';
+import BrandCard from '../components/BrandCard';
 import {
   Search,
   Sparkles,
   Navigation,
   RefreshCw,
   AlertCircle,
-  X
+  X,
+  MapPin,
+  Clock,
+  Award,
+  Utensils
 } from 'lucide-react';
-
-// Distance calculation using Haversine formula (km)
-function calculateDistance(lat1, lon1, lat2, lon2) {
-  const R = 6371;
-  const dLat = ((lat2 - lat1) * Math.PI) / 180;
-  const dLon = ((lon2 - lon1) * Math.PI) / 180;
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos((lat1 * Math.PI) / 180) *
-      Math.cos((lat2 * Math.PI) / 180) *
-      Math.sin(dLon / 2) *
-      Math.sin(dLon / 2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return Number((R * c).toFixed(1));
-}
 
 export default function CustomerHome({ setActivePage, setSelectedRestaurantId }) {
   const navigate = useNavigate();
   const { user } = useAuth();
+
+  // Data states
+  const [brands, setBrands] = useState([]);
   const [restaurants, setRestaurants] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  // Filter & Search states
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
-  const [selectedCuisine, setSelectedCuisine] = useState('All');
+  const [selectedArea, setSelectedArea] = useState('All');
+  const [selectedBrandFilter, setSelectedBrandFilter] = useState('All');
   const [openOnly, setOpenOnly] = useState(false);
+  const [activeTab, setActiveTab] = useState('brands'); // 'brands' | 'branches'
 
   // Geolocation state
   const [userCoords, setUserCoords] = useState(null);
-  const [locationStatus, setLocationStatus] = useState('idle'); // 'idle' | 'requesting' | 'granted' | 'denied' | 'unsupported'
+  const [locationStatus, setLocationStatus] = useState('idle');
   const [locationMessage, setLocationMessage] = useState('');
 
-  // Time-based greeting
-  const getGreeting = () => {
-    const hour = new Date().getHours();
-    if (hour < 12) return 'Good morning';
-    if (hour < 17) return 'Good afternoon';
-    return 'Good evening';
-  };
-
-  // Debounce search input for instant live search without page reloads
+  // Debounce search
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearch(search.trim());
-    }, 280);
+    }, 250);
     return () => clearTimeout(timer);
   }, [search]);
 
-  // Load restaurants from backend API
-  const loadRestaurants = useCallback(async () => {
+  // Load brands and branches
+  const loadDiscoveryData = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const data = await restaurantAPI.getAll({
-        search: debouncedSearch || undefined,
-        cuisine: selectedCuisine !== 'All' ? selectedCuisine : undefined,
-        open_only: openOnly ? 'true' : undefined,
-        lat: userCoords?.latitude,
-        lng: userCoords?.longitude
-      });
-      const list = Array.isArray(data) ? data : (data?.restaurants || []);
-      setRestaurants(list);
+      const [brandsRes, restRes] = await Promise.all([
+        restaurantAPI.getBrands().catch(() => ({ brands: [] })),
+        restaurantAPI.getAll({
+          search: debouncedSearch || undefined,
+          area: selectedArea !== 'All' ? selectedArea : undefined,
+          brand: selectedBrandFilter !== 'All' ? selectedBrandFilter : undefined,
+          open_only: openOnly ? 'true' : undefined,
+          lat: userCoords?.latitude,
+          lng: userCoords?.longitude
+        })
+      ]);
+
+      setBrands(brandsRes.brands || []);
+      const branchList = Array.isArray(restRes) ? restRes : (restRes?.restaurants || []);
+      setRestaurants(branchList);
     } catch (err) {
-      console.error('Failed to load restaurants:', err);
-      setError(err.message || 'Unable to load restaurants');
+      console.error('Failed to load Bengaluru restaurant discovery:', err);
+      setError(err.message || 'Unable to load Bengaluru restaurants');
     } finally {
       setLoading(false);
     }
-  }, [debouncedSearch, selectedCuisine, openOnly, userCoords]);
+  }, [debouncedSearch, selectedArea, selectedBrandFilter, openOnly, userCoords]);
 
   useEffect(() => {
-    loadRestaurants();
-  }, [loadRestaurants]);
+    loadDiscoveryData();
+  }, [loadDiscoveryData]);
 
-  // Handle Geolocation request
+  // Geolocation handling
   const handleRequestLocation = () => {
     if (!navigator.geolocation) {
       setLocationStatus('unsupported');
@@ -94,120 +89,115 @@ export default function CustomerHome({ setActivePage, setSelectedRestaurantId })
     }
 
     setLocationStatus('requesting');
-    setLocationMessage('Getting your current location...');
+    setLocationMessage('Locating nearest Bengaluru branches...');
 
     navigator.geolocation.getCurrentPosition(
       (position) => {
         const { latitude, longitude } = position.coords;
         setUserCoords({ latitude, longitude });
         setLocationStatus('granted');
-        setLocationMessage('Location enabled. Showing nearest kitchens first.');
+        setLocationMessage('Showing restaurants sorted by proximity to you.');
+        setTimeout(() => setLocationMessage(''), 4000);
       },
-      (geoError) => {
-        console.warn('Geolocation access denied or unavailable:', geoError.message);
+      () => {
         setLocationStatus('denied');
-        setLocationMessage('Location permission was not granted. Showing all available restaurants.');
+        setLocationMessage('Location permission denied. Showing all Bengaluru branches.');
+        setTimeout(() => setLocationMessage(''), 4000);
       },
-      { timeout: 10000, enableHighAccuracy: true }
+      { timeout: 8000, maximumAge: 60000 }
     );
-  };
-
-  // Process sorting with coordinates if available in database, otherwise fallback gracefully
-  const hasCoordinatesInDB = restaurants.some(
-    (r) => r.latitude !== undefined && r.latitude !== null && r.longitude !== undefined && r.longitude !== null
-  );
-
-  let processedRestaurants = [...restaurants];
-
-  if (userCoords && hasCoordinatesInDB) {
-    processedRestaurants = processedRestaurants.map((r) => {
-      if (r.latitude && r.longitude) {
-        const dist = calculateDistance(userCoords.latitude, userCoords.longitude, r.latitude, r.longitude);
-        return { ...r, calculatedDistance: dist };
-      }
-      return { ...r, calculatedDistance: null };
-    });
-  }
-
-  // Sort by: 1. Availability (open first), 2. Preparation time (fastest kitchen first), 3. Distance
-  processedRestaurants.sort((a, b) => {
-    const aOpen = a.is_currently_open !== undefined ? (a.is_currently_open ? 1 : 0) : (a.is_open ? 1 : 0);
-    const bOpen = b.is_currently_open !== undefined ? (b.is_currently_open ? 1 : 0) : (b.is_open ? 1 : 0);
-    if (aOpen !== bOpen) return bOpen - aOpen;
-
-    const aPrep = a.prep_time_minutes || 15;
-    const bPrep = b.prep_time_minutes || 15;
-    if (aPrep !== bPrep) return aPrep - bPrep;
-
-    const aDist = a.calculatedDistance !== null && a.calculatedDistance !== undefined ? a.calculatedDistance : (a.distance_km || 999);
-    const bDist = b.calculatedDistance !== null && b.calculatedDistance !== undefined ? b.calculatedDistance : (b.distance_km || 999);
-    return aDist - bDist;
-  });
-
-  // Section title dynamically adjusts based on location state and DB schema
-  const getSectionTitle = () => {
-    if (locationStatus === 'granted' && hasCoordinatesInDB) {
-      return 'Nearest Kitchens for Pickup';
-    }
-    if (locationStatus === 'granted' && !hasCoordinatesInDB) {
-      return 'Available Kitchens for Pickup';
-    }
-    return 'Nearby & Available Kitchens';
   };
 
   const handleClearFilters = () => {
     setSearch('');
-    setSelectedCuisine('All');
+    setSelectedArea('All');
+    setSelectedBrandFilter('All');
     setOpenOnly(false);
   };
 
-  const hasActiveFilters = Boolean(search.trim() || selectedCuisine !== 'All' || openOnly);
+  const areas = [
+    'All',
+    'Indiranagar',
+    'Koramangala',
+    'Jayanagar',
+    'Church Street',
+    'Whitefield',
+    'Marathahalli',
+    'JP Nagar',
+    'Rajajinagar',
+    'Kammanahalli',
+    'Residency Road'
+  ];
 
-  const cuisines = ['All', 'Cafe', 'South Indian', 'Burgers', 'Pizza', 'Indian', 'Fast Food', 'Beverages'];
+  const hasActiveFilters = Boolean(search.trim() || selectedArea !== 'All' || selectedBrandFilter !== 'All' || openOnly);
 
   return (
-    <div style={{ padding: '2rem 0 5rem 0' }}>
+    <div style={{ background: 'var(--bg-heritage)', minHeight: '90vh', padding: '2.5rem 0 6rem 0' }}>
       <div className="container">
-        {/* Personalized Greeting Header */}
-        <div style={{ marginBottom: '2rem' }}>
+        {/* ========================================================= */}
+        {/* HERO SECTION WITH HERITAGE & MODERN LUXURY AESTHETICS   */}
+        {/* ========================================================= */}
+        <div style={{
+          textAlign: 'center',
+          maxWidth: '820px',
+          margin: '0 auto 2.5rem auto'
+        }}>
+          {/* Subtle Heritage Badge */}
           <div style={{
             display: 'inline-flex',
             alignItems: 'center',
             gap: '8px',
-            color: 'var(--primary)',
-            fontSize: '0.85rem',
+            padding: '0.4rem 1rem',
+            background: 'var(--accent-gold-light)',
+            border: '1px solid var(--accent-gold-border)',
+            borderRadius: '9999px',
+            fontSize: '0.825rem',
             fontWeight: 700,
-            textTransform: 'uppercase',
-            letterSpacing: '0.05em'
+            color: 'var(--accent-brass)',
+            marginBottom: '1rem'
           }}>
-            <Sparkles size={16} /> Campus Dining Hub
+            <Award size={15} />
+            <span>Bengaluru's Authentic Culinary Institutions • Zero Waiting</span>
           </div>
-          <h1 style={{
-            fontSize: 'clamp(1.8rem, 3.5vw, 2.4rem)',
-            fontWeight: 800,
-            color: 'var(--text-primary)',
-            letterSpacing: '-0.02em',
-            marginTop: '0.2rem'
+
+          <h1 className="heritage-heading" style={{
+            fontSize: 'clamp(2rem, 4.5vw, 3.2rem)',
+            lineHeight: 1.15,
+            marginBottom: '0.75rem',
+            color: 'var(--text-heritage-dark)'
           }}>
-            {getGreeting()}, {user ? user.name.split(' ')[0] : 'Foodie'} 👋
+            Discover Bengaluru's Favourite Restaurants
           </h1>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '1rem' }}>
-            Order before you arrive. The kitchen prepares your food while you travel so you skip the line.
+
+          <p style={{
+            fontSize: '1.15rem',
+            color: 'var(--text-heritage-secondary)',
+            lineHeight: 1.6,
+            maxWidth: '620px',
+            margin: '0 auto'
+          }}>
+            Choose a restaurant near you, pre-order your meal, and skip the queue.
           </p>
+
+          <div className="heritage-ornament">
+            <span style={{ color: 'var(--accent-brass)', fontSize: '0.8rem' }}>✦ ✦ ✦</span>
+          </div>
         </div>
 
-        {/* Search & Filter Control Bar */}
+        {/* ========================================================= */}
+        {/* SEARCH, LOCALITY SELECTOR, AND GEOLOCATION BAR          */}
+        {/* ========================================================= */}
         <div style={{
           background: 'white',
           borderRadius: 'var(--radius-xl)',
-          padding: '1.25rem',
-          boxShadow: 'var(--shadow-card)',
-          border: '1px solid var(--border-subtle)',
+          padding: '1.25rem 1.5rem',
+          boxShadow: 'var(--shadow-heritage)',
+          border: '1px solid var(--border-heritage)',
           marginBottom: '2rem'
         }}>
-          {/* Search Input Box */}
-          <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1rem' }}>
-            <div style={{ position: 'relative', flex: 1 }}>
+          <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
+            {/* Search Input */}
+            <div style={{ position: 'relative', flex: 1, minWidth: '260px' }}>
               <Search
                 size={18}
                 style={{
@@ -221,8 +211,16 @@ export default function CustomerHome({ setActivePage, setSelectedRestaurantId })
               <input
                 type="text"
                 className="input-field"
-                placeholder="Search restaurants or food items..."
-                style={{ paddingLeft: '40px', paddingRight: search ? '36px' : '14px' }}
+                placeholder="Search brand (Rameshwaram, Empire, Meghana) or locality (Indiranagar)..."
+                style={{
+                  width: '100%',
+                  paddingLeft: '42px',
+                  paddingRight: search ? '36px' : '14px',
+                  height: '44px',
+                  borderRadius: 'var(--radius-md)',
+                  border: '1px solid var(--border-heritage)',
+                  background: 'var(--bg-heritage)'
+                }}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
@@ -251,35 +249,44 @@ export default function CustomerHome({ setActivePage, setSelectedRestaurantId })
               className={`btn btn-sm ${locationStatus === 'granted' ? 'btn-primary' : 'btn-secondary'}`}
               onClick={handleRequestLocation}
               disabled={locationStatus === 'requesting'}
-              title="Locate nearest restaurants"
-              style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
+              title="Locate nearest branches"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                height: '44px',
+                padding: '0 1rem',
+                borderRadius: 'var(--radius-md)',
+                fontWeight: 700
+              }}
             >
               <Navigation
                 size={15}
                 style={{
                   transform: locationStatus === 'requesting' ? 'rotate(45deg)' : 'none',
-                  transition: 'transform 0.3s ease'
+                  transition: 'transform 0.3s ease',
+                  color: locationStatus === 'granted' ? 'white' : 'var(--accent-brass)'
                 }}
               />
-              <span className="desktop-links">
+              <span>
                 {locationStatus === 'requesting'
                   ? 'Locating...'
                   : locationStatus === 'granted'
-                  ? 'Location Active'
-                  : 'Use my location'}
+                  ? 'Nearby Active'
+                  : 'Find Nearby'}
               </span>
             </button>
           </div>
 
-          {/* Location status feedback message if present */}
+          {/* Location status message */}
           {locationMessage && (
             <div style={{
-              fontSize: '0.8rem',
-              color: locationStatus === 'denied' ? 'var(--accent-amber)' : 'var(--primary)',
+              fontSize: '0.825rem',
+              color: 'var(--accent-brass)',
               marginBottom: '0.85rem',
-              padding: '0.4rem 0.75rem',
+              padding: '0.4rem 0.85rem',
               borderRadius: 'var(--radius-sm)',
-              background: locationStatus === 'denied' ? 'var(--accent-amber-light)' : 'var(--primary-light)',
+              background: 'var(--accent-gold-light)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between'
@@ -295,34 +302,38 @@ export default function CustomerHome({ setActivePage, setSelectedRestaurantId })
             </div>
           )}
 
-          {/* Cuisine Pill Tags & Filter Toggles */}
+          {/* Area / Locality Filter Pills */}
           <div style={{
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
             flexWrap: 'wrap',
-            gap: '0.75rem'
+            gap: '0.75rem',
+            paddingTop: '0.5rem',
+            borderTop: '1px solid #f5f0e8'
           }}>
-            {/* Category Buttons */}
-            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-              {cuisines.map((c) => (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+              <span style={{ fontSize: '0.78rem', fontWeight: 800, color: 'var(--text-heritage-muted)', textTransform: 'uppercase', marginRight: '4px' }}>
+                Area:
+              </span>
+              {areas.map((area) => (
                 <button
-                  key={c}
+                  key={area}
                   type="button"
-                  onClick={() => setSelectedCuisine(c)}
+                  onClick={() => setSelectedArea(area)}
                   style={{
-                    padding: '0.4rem 0.9rem',
+                    padding: '0.35rem 0.85rem',
                     borderRadius: 'var(--radius-full)',
-                    fontSize: '0.825rem',
-                    fontWeight: 600,
+                    fontSize: '0.78rem',
+                    fontWeight: 700,
                     border: '1px solid',
-                    borderColor: selectedCuisine === c ? 'var(--primary)' : 'var(--border-subtle)',
-                    background: selectedCuisine === c ? 'var(--primary)' : 'var(--bg-card)',
-                    color: selectedCuisine === c ? 'white' : 'var(--text-secondary)',
+                    borderColor: selectedArea === area ? 'var(--accent-brass)' : 'var(--border-heritage)',
+                    background: selectedArea === area ? 'var(--accent-brass)' : 'white',
+                    color: selectedArea === area ? 'white' : 'var(--text-heritage-secondary)',
                     transition: 'all 0.15s ease'
                   }}
                 >
-                  {c}
+                  {area}
                 </button>
               ))}
             </div>
@@ -333,9 +344,9 @@ export default function CustomerHome({ setActivePage, setSelectedRestaurantId })
               alignItems: 'center',
               gap: '8px',
               cursor: 'pointer',
-              fontSize: '0.85rem',
-              fontWeight: 600,
-              color: 'var(--text-secondary)',
+              fontSize: '0.825rem',
+              fontWeight: 700,
+              color: 'var(--text-heritage-dark)',
               userSelect: 'none'
             }}>
               <input
@@ -345,163 +356,233 @@ export default function CustomerHome({ setActivePage, setSelectedRestaurantId })
                 style={{
                   width: '16px',
                   height: '16px',
-                  accentColor: 'var(--primary)',
+                  accentColor: '#b45309',
                   cursor: 'pointer'
                 }}
               />
-              Open Now Only
+              <span>Open Now Only</span>
             </label>
           </div>
         </div>
 
-        {/* Section Header */}
+        {/* ========================================================= */}
+        {/* VIEW SELECTOR: ICONIC BRANDS VS ALL BENGALURU BRANCHES   */}
+        {/* ========================================================= */}
         <div style={{
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          marginBottom: '1.25rem'
+          flexWrap: 'wrap',
+          gap: '1rem',
+          marginBottom: '1.75rem'
         }}>
-          <h2 style={{ fontSize: '1.35rem', fontWeight: 800, letterSpacing: '-0.02em', color: 'var(--text-primary)' }}>
-            {getSectionTitle()}
-          </h2>
-          {!loading && !error && (
-            <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)' }}>
-              {processedRestaurants.length} {processedRestaurants.length === 1 ? 'restaurant' : 'restaurants'} ready for pre-order
-            </span>
+          {/* Tabs */}
+          <div style={{
+            display: 'inline-flex',
+            background: 'white',
+            padding: '4px',
+            borderRadius: 'var(--radius-full)',
+            border: '1px solid var(--border-heritage)',
+            boxShadow: 'var(--shadow-sm)'
+          }}>
+            <button
+              type="button"
+              onClick={() => setActiveTab('brands')}
+              style={{
+                padding: '0.5rem 1.25rem',
+                borderRadius: 'var(--radius-full)',
+                fontSize: '0.875rem',
+                fontWeight: 700,
+                border: 'none',
+                background: activeTab === 'brands' ? 'var(--accent-brass)' : 'transparent',
+                color: activeTab === 'brands' ? 'white' : 'var(--text-heritage-secondary)',
+                transition: 'all 0.15s ease'
+              }}
+            >
+              Iconic Restaurant Brands ({brands.length})
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('branches')}
+              style={{
+                padding: '0.5rem 1.25rem',
+                borderRadius: 'var(--radius-full)',
+                fontSize: '0.875rem',
+                fontWeight: 700,
+                border: 'none',
+                background: activeTab === 'branches' ? 'var(--accent-brass)' : 'transparent',
+                color: activeTab === 'branches' ? 'white' : 'var(--text-heritage-secondary)',
+                transition: 'all 0.15s ease'
+              }}
+            >
+              All Bengaluru Branches ({restaurants.length})
+            </button>
+          </div>
+
+          {/* Active Filter Clear Info */}
+          {hasActiveFilters && (
+            <button
+              type="button"
+              onClick={handleClearFilters}
+              style={{
+                fontSize: '0.8rem',
+                fontWeight: 700,
+                color: 'var(--accent-terracotta)',
+                background: 'none',
+                border: 'none',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '4px',
+                cursor: 'pointer'
+              }}
+            >
+              <RefreshCw size={12} /> Clear all filters
+            </button>
           )}
         </div>
 
-        {/* Loading State: Finding restaurants... with skeleton cards */}
+        {/* ========================================================= */}
+        {/* LOADING & ERROR STATES                                   */}
+        {/* ========================================================= */}
         {loading && (
-          <div>
-            <div style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '8px',
-              color: 'var(--primary)',
-              fontWeight: 600,
-              fontSize: '0.95rem',
-              marginBottom: '1.25rem'
-            }}>
-              <RefreshCw size={16} className="spin" /> Finding restaurants...
-            </div>
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))',
-              gap: '1.5rem'
-            }}>
-              {[1, 2, 3].map((n) => (
-                <div
-                  key={n}
-                  className="card"
-                  style={{
-                    background: 'white',
-                    height: '380px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    overflow: 'hidden'
-                  }}
-                >
-                  <div style={{
-                    height: '180px',
-                    background: 'linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%)',
-                    backgroundSize: '200% 100%',
-                    animation: 'skeletonPulse 1.5s infinite ease-in-out'
-                  }} />
-                  <div style={{ padding: '1.25rem', flex: 1, display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                    <div style={{ height: '22px', width: '60%', background: '#e2e8f0', borderRadius: '4px' }} />
-                    <div style={{ height: '14px', width: '40%', background: '#f1f5f9', borderRadius: '4px' }} />
-                    <div style={{ height: '14px', width: '90%', background: '#f1f5f9', borderRadius: '4px' }} />
-                    <div style={{ height: '14px', width: '75%', background: '#f1f5f9', borderRadius: '4px' }} />
-                    <div style={{ marginTop: 'auto', height: '36px', background: '#f1f5f9', borderRadius: '8px' }} />
-                  </div>
-                </div>
-              ))}
-            </div>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))',
+            gap: '1.75rem'
+          }}>
+            {[1, 2, 3].map((idx) => (
+              <div
+                key={idx}
+                className="heritage-card"
+                style={{ height: '380px', background: '#f5f0e8', position: 'relative' }}
+              />
+            ))}
           </div>
         )}
 
-        {/* Error State: Unable to load restaurants with Try Again button */}
-        {!loading && error && (
-          <div className="card" style={{ padding: '3.5rem 1.5rem', textAlign: 'center', background: 'white' }}>
-            <div style={{
-              width: '56px',
-              height: '56px',
-              borderRadius: '50%',
-              background: 'var(--accent-rose-light)',
-              color: 'var(--accent-rose)',
-              display: 'inline-flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              marginBottom: '1rem'
-            }}>
-              <AlertCircle size={28} />
-            </div>
-            <h3 style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: '0.5rem', color: 'var(--text-primary)' }}>
-              Unable to load restaurants
+        {error && !loading && (
+          <div style={{
+            background: 'white',
+            borderRadius: 'var(--radius-xl)',
+            padding: '3rem 2rem',
+            textAlign: 'center',
+            border: '1px solid var(--border-heritage)',
+            maxWidth: '500px',
+            margin: '2rem auto'
+          }}>
+            <AlertCircle size={44} style={{ color: 'var(--accent-terracotta)', margin: '0 auto 1rem auto' }} />
+            <h3 style={{ fontSize: '1.3rem', fontWeight: 800, marginBottom: '0.5rem' }}>
+              Unable to load Bengaluru restaurants
             </h3>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.925rem', marginBottom: '1.5rem', maxWidth: '440px', margin: '0 auto 1.5rem auto' }}>
-              We could not connect to the kitchen servers. Please check your network connection and try again.
+            <p style={{ color: 'var(--text-heritage-secondary)', fontSize: '0.9rem', marginBottom: '1.5rem' }}>
+              {error}
             </p>
-            <button
-              type="button"
-              className="btn btn-primary"
-              onClick={loadRestaurants}
-              style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
-            >
-              <RefreshCw size={16} /> Try Again
+            <button type="button" className="btn btn-primary" onClick={loadDiscoveryData}>
+              <RefreshCw size={15} /> Try Again
             </button>
           </div>
         )}
 
-        {/* Empty Filter State vs Empty Database State */}
-        {!loading && !error && processedRestaurants.length === 0 && (
-          <div className="card" style={{ padding: '3.5rem 1.5rem', textAlign: 'center', background: 'white' }}>
-            <h3 style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: '0.5rem', color: 'var(--text-primary)' }}>
-              {debouncedSearch
-                ? `No restaurants found for "${debouncedSearch}".`
-                : hasActiveFilters
-                ? 'No restaurants match your filters.'
-                : 'No restaurants available right now.'}
-            </h3>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.925rem', marginBottom: '1.5rem', maxWidth: '440px', margin: '0 auto 1.5rem auto' }}>
-              {debouncedSearch
-                ? 'Try another restaurant name, cuisine, or area (e.g., "Indiranagar", "cafe", "dosa", "pizza", "burger").'
-                : hasActiveFilters
-                ? 'Try clearing your cuisine filter or unchecking "Open Now Only".'
-                : 'There are currently no active restaurants available. Please check back shortly.'}
-            </p>
-            {hasActiveFilters && (
+        {/* ========================================================= */}
+        {/* TAB 1: ICONIC BRANDS SHOWCASE                            */}
+        {/* ========================================================= */}
+        {!loading && !error && activeTab === 'brands' && (
+          <div>
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))',
+              gap: '1.75rem'
+            }}>
+              {brands.map((brand) => (
+                <BrandCard key={brand.id} brand={brand} />
+              ))}
+            </div>
+
+            {/* Quick Helper Strip */}
+            <div style={{
+              marginTop: '3.5rem',
+              padding: '1.75rem 2rem',
+              background: 'white',
+              borderRadius: 'var(--radius-xl)',
+              border: '1px solid var(--border-heritage)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: '1.25rem'
+            }}>
+              <div>
+                <h4 style={{ fontSize: '1.05rem', fontWeight: 800, color: 'var(--text-heritage-dark)', margin: 0 }}>
+                  Looking for a specific branch near you?
+                </h4>
+                <p style={{ fontSize: '0.85rem', color: 'var(--text-heritage-secondary)', margin: '2px 0 0 0' }}>
+                  Browse all 14 individual branches across Indiranagar, Koramangala, Church St, Jayanagar & Whitefield.
+                </p>
+              </div>
               <button
                 type="button"
-                className="btn btn-secondary"
-                onClick={handleClearFilters}
+                onClick={() => setActiveTab('branches')}
+                className="btn btn-sm btn-secondary"
+                style={{ fontWeight: 700, padding: '0.6rem 1.2rem', borderColor: 'var(--accent-brass)', color: 'var(--accent-brass)' }}
               >
-                Clear Filters
+                View All Bengaluru Branches
               </button>
-            )}
+            </div>
           </div>
         )}
 
-        {/* Restaurant Cards Responsive Grid */}
-        {!loading && !error && processedRestaurants.length > 0 && (
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))',
-            gap: '1.5rem'
-          }}>
-            {processedRestaurants.map((rest) => (
-              <RestaurantCard
-                key={rest.id}
-                restaurant={rest}
-                calculatedDistance={rest.calculatedDistance}
-                onSelectRestaurant={(id) => {
-                  setSelectedRestaurantId?.(id);
-                  setActivePage?.('restaurant-menu-view');
-                  navigate(`/restaurant/${id}`);
-                }}
-              />
-            ))}
+        {/* ========================================================= */}
+        {/* TAB 2: ALL BENGALURU BRANCHES GRID                       */}
+        {/* ========================================================= */}
+        {!loading && !error && activeTab === 'branches' && (
+          <div>
+            {restaurants.length === 0 ? (
+              <div style={{
+                background: 'white',
+                borderRadius: 'var(--radius-xl)',
+                padding: '4rem 2rem',
+                textAlign: 'center',
+                border: '1px solid var(--border-heritage)',
+                maxWidth: '560px',
+                margin: '2rem auto'
+              }}>
+                <Utensils size={40} style={{ color: 'var(--text-muted)', margin: '0 auto 1rem auto' }} />
+                <h3 style={{ fontSize: '1.3rem', fontWeight: 800, marginBottom: '0.5rem', color: 'var(--text-heritage-dark)' }}>
+                  No branches found matching "{search || selectedArea}"
+                </h3>
+                <p style={{ color: 'var(--text-heritage-secondary)', fontSize: '0.9rem', marginBottom: '1.5rem' }}>
+                  Try searching another Bengaluru locality or clear your active filters.
+                </p>
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={handleClearFilters}
+                  style={{ background: 'var(--accent-brass)', border: 'none' }}
+                >
+                  Clear Search & Filters
+                </button>
+              </div>
+            ) : (
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))',
+                gap: '1.75rem'
+              }}>
+                {restaurants.map((rest) => (
+                  <RestaurantCard
+                    key={rest.id}
+                    restaurant={rest}
+                    calculatedDistance={rest.calculatedDistance}
+                    onSelectRestaurant={(id) => {
+                      setSelectedRestaurantId?.(id);
+                      setActivePage?.('restaurant-menu-view');
+                      const brandParam = rest.brand_slug || rest.brand_id || 'brand';
+                      navigate(`/restaurants/${brandParam}/branches/${id}`);
+                    }}
+                  />
+                ))}
+              </div>
+            )}
           </div>
         )}
       </div>

@@ -73,6 +73,12 @@ export const restaurantAPI = {
     if (params.location && params.location !== 'All') {
       cleanParams.location = params.location;
     }
+    if (params.area && params.area !== 'All') {
+      cleanParams.area = params.area;
+    }
+    if (params.brand && params.brand !== 'All') {
+      cleanParams.brand = params.brand;
+    }
     if (params.open_only || params.openNow) {
       cleanParams.openNow = 'true';
       cleanParams.open_only = 'true';
@@ -83,6 +89,8 @@ export const restaurantAPI = {
     const query = new URLSearchParams(cleanParams).toString();
     return apiRequest(`/restaurants${query ? `?${query}` : ''}`);
   },
+  getBrands: () => apiRequest('/restaurants/brands'),
+  getBrand: (idOrSlug) => apiRequest(`/restaurants/brands/${idOrSlug}`),
   getById: (id) => apiRequest(`/restaurants/${id}`),
   updateSettings: (id, settings) => apiRequest(`/restaurants/${id}/settings`, { method: 'PUT', body: JSON.stringify(settings) }),
   toggleStatus: (id) => apiRequest(`/restaurants/${id}/toggle-status`, { method: 'PATCH' })

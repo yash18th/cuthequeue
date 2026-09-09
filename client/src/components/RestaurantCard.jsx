@@ -1,5 +1,5 @@
 import React from 'react';
-import { Star, Clock, MapPin, ChevronRight, Zap, ShoppingBag } from 'lucide-react';
+import { Star, Clock, MapPin, ChevronRight, Zap, Award } from 'lucide-react';
 
 export default function RestaurantCard({
   restaurant,
@@ -10,15 +10,8 @@ export default function RestaurantCard({
     ? restaurant.is_currently_open
     : !!restaurant.is_open;
 
-  // Format hours cleanly (e.g., "08:30 – 23:00")
-  const hoursDisplay = restaurant.opening_time && restaurant.closing_time
-    ? `${restaurant.opening_time} – ${restaurant.closing_time}`
-    : null;
-
-  // Calculate dynamic ready time based on prep time
+  // Calculate ready time estimate
   const prepMinutes = restaurant.prep_time_minutes || 15;
-  const readyDate = new Date(Date.now() + prepMinutes * 60000);
-  const readyByTime = readyDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
   // Determine distance display
   const displayDistance = calculatedDistance !== undefined && calculatedDistance !== null
@@ -27,15 +20,49 @@ export default function RestaurantCard({
     ? `${restaurant.distance_km} km away`
     : null;
 
+  // Queue pill helper
+  const renderQueuePill = () => {
+    const q = (restaurant.queue_status || 'moderate').toLowerCase();
+    const count = restaurant.queue_count || 6;
+    if (q === 'low') {
+      return (
+        <span className="queue-pill queue-pill-low">
+          ● Low ({count} orders ahead)
+        </span>
+      );
+    }
+    if (q === 'busy') {
+      return (
+        <span className="queue-pill queue-pill-busy">
+          ● Busy ({count} orders ahead)
+        </span>
+      );
+    }
+    if (q === 'very_busy') {
+      return (
+        <span className="queue-pill queue-pill-very-busy">
+          ● High Rush ({count} orders ahead)
+        </span>
+      );
+    }
+    return (
+      <span className="queue-pill queue-pill-moderate">
+        ● Moderate ({count} orders ahead)
+      </span>
+    );
+  };
+
+  const displayName = restaurant.brand_name
+    ? `${restaurant.brand_name} — ${restaurant.branch_name || restaurant.area || ''}`
+    : restaurant.name;
+
   return (
     <div
-      className="card card-hover"
+      className="heritage-card"
       style={{
         display: 'flex',
         flexDirection: 'column',
         cursor: 'pointer',
-        background: 'white',
-        opacity: isOpen ? 1 : 0.88,
         position: 'relative'
       }}
       onClick={() => onSelectRestaurant(restaurant.id)}
@@ -49,223 +76,182 @@ export default function RestaurantCard({
       }}
     >
       {/* Cover Image & Badges */}
-      <div style={{ position: 'relative', height: '180px', width: '100%', overflow: 'hidden', background: '#0f172a' }}>
+      <div style={{ position: 'relative', height: '190px', width: '100%', overflow: 'hidden', background: '#1c1917' }}>
         <img
           src={restaurant.cover_image || 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=1000'}
           alt={restaurant.name}
           loading="lazy"
-          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+          style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.4s ease' }}
+          onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.04)'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}
         />
 
         {/* Top Badges */}
         <div style={{ position: 'absolute', top: '12px', left: '12px', zIndex: 2 }}>
           <span style={{
-            background: 'rgba(15, 23, 42, 0.88)',
-            color: '#38bdf8',
-            padding: '3px 8px',
-            borderRadius: '6px',
-            fontSize: '0.7rem',
-            fontWeight: 700,
+            background: 'rgba(28, 25, 23, 0.88)',
+            color: '#fbbf24',
+            padding: '3px 9px',
+            borderRadius: 'var(--radius-full)',
+            fontSize: '0.72rem',
+            fontWeight: 800,
             display: 'inline-flex',
             alignItems: 'center',
             gap: '4px',
             backdropFilter: 'blur(6px)',
-            border: '1px solid rgba(56, 189, 248, 0.35)'
+            border: '1px solid rgba(251, 191, 36, 0.3)'
           }}>
-            ⚡ Available on CutTheQueue
+            ⚡ Pre-Order & Skip Queue
           </span>
         </div>
 
-        <div style={{ position: 'absolute', top: '12px', right: '12px', display: 'flex', gap: '6px', zIndex: 2 }}>
+        <div style={{ position: 'absolute', top: '12px', right: '12px', zIndex: 2 }}>
           <span className={`badge ${isOpen ? 'badge-open' : 'badge-closed'}`}>
-            {isOpen ? '🟢 OPEN' : '🔴 CLOSED'}
+            {isOpen ? '🟢 Open' : '🔴 Closed'}
           </span>
         </div>
 
-        {/* Pickup & Queue Badges */}
+        {/* Bottom Logo & Rating Overlay */}
         <div style={{
           position: 'absolute',
-          bottom: '12px',
-          left: '12px',
+          bottom: '10px',
+          right: '12px',
+          zIndex: 2,
           display: 'flex',
-          flexDirection: 'column',
-          gap: '5px',
-          zIndex: 2
+          alignItems: 'center',
+          gap: '6px'
         }}>
-          <div style={{
-            background: 'rgba(15, 23, 42, 0.82)',
-            color: '#a7f3d0',
+          <span style={{
+            background: 'rgba(28, 25, 23, 0.88)',
+            color: '#fbbf24',
             padding: '3px 8px',
             borderRadius: '6px',
-            fontSize: '0.75rem',
-            fontWeight: 700,
+            fontSize: '0.78rem',
+            fontWeight: 800,
             display: 'inline-flex',
             alignItems: 'center',
             gap: '4px',
             backdropFilter: 'blur(6px)'
           }}>
-            <ShoppingBag size={12} /> Pickup Available
-          </div>
-
-          <div style={{
-            background: 'rgba(15, 23, 42, 0.82)',
-            color: '#fef08a',
-            padding: '3px 8px',
-            borderRadius: '6px',
-            fontSize: '0.72rem',
-            fontWeight: 700,
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '4px',
-            backdropFilter: 'blur(6px)'
-          }}>
-            <Zap size={11} /> Low queue • Ready faster
-          </div>
+            <Star size={13} fill="#fbbf24" strokeWidth={0} />
+            {restaurant.rating ? Number(restaurant.rating).toFixed(1) : '4.7'}
+          </span>
         </div>
-
-        {/* Floating Restaurant Logo Thumbnail */}
-        {restaurant.logo && (
-          <div style={{
-            position: 'absolute',
-            bottom: '-16px',
-            right: '16px',
-            width: '46px',
-            height: '46px',
-            borderRadius: '10px',
-            border: '2px solid white',
-            boxShadow: 'var(--shadow-md)',
-            overflow: 'hidden',
-            background: 'white',
-            zIndex: 3
-          }}>
-            <img
-              src={restaurant.logo}
-              alt={`${restaurant.name} logo`}
-              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-            />
-          </div>
-        )}
       </div>
 
-      {/* Body Information */}
-      <div style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column', flex: 1 }}>
-        {/* Title & Rating */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px', marginBottom: '0.35rem' }}>
-          <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1.25 }}>
-            {restaurant.name}
-          </h3>
-          <div style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '3px',
-            background: '#fef3c7',
-            color: '#b45309',
-            padding: '2px 7px',
-            borderRadius: '6px',
-            fontSize: '0.8rem',
-            fontWeight: 700,
-            flexShrink: 0
+      {/* Card Body */}
+      <div style={{ padding: '1.4rem', flex: 1, display: 'flex', flexDirection: 'column' }}>
+        {/* Brand / Area Title */}
+        <div style={{ marginBottom: '0.4rem' }}>
+          <span style={{
+            fontSize: '0.75rem',
+            fontWeight: 800,
+            color: 'var(--accent-brass)',
+            textTransform: 'uppercase',
+            letterSpacing: '0.04em'
           }}>
-            <Star size={12} fill="#b45309" strokeWidth={0} />
-            {restaurant.rating ? Number(restaurant.rating).toFixed(1) : '4.5'}
-          </div>
+            {restaurant.area || 'Bengaluru'}
+          </span>
+          <h3 style={{
+            fontSize: '1.2rem',
+            fontWeight: 800,
+            color: 'var(--text-heritage-dark)',
+            letterSpacing: '-0.02em',
+            margin: '2px 0 0 0'
+          }}>
+            {displayName}
+          </h3>
         </div>
 
         {/* Cuisine */}
-        <p style={{ fontSize: '0.825rem', color: 'var(--primary)', fontWeight: 600, marginBottom: '0.4rem' }}>
+        <p style={{
+          fontSize: '0.825rem',
+          color: 'var(--text-heritage-secondary)',
+          marginBottom: '0.75rem',
+          whiteSpace: 'nowrap',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis'
+        }}>
           {restaurant.cuisine}
         </p>
 
-        {/* Short Description */}
-        <p style={{
-          fontSize: '0.85rem',
-          color: 'var(--text-secondary)',
-          lineHeight: 1.45,
-          marginBottom: '0.85rem',
-          display: '-webkit-box',
-          WebkitLineClamp: 2,
-          WebkitBoxOrient: 'vertical',
-          overflow: 'hidden',
-          flex: 1
-        }}>
-          {restaurant.description}
-        </p>
-
-        {/* Pickup & Preparation Callout */}
-        <div style={{
-          fontSize: '0.78rem',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '5px',
-          marginBottom: '0.85rem',
-          padding: '0.6rem 0.75rem',
-          background: 'var(--primary-light)',
-          border: '1px solid var(--primary-border)',
-          borderRadius: 'var(--radius-sm)'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '4px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '5px', fontWeight: 700, color: 'var(--primary)' }}>
-              <Clock size={13} />
-              <span>Preparing in ~{prepMinutes} min</span>
-            </div>
-            <span style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', fontWeight: 600 }}>
-              Ready by ~{readyByTime}
-            </span>
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '5px', color: 'var(--text-secondary)', fontSize: '0.75rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', overflow: 'hidden' }}>
-              <MapPin size={12} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
-              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                {restaurant.location ? `${restaurant.location} • ${restaurant.address}` : restaurant.address}
-              </span>
-            </div>
-            {displayDistance && (
-              <span style={{ flexShrink: 0, fontWeight: 600 }}>
-                {displayDistance}
-              </span>
-            )}
-          </div>
-        </div>
-
-        {/* Action Footer */}
+        {/* Location & Distance */}
         <div style={{
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'space-between',
-          paddingTop: '0.75rem',
-          borderTop: '1px solid var(--border-subtle)',
-          gap: '0.5rem'
+          gap: '6px',
+          fontSize: '0.8rem',
+          color: 'var(--text-heritage-muted)',
+          marginBottom: '1rem'
         }}>
-          <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600 }}>
-            {hoursDisplay ? `Open ${hoursDisplay}` : 'Walk-in Counter Pickup'}
+          <MapPin size={13} style={{ color: 'var(--accent-brass)', flexShrink: 0 }} />
+          <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flex: 1 }}>
+            {restaurant.address}
           </span>
+          {displayDistance && (
+            <span style={{ fontWeight: 700, color: 'var(--text-heritage-dark)', flexShrink: 0 }}>
+              • {displayDistance}
+            </span>
+          )}
+        </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <button
-              type="button"
-              className="btn btn-secondary btn-sm"
-              style={{ fontSize: '0.8rem', padding: '0.35rem 0.65rem' }}
-              onClick={(e) => {
-                e.stopPropagation();
-                onSelectRestaurant(restaurant.id);
-              }}
-            >
-              View Menu
-            </button>
-            <button
-              type="button"
-              className="btn btn-primary btn-sm"
-              style={{ fontSize: '0.8rem', padding: '0.35rem 0.75rem' }}
-              onClick={(e) => {
-                e.stopPropagation();
-                onSelectRestaurant(restaurant.id);
-              }}
-            >
-              Pre-Order Now <ChevronRight size={13} />
-            </button>
+        {/* Live Queue & Preparation Strip */}
+        <div style={{
+          marginTop: 'auto',
+          padding: '0.7rem 0.85rem',
+          background: 'var(--bg-heritage-warm)',
+          borderRadius: 'var(--radius-md)',
+          marginBottom: '1rem',
+          border: '1px solid #e7e5e4',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: '6px'
+        }}>
+          <div>
+            {renderQueuePill()}
+          </div>
+          <div style={{
+            fontSize: '0.78rem',
+            fontWeight: 700,
+            color: 'var(--text-heritage-dark)',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '4px'
+          }}>
+            <Clock size={13} style={{ color: 'var(--accent-brass)' }} />
+            Ready in ~{prepMinutes} min
           </div>
         </div>
+
+        {/* Primary CTA */}
+        <button
+          type="button"
+          className="btn btn-primary"
+          onClick={(e) => {
+            e.stopPropagation();
+            onSelectRestaurant(restaurant.id);
+          }}
+          style={{
+            width: '100%',
+            fontWeight: 700,
+            fontSize: '0.88rem',
+            padding: '0.65rem',
+            borderRadius: 'var(--radius-md)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '6px',
+            background: 'linear-gradient(135deg, #b45309 0%, #d97706 100%)',
+            border: 'none',
+            color: 'white',
+            boxShadow: '0 2px 6px rgba(180, 83, 9, 0.3)'
+          }}
+        >
+          <span>View Menu & Pre-Order</span>
+          <ChevronRight size={16} />
+        </button>
       </div>
     </div>
   );

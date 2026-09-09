@@ -14,6 +14,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import LandingPage from './pages/LandingPage';
 import AuthPage from './pages/AuthPage';
 import CustomerHome from './pages/CustomerHome';
+import BrandDetailPage from './pages/BrandDetailPage';
 import RestaurantPage from './pages/RestaurantPage';
 import CartPage from './pages/CartPage';
 import CheckoutPage from './pages/CheckoutPage';
@@ -54,8 +55,21 @@ function MainApp() {
         navigate('/');
         break;
       case 'home':
-        navigate('/browse');
+      case 'browse':
+      case 'restaurants':
+        navigate('/restaurants');
         break;
+      case 'brand-detail': {
+        const target = meta?.brandSlug || meta?.brandId || '';
+        navigate(`/restaurants/${target}`);
+        break;
+      }
+      case 'branch-detail': {
+        const brandSlug = meta?.brandSlug || 'brand';
+        const branchId = meta?.branchId || meta?.restaurantId;
+        navigate(`/restaurants/${brandSlug}/branches/${branchId}`);
+        break;
+      }
       case 'orders':
         navigate('/orders');
         break;
@@ -81,6 +95,11 @@ function MainApp() {
         navigate(`/orders/${id}`);
         break;
       }
+      case 'queue': {
+        const id = meta?.orderId || trackedOrderId;
+        navigate(`/queue/${id}`);
+        break;
+      }
       case 'restaurant-dashboard':
         navigate('/kitchen');
         break;
@@ -101,7 +120,7 @@ function MainApp() {
     }
   };
 
-  const hideFooter = location.pathname.startsWith('/orders/') || location.pathname === '/order-tracking';
+  const hideFooter = location.pathname.startsWith('/orders/') || location.pathname.startsWith('/queue/') || location.pathname === '/order-tracking';
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
@@ -125,11 +144,39 @@ function MainApp() {
             }
           />
           <Route
+            path="/restaurants"
+            element={
+              <CustomerHome
+                setActivePage={setActivePage}
+                setSelectedRestaurantId={setSelectedRestaurantId}
+              />
+            }
+          />
+          <Route
             path="/browse"
             element={
               <CustomerHome
                 setActivePage={setActivePage}
                 setSelectedRestaurantId={setSelectedRestaurantId}
+              />
+            }
+          />
+          <Route
+            path="/restaurants/:brandIdOrSlug"
+            element={
+              <BrandDetailPage
+                setActivePage={setActivePage}
+                setSelectedRestaurantId={setSelectedRestaurantId}
+              />
+            }
+          />
+          <Route
+            path="/restaurants/:brandIdOrSlug/branches/:restaurantId"
+            element={
+              <RestaurantPage
+                restaurantId={selectedRestaurantId}
+                setActivePage={setActivePage}
+                onOpenCart={() => setIsCartOpen(true)}
               />
             }
           />
@@ -193,6 +240,14 @@ function MainApp() {
           />
           <Route
             path="/orders/:orderId"
+            element={
+              <ProtectedRoute allowedRoles={['customer', 'restaurant_admin', 'super_admin']}>
+                <OrderTrackingPage setActivePage={setActivePage} />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/queue/:orderId"
             element={
               <ProtectedRoute allowedRoles={['customer', 'restaurant_admin', 'super_admin']}>
                 <OrderTrackingPage setActivePage={setActivePage} />

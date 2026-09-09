@@ -46,18 +46,121 @@ function calculateHaversineKm(lat1, lon1, lat2, lon2) {
   return Math.round(R * c * 10) / 10;
 }
 
+// -------------------------------------------------------------
+// BRAND ENDPOINTS
+// -------------------------------------------------------------
+
+// Get all restaurant brands
+router.get('/brands', (req, res) => {
+  try {
+    const brands = db.prepare('SELECT * FROM brands ORDER BY id ASC').all();
+    const branchStmt = db.prepare(`
+      SELECT id, brand_id, name, branch_name, area, address, location, latitude, longitude,
+             opening_time, closing_time, is_open, prep_time_minutes, distance_km, queue_status, queue_count, rating
+      FROM restaurants
+      WHERE brand_id = ? AND is_approved = 1 AND is_suspended = 0
+      ORDER BY id ASC
+    `);
+
+    const enrichedBrands = brands.map(b => {
+      const branches = branchStmt.all(b.id).map(br => ({
+        ...br,
+        is_currently_open: checkIsCurrentlyOpen(br)
+      }));
+
+      const areas = [...new Set(branches.map(br => br.area).filter(Boolean))];
+
+      return {
+        ...b,
+        branch_count: branches.length,
+        areas,
+        branches
+      };
+    });
+
+    res.json({ brands: enrichedBrands, total: enrichedBrands.length });
+  } catch (err) {
+    console.error('Fetch brands error:', err);
+    res.status(500).json({ error: 'Failed to fetch restaurant brands.' });
+  }
+});
+
+// Get single brand with all its branches
+router.get('/brands/:brandIdOrSlug', (req, res) => {
+  try {
+    const param = req.params.brandIdOrSlug;
+    const isNumeric = /^\d+$/.test(param);
+
+    const brand = isNumeric
+      ? db.prepare('SELECT * FROM brands WHERE id = ?').get(param)
+      : db.prepare('SELECT * FROM brands WHERE slug = ?').get(param);
+
+    if (!brand) {
+      return res.status(404).json({ error: 'Restaurant brand not found.' });
+    }
+
+    const branches = db.prepare(`
+      SELECT id, brand_id, name, branch_name, area, address, location, latitude, longitude,
+             contact_phone, opening_time, closing_time, is_open, prep_time_minutes,
+             distance_km, queue_status, queue_count, rating, cover_image, logo
+      FROM restaurants
+      WHERE brand_id = ? AND is_approved = 1 AND is_suspended = 0
+      ORDER BY id ASC
+    `).all(brand.id).map(br => ({
+      ...br,
+      is_currently_open: checkIsCurrentlyOpen(br)
+    }));
+
+    const areas = [...new Set(branches.map(br => br.area).filter(Boolean))];
+
+    res.json({
+      brand: {
+        ...brand,
+        branch_count: branches.length,
+        areas
+      },
+      branches
+    });
+  } catch (err) {
+    console.error('Fetch brand error:', err);
+    res.status(500).json({ error: 'Failed to fetch restaurant brand.' });
+  }
+});
+
 // Get all restaurants (Public, filterable)
 router.get('/', (req, res) => {
   try {
     const rawSearch = req.query.q || req.query.search;
     const rawCuisine = req.query.category || req.query.cuisine;
-    const rawLocation = req.query.location;
+    const rawLocation = req.query.location || req.query.area;
+    const brandParam = req.query.brand || req.query.brand_id;
     const openNow = req.query.openNow === 'true' || req.query.open_only === 'true';
     const userLat = req.query.lat ? parseFloat(req.query.lat) : null;
     const userLng = req.query.lng ? parseFloat(req.query.lng) : null;
 
-    let query = 'SELECT * FROM restaurants WHERE is_approved = 1 AND is_suspended = 0';
+    let query = `
+      SELECT restaurants.*,
+             brands.name as brand_name,
+             brands.slug as brand_slug,
+             brands.logo as brand_logo,
+             brands.cuisine as brand_cuisine,
+             brands.heritage_since as brand_heritage_since
+      FROM restaurants
+      LEFT JOIN brands ON restaurants.brand_id = brands.id
+      WHERE restaurants.is_approved = 1 AND restaurants.is_suspended = 0
+    `;
     const params = [];
+
+    // Filter by brand
+    if (brandParam) {
+      if (/^\d+$/.test(brandParam)) {
+        query += ' AND restaurants.brand_id = ?';
+        params.push(Number(brandParam));
+      } else {
+        query += ' AND (brands.slug = ? OR LOWER(brands.name) = ?)';
+        params.push(brandParam.toLowerCase(), brandParam.toLowerCase());
+      }
+    }
 
     // 1. Multi-token partial search across name, cuisine, location, address, description, menu_items, categories
     if (rawSearch && typeof rawSearch === 'string') {
@@ -84,6 +187,9 @@ router.get('/', (req, res) => {
             const pattern = `%${token}%`;
             query += ` AND (
               LOWER(restaurants.name) LIKE ?
+              OR LOWER(COALESCE(brands.name, '')) LIKE ?
+              OR LOWER(COALESCE(restaurants.branch_name, '')) LIKE ?
+              OR LOWER(COALESCE(restaurants.area, '')) LIKE ?
               OR LOWER(restaurants.cuisine) LIKE ?
               OR LOWER(COALESCE(restaurants.location, '')) LIKE ?
               OR LOWER(restaurants.address) LIKE ?
@@ -99,7 +205,7 @@ router.get('/', (req, res) => {
                 AND LOWER(c.name) LIKE ?
               )
             )`;
-            params.push(pattern, pattern, pattern, pattern, pattern, pattern, pattern, pattern);
+            params.push(pattern, pattern, pattern, pattern, pattern, pattern, pattern, pattern, pattern, pattern, pattern);
           }
         });
       }
@@ -205,7 +311,20 @@ router.get('/', (req, res) => {
 // Get single restaurant details + categories + menu items
 router.get('/:id', (req, res) => {
   try {
-    const restaurant = db.prepare('SELECT * FROM restaurants WHERE id = ?').get(req.params.id);
+    const restaurant = db.prepare(`
+      SELECT r.*,
+             b.name as brand_name,
+             b.slug as brand_slug,
+             b.tagline as brand_tagline,
+             b.description as brand_description,
+             b.cuisine as brand_cuisine,
+             b.heritage_since as brand_heritage_since,
+             b.logo as brand_logo
+      FROM restaurants r
+      LEFT JOIN brands b ON r.brand_id = b.id
+      WHERE r.id = ?
+    `).get(req.params.id);
+
     if (!restaurant) {
       return res.status(404).json({ error: 'Restaurant not found.' });
     }
@@ -225,7 +344,10 @@ router.get('/:id', (req, res) => {
     }));
 
     res.json({
-      restaurant,
+      restaurant: {
+        ...restaurant,
+        is_currently_open: checkIsCurrentlyOpen(restaurant)
+      },
       categories: categorized,
       allItems: formattedItems
     });

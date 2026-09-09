@@ -29,6 +29,20 @@ function initDatabase() {
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
 
+    CREATE TABLE IF NOT EXISTS brands (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL UNIQUE,
+      slug TEXT NOT NULL UNIQUE,
+      tagline TEXT,
+      description TEXT,
+      cuisine TEXT,
+      heritage_since TEXT,
+      logo TEXT,
+      cover_image TEXT,
+      rating REAL DEFAULT 4.8,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+
     CREATE TABLE IF NOT EXISTS restaurants (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT NOT NULL,
@@ -150,6 +164,21 @@ function initDatabase() {
   }
   if (!restaurantCols.includes('longitude')) {
     db.exec('ALTER TABLE restaurants ADD COLUMN longitude REAL;');
+  }
+  if (!restaurantCols.includes('brand_id')) {
+    db.exec('ALTER TABLE restaurants ADD COLUMN brand_id INTEGER REFERENCES brands(id) ON DELETE SET NULL;');
+  }
+  if (!restaurantCols.includes('branch_name')) {
+    db.exec('ALTER TABLE restaurants ADD COLUMN branch_name TEXT;');
+  }
+  if (!restaurantCols.includes('area')) {
+    db.exec('ALTER TABLE restaurants ADD COLUMN area TEXT;');
+  }
+  if (!restaurantCols.includes('queue_status')) {
+    db.exec("ALTER TABLE restaurants ADD COLUMN queue_status TEXT DEFAULT 'moderate';");
+  }
+  if (!restaurantCols.includes('queue_count')) {
+    db.exec('ALTER TABLE restaurants ADD COLUMN queue_count INTEGER DEFAULT 6;');
   }
 }
 

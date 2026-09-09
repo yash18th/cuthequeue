@@ -136,7 +136,7 @@ export default function RestaurantDashboard({ setActivePage }) {
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               <h1 style={{ fontSize: '1.8rem', fontWeight: 800, letterSpacing: '-0.02em', margin: 0 }}>
-                {restaurant.name} Kitchen
+                {restaurant.name} {restaurant.branch_name ? `(${restaurant.branch_name})` : ''} Kitchen
               </h1>
               <span className={`badge ${restaurant.is_open ? 'badge-open' : 'badge-closed'}`}>
                 {restaurant.is_open ? '🟢 Open' : '🔴 Closed'}

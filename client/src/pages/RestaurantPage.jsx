@@ -4,18 +4,34 @@ import { restaurantAPI } from '../utils/api';
 import { useCart } from '../context/CartContext';
 import ItemModal from '../components/ItemModal';
 import PageNavHeader from '../components/PageNavHeader';
-import { Star, Clock, MapPin, ArrowLeft, ShoppingBag, AlertCircle, Plus, Info } from 'lucide-react';
+import {
+  Star,
+  Clock,
+  MapPin,
+  ArrowLeft,
+  ShoppingBag,
+  AlertCircle,
+  Plus,
+  Info,
+  Search,
+  Check,
+  ChevronRight,
+  Utensils
+} from 'lucide-react';
 
 export default function RestaurantPage({ restaurantId, setActivePage, onOpenCart }) {
   const params = useParams();
   const navigate = useNavigate();
-  const effectiveId = restaurantId || params.restaurantId || params.id;
+  const effectiveId = restaurantId || params.branchId || params.restaurantId || params.id;
 
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeCategory, setActiveCategory] = useState(null);
+  const [menuSearch, setMenuSearch] = useState('');
   const [selectedItemForModal, setSelectedItemForModal] = useState(null);
-  const { addItem, totalItemCount } = useCart();
+  const [vegOnly, setVegOnly] = useState(false);
+
+  const { addItem, totalItemCount, cartTotal, restaurant: cartRestaurant } = useCart();
 
   useEffect(() => {
     if (!effectiveId) return;
@@ -31,381 +47,550 @@ export default function RestaurantPage({ restaurantId, setActivePage, onOpenCart
       .finally(() => setLoading(false));
   }, [effectiveId]);
 
-  const handleBack = () => {
-    if (window.history.state && window.history.state.idx > 0) {
-      navigate(-1);
-    } else if (setActivePage) {
-      setActivePage('home');
-    } else {
-      navigate('/browse');
-    }
-  };
-
   if (loading) {
     return (
-      <div className="container" style={{ padding: '4rem 0', textAlign: 'center' }}>
-        <p style={{ color: 'var(--text-muted)' }}>Loading live menu...</p>
+      <div style={{ background: 'var(--bg-heritage)', minHeight: '80vh', padding: '4rem 0', textAlign: 'center' }}>
+        <div className="container" style={{ maxWidth: '800px' }}>
+          <div style={{ width: '120px', height: '36px', background: '#e7e5e4', borderRadius: '8px', marginBottom: '2rem' }} />
+          <div style={{ height: '240px', background: '#e7e5e4', borderRadius: '16px', marginBottom: '2rem' }} />
+          <p style={{ color: 'var(--text-heritage-muted)' }}>Loading authentic Bengaluru menu...</p>
+        </div>
       </div>
     );
   }
 
   if (!data || !data.restaurant) {
     return (
-      <div className="container" style={{ padding: '4rem 0', textAlign: 'center' }}>
-        <p style={{ fontSize: '1.1rem', marginBottom: '1rem' }}>Restaurant not found or currently unavailable.</p>
-        <button className="btn btn-secondary" onClick={handleBack}>
-          <ArrowLeft size={16} /> Back to Restaurants
-        </button>
+      <div style={{ background: 'var(--bg-heritage)', minHeight: '70vh', padding: '4rem 0', textAlign: 'center' }}>
+        <div className="container" style={{ maxWidth: '500px' }}>
+          <AlertCircle size={44} style={{ color: 'var(--accent-terracotta)', margin: '0 auto 1rem auto' }} />
+          <h2 style={{ fontSize: '1.5rem', fontWeight: 800, marginBottom: '0.5rem', color: 'var(--text-heritage-dark)' }}>
+            Branch Not Found
+          </h2>
+          <p style={{ color: 'var(--text-heritage-secondary)', marginBottom: '1.5rem' }}>
+            We could not find this restaurant branch.
+          </p>
+          <button
+            type="button"
+            className="btn btn-secondary"
+            onClick={() => navigate('/restaurants')}
+          >
+            <ArrowLeft size={16} /> Back to Restaurants
+          </button>
+        </div>
       </div>
     );
   }
 
   const { restaurant, categories, allItems } = data;
 
-  const handleAddToCart = (item, rest, quantity, selections) => {
-    addItem(item, rest, quantity, selections);
+  const brandSlug = restaurant.brand_slug || restaurant.brand_id;
+  const brandName = restaurant.brand_name || restaurant.name.split(' - ')[0];
+  const branchName = restaurant.branch_name || restaurant.area || restaurant.name;
+
+  const fallbackPath = brandSlug ? `/restaurants/${brandSlug}` : '/restaurants';
+  const backLabel = brandName ? `Back to ${brandName}` : 'Back to Restaurants';
+
+  const breadcrumbs = [
+    { label: 'Home', path: '/' },
+    { label: 'Restaurants', path: '/restaurants' }
+  ];
+  if (brandSlug && brandName) {
+    breadcrumbs.push({ label: brandName, path: `/restaurants/${brandSlug}` });
+  }
+  breadcrumbs.push({ label: `${branchName} Menu` });
+
+  const isOpen = restaurant.is_currently_open !== undefined
+    ? restaurant.is_currently_open
+    : !!restaurant.is_open;
+
+  // Queue Pill Helper
+  const renderQueueBadge = () => {
+    const q = (restaurant.queue_status || 'moderate').toLowerCase();
+    const count = restaurant.queue_count || 6;
+    if (q === 'low') {
+      return (
+        <span className="queue-pill queue-pill-low">
+          ● Low Queue ({count} orders ahead)
+        </span>
+      );
+    }
+    if (q === 'busy') {
+      return (
+        <span className="queue-pill queue-pill-busy">
+          ● Busy Queue ({count} orders ahead)
+        </span>
+      );
+    }
+    if (q === 'very_busy') {
+      return (
+        <span className="queue-pill queue-pill-very-busy">
+          ● High Rush ({count} orders ahead)
+        </span>
+      );
+    }
+    return (
+      <span className="queue-pill queue-pill-moderate">
+        ● Moderate Queue ({count} orders ahead)
+      </span>
+    );
+  };
+
+  // Filter items
+  const filteredItems = (allItems || []).filter((item) => {
+    const matchesCategory = activeCategory ? item.category_id === activeCategory : true;
+    const matchesSearch = menuSearch.trim() === '' ||
+      item.name.toLowerCase().includes(menuSearch.toLowerCase()) ||
+      (item.description && item.description.toLowerCase().includes(menuSearch.toLowerCase()));
+    const matchesVeg = vegOnly ? Boolean(item.is_veg) : true;
+    return matchesCategory && matchesSearch && matchesVeg;
+  });
+
+  const handleAddToCart = (item) => {
+    const customizations = item.customizations || JSON.parse(item.customizations_json || '[]');
+    if (customizations.length > 0) {
+      setSelectedItemForModal(item);
+    } else {
+      addItem(item, restaurant, 1, {});
+    }
   };
 
   return (
-    <div style={{ paddingBottom: '6rem' }}>
-      <div className="container" style={{ paddingTop: '1.25rem', paddingBottom: '0.75rem' }}>
+    <div style={{ background: 'var(--bg-heritage)', minHeight: '90vh', paddingBottom: '7rem' }}>
+      {/* Top Nav Header with Back & Breadcrumb */}
+      <div className="container" style={{ paddingTop: '1.5rem', paddingBottom: '0.5rem' }}>
         <PageNavHeader
-          backLabel="Back to Restaurants"
-          fallbackPath="/browse"
-          breadcrumbs={[
-            { label: 'Home', path: '/' },
-            { label: 'Browse', path: '/browse' },
-            { label: restaurant.name }
-          ]}
+          backLabel={backLabel}
+          fallbackPath={fallbackPath}
+          breadcrumbs={breadcrumbs}
         />
       </div>
 
-      {/* Cover Banner */}
-      <div style={{ position: 'relative', height: '280px', width: '100%', background: '#0f172a' }}>
+      {/* Heritage Cover Banner */}
+      <div style={{
+        position: 'relative',
+        height: '280px',
+        width: '100%',
+        background: '#1c1917',
+        overflow: 'hidden'
+      }}>
         <img
           src={restaurant.cover_image}
           alt={restaurant.name}
-          style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.88 }}
+          style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.82 }}
         />
         <div style={{
           position: 'absolute',
           inset: 0,
-          background: 'linear-gradient(to top, rgba(15,23,42,0.85) 0%, transparent 60%)'
+          background: 'linear-gradient(to top, rgba(28, 25, 23, 0.92) 0%, rgba(28, 25, 23, 0.3) 60%, transparent 100%)'
         }} />
 
         <div className="container" style={{ position: 'absolute', bottom: '24px', left: 0, right: 0, color: 'white' }}>
-          <button
-            onClick={handleBack}
-            style={{
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', marginBottom: '6px' }}>
+            <span className={`badge ${isOpen ? 'badge-open' : 'badge-closed'}`}>
+              {isOpen ? '🟢 Open for Pre-Order' : '🔴 Closed'}
+            </span>
+            <span style={{
+              background: 'rgba(28, 25, 23, 0.85)',
+              color: '#fbbf24',
+              padding: '3px 8px',
+              borderRadius: '6px',
+              fontSize: '0.78rem',
+              fontWeight: 800,
               display: 'inline-flex',
               alignItems: 'center',
-              gap: '6px',
-              background: 'rgba(255,255,255,0.2)',
-              color: 'white',
-              padding: '6px 12px',
-              borderRadius: '8px',
-              fontSize: '0.8rem',
-              fontWeight: 600,
-              marginBottom: '1rem',
+              gap: '4px',
               backdropFilter: 'blur(6px)'
-            }}
-          >
-            <ArrowLeft size={14} /> Back to Restaurants
-          </button>
-
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '1rem' }}>
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px' }}>
-                <h1 style={{ fontSize: 'clamp(1.8rem, 3.5vw, 2.4rem)', fontWeight: 800, letterSpacing: '-0.02em', margin: 0 }}>
-                  {restaurant.name}
-                </h1>
-                <span className={`badge ${restaurant.is_open ? 'badge-open' : 'badge-closed'}`}>
-                  {restaurant.is_open ? '🟢 Open Now' : '🔴 Currently Closed'}
-                </span>
-              </div>
-              <p style={{ color: '#e2e8f0', fontSize: '0.95rem', marginBottom: '0.5rem' }}>
-                {restaurant.cuisine} • {restaurant.address}
-              </p>
-              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                <span style={{
-                  background: 'rgba(255,255,255,0.2)',
-                  color: '#a7f3d0',
-                  padding: '3px 8px',
-                  borderRadius: '6px',
-                  fontSize: '0.75rem',
-                  fontWeight: 700,
-                  backdropFilter: 'blur(4px)'
-                }}>
-                  🛍️ Self-Pickup Counter
-                </span>
-                <span style={{
-                  background: 'rgba(255,255,255,0.2)',
-                  color: '#fef08a',
-                  padding: '3px 8px',
-                  borderRadius: '6px',
-                  fontSize: '0.75rem',
-                  fontWeight: 700,
-                  backdropFilter: 'blur(4px)'
-                }}>
-                  ⚡ Low Queue • Ready on Arrival
-                </span>
-                {restaurant.opening_time && restaurant.closing_time && (
-                  <span style={{
-                    background: 'rgba(255,255,255,0.2)',
-                    color: 'white',
-                    padding: '3px 8px',
-                    borderRadius: '6px',
-                    fontSize: '0.75rem',
-                    fontWeight: 600,
-                    backdropFilter: 'blur(4px)'
-                  }}>
-                    Hours: {restaurant.opening_time} – {restaurant.closing_time}
-                  </span>
-                )}
-              </div>
-            </div>
-
-            <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
-              <div style={{
-                background: 'rgba(255,255,255,0.15)',
-                backdropFilter: 'blur(8px)',
-                padding: '8px 14px',
-                borderRadius: '12px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px'
-              }}>
-                <Clock size={18} style={{ color: '#34d399' }} />
-                <div>
-                  <div style={{ fontSize: '0.72rem', color: '#cbd5e1', textTransform: 'uppercase', fontWeight: 700 }}>Prep Time</div>
-                  <div style={{ fontSize: '0.95rem', fontWeight: 800 }}>~{restaurant.prep_time_minutes || 15} min</div>
-                </div>
-              </div>
-
-              <div style={{
-                background: 'rgba(255,255,255,0.15)',
-                backdropFilter: 'blur(8px)',
-                padding: '8px 14px',
-                borderRadius: '12px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px'
-              }}>
-                <Star size={18} style={{ color: '#fbbf24' }} fill="#fbbf24" />
-                <div>
-                  <div style={{ fontSize: '0.72rem', color: '#cbd5e1', textTransform: 'uppercase', fontWeight: 700 }}>Rating</div>
-                  <div style={{ fontSize: '0.95rem', fontWeight: 800 }}>{restaurant.rating || 4.5} / 5.0</div>
-                </div>
-              </div>
-            </div>
+            }}>
+              <Star size={13} fill="#fbbf24" strokeWidth={0} />
+              {restaurant.rating ? Number(restaurant.rating).toFixed(1) : '4.8'}
+            </span>
           </div>
-        </div>
-      </div>
 
-      {/* Closed Warning Banner if restaurant is closed */}
-      {!restaurant.is_open && (
-        <div style={{ background: '#fff1f2', borderBottom: '1px solid #fecdd3', padding: '0.85rem 0' }}>
-          <div className="container" style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#be123c', fontSize: '0.9rem' }}>
-            <AlertCircle size={18} />
-            <span>
-              <strong>This kitchen is currently closed.</strong> You can still browse the menu or schedule a pickup order in advance.
+          <h1 style={{
+            fontSize: 'clamp(1.8rem, 4vw, 2.6rem)',
+            fontWeight: 800,
+            letterSpacing: '-0.025em',
+            margin: '0.2rem 0',
+            color: 'white'
+          }}>
+            {restaurant.name}
+          </h1>
+
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+            fontSize: '0.875rem',
+            color: '#e7e5e4',
+            flexWrap: 'wrap'
+          }}>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+              <MapPin size={14} style={{ color: '#fbbf24' }} />
+              {restaurant.address}
+            </span>
+            <span>•</span>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+              <Clock size={14} style={{ color: '#fbbf24' }} />
+              Ready in ~{restaurant.prep_time_minutes || 15} mins
             </span>
           </div>
         </div>
-      )}
-
-      {/* Category Tabs Navigation */}
-      <div style={{
-        position: 'sticky',
-        top: '68px',
-        zIndex: 40,
-        background: 'rgba(255,255,255,0.94)',
-        backdropFilter: 'blur(10px)',
-        borderBottom: '1px solid var(--border-subtle)',
-        padding: '0.75rem 0'
-      }}>
-        <div className="container" style={{ display: 'flex', gap: '0.5rem', overflowX: 'auto', whiteSpace: 'nowrap', paddingBottom: '2px' }}>
-          {categories.map((cat) => (
-            <button
-              key={cat.id}
-              onClick={() => setActiveCategory(cat.id)}
-              style={{
-                padding: '0.5rem 1.15rem',
-                borderRadius: 'var(--radius-full)',
-                fontSize: '0.875rem',
-                fontWeight: 700,
-                border: 'none',
-                background: activeCategory === cat.id ? 'var(--primary)' : 'var(--bg-subtle)',
-                color: activeCategory === cat.id ? 'white' : 'var(--text-secondary)',
-                transition: 'all 0.15s'
-              }}
-            >
-              {cat.name} ({cat.items.length})
-            </button>
-          ))}
-        </div>
       </div>
 
-      {/* Menu Items List */}
-      <div className="container" style={{ marginTop: '2rem' }}>
-        <div style={{ marginBottom: '2rem', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '1rem' }}>
-          <h2 style={{ fontSize: '1.6rem', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.02em', marginBottom: '0.25rem' }}>
-            Today's Menu
-          </h2>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem' }}>
-            Order ahead before you arrive. Pick up freshly prepared food at the counter.
-          </p>
+      {/* Main Content Area */}
+      <div className="container" style={{ marginTop: '1.75rem' }}>
+        {/* Live Queue & Preparation Indicator Box */}
+        <div style={{
+          background: 'white',
+          borderRadius: 'var(--radius-xl)',
+          padding: '1.25rem 1.5rem',
+          boxShadow: 'var(--shadow-heritage)',
+          border: '1px solid var(--border-heritage)',
+          marginBottom: '2rem',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: '1rem'
+        }}>
+          <div>
+            <div style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--accent-brass)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+              Live Counter Status
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
+              {renderQueueBadge()}
+              <span style={{ fontSize: '0.85rem', color: 'var(--text-heritage-secondary)' }}>
+                Order ahead to skip standing in counter queues
+              </span>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <div style={{ textAlign: 'right' }}>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-heritage-muted)' }}>Estimated Wait</div>
+              <div style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--text-heritage-dark)' }}>
+                ~{restaurant.prep_time_minutes || 15} mins
+              </div>
+            </div>
+          </div>
         </div>
 
-        {categories
-          .filter((cat) => !activeCategory || cat.id === activeCategory)
-          .map((category) => (
-            <div key={category.id} style={{ marginBottom: '3rem' }}>
-              <h3 style={{ fontSize: '1.3rem', fontWeight: 800, marginBottom: '1.25rem', color: 'var(--text-primary)' }}>
-                {category.name}
-              </h3>
+        {/* Menu Search & Category Bar */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: '1rem',
+          marginBottom: '1.5rem'
+        }}>
+          {/* Categories */}
+          <div style={{
+            display: 'flex',
+            gap: '0.5rem',
+            overflowX: 'auto',
+            paddingBottom: '4px',
+            maxWidth: '100%'
+          }}>
+            <button
+              type="button"
+              onClick={() => setActiveCategory(null)}
+              style={{
+                padding: '0.45rem 1rem',
+                borderRadius: 'var(--radius-full)',
+                fontSize: '0.825rem',
+                fontWeight: 700,
+                border: '1px solid',
+                borderColor: activeCategory === null ? 'var(--accent-brass)' : 'var(--border-heritage)',
+                background: activeCategory === null ? 'var(--accent-brass)' : 'white',
+                color: activeCategory === null ? 'white' : 'var(--text-heritage-secondary)',
+                whiteSpace: 'nowrap',
+                transition: 'all 0.15s ease'
+              }}
+            >
+              All Items ({allItems.length})
+            </button>
+            {categories.map((cat) => (
+              <button
+                key={cat.id}
+                type="button"
+                onClick={() => setActiveCategory(cat.id)}
+                style={{
+                  padding: '0.45rem 1rem',
+                  borderRadius: 'var(--radius-full)',
+                  fontSize: '0.825rem',
+                  fontWeight: 700,
+                  border: '1px solid',
+                  borderColor: activeCategory === cat.id ? 'var(--accent-brass)' : 'var(--border-heritage)',
+                  background: activeCategory === cat.id ? 'var(--accent-brass)' : 'white',
+                  color: activeCategory === cat.id ? 'white' : 'var(--text-heritage-secondary)',
+                  whiteSpace: 'nowrap',
+                  transition: 'all 0.15s ease'
+                }}
+              >
+                {cat.name}
+              </button>
+            ))}
+          </div>
 
-              {category.items.length === 0 ? (
-                <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>No items in this category yet.</p>
-              ) : (
-                <div style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
-                  gap: '1.25rem'
-                }}>
-                  {category.items.map((item) => (
-                    <div
-                      key={item.id}
-                      className="card"
+          {/* Search menu items & Veg toggle */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+            <div style={{ position: 'relative', width: '220px' }}>
+              <Search size={15} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+              <input
+                type="text"
+                placeholder="Search dish..."
+                value={menuSearch}
+                onChange={(e) => setMenuSearch(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '0.4rem 0.8rem 0.4rem 2rem',
+                  borderRadius: 'var(--radius-full)',
+                  border: '1px solid var(--border-heritage)',
+                  background: 'white',
+                  fontSize: '0.825rem'
+                }}
+              />
+            </div>
+
+            <label style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              fontSize: '0.825rem',
+              fontWeight: 700,
+              cursor: 'pointer',
+              color: 'var(--text-heritage-dark)',
+              userSelect: 'none'
+            }}>
+              <input
+                type="checkbox"
+                checked={vegOnly}
+                onChange={(e) => setVegOnly(e.target.checked)}
+                style={{ accentColor: '#059669', width: '15px', height: '15px' }}
+              />
+              <span>Pure Veg</span>
+            </label>
+          </div>
+        </div>
+
+        {/* Menu Items Grid */}
+        {filteredItems.length === 0 ? (
+          <div style={{
+            background: 'white',
+            borderRadius: 'var(--radius-xl)',
+            padding: '3rem 2rem',
+            textAlign: 'center',
+            border: '1px solid var(--border-heritage)'
+          }}>
+            <Utensils size={36} style={{ color: 'var(--text-muted)', margin: '0 auto 1rem auto' }} />
+            <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--text-heritage-dark)' }}>
+              No dishes found matching your filter
+            </h3>
+            <p style={{ color: 'var(--text-heritage-secondary)', fontSize: '0.875rem', marginTop: '4px' }}>
+              Try clearing search or toggling veg/non-veg filter.
+            </p>
+          </div>
+        ) : (
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
+            gap: '1.5rem'
+          }}>
+            {filteredItems.map((item) => (
+              <div
+                key={item.id}
+                className="heritage-card"
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  padding: '1.25rem',
+                  position: 'relative'
+                }}
+              >
+                <div style={{ display: 'flex', gap: '1rem', flex: 1 }}>
+                  <div style={{ flex: 1 }}>
+                    {/* Veg / Non-veg Indicator */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
+                      <span style={{
+                        display: 'inline-block',
+                        width: '14px',
+                        height: '14px',
+                        border: item.is_veg ? '1.5px solid #059669' : '1.5px solid #dc2626',
+                        padding: '2px',
+                        borderRadius: '2px',
+                        textAlign: 'center',
+                        lineHeight: 0
+                      }}>
+                        <span style={{
+                          display: 'inline-block',
+                          width: '6px',
+                          height: '6px',
+                          borderRadius: '50%',
+                          background: item.is_veg ? '#059669' : '#dc2626'
+                        }} />
+                      </span>
+                      <span style={{ fontSize: '0.72rem', fontWeight: 700, color: item.is_veg ? '#059669' : '#dc2626' }}>
+                        {item.is_veg ? 'VEG' : 'NON-VEG'}
+                      </span>
+                    </div>
+
+                    <h3 style={{
+                      fontSize: '1.05rem',
+                      fontWeight: 800,
+                      color: 'var(--text-heritage-dark)',
+                      margin: '2px 0 4px 0'
+                    }}>
+                      {item.name}
+                    </h3>
+
+                    <div style={{
+                      fontSize: '1rem',
+                      fontWeight: 800,
+                      color: 'var(--accent-brass)',
+                      marginBottom: '0.4rem'
+                    }}>
+                      ₹{item.price}
+                    </div>
+
+                    <p style={{
+                      fontSize: '0.8rem',
+                      color: 'var(--text-heritage-secondary)',
+                      lineHeight: 1.5,
+                      margin: 0,
+                      display: '-webkit-box',
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: 'vertical',
+                      overflow: 'hidden'
+                    }}>
+                      {item.description}
+                    </p>
+                  </div>
+
+                  {/* Item Image & Add Button */}
+                  <div style={{ position: 'relative', width: '100px', height: '100px', flexShrink: 0 }}>
+                    <img
+                      src={item.image || 'https://images.unsplash.com/photo-1589301760014-d929f3979dbc?w=300'}
+                      alt={item.name}
+                      loading="lazy"
                       style={{
-                        padding: '1.25rem',
-                        display: 'flex',
-                        gap: '1rem',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                        borderRadius: 'var(--radius-md)'
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleAddToCart(item)}
+                      disabled={!item.is_available}
+                      style={{
+                        position: 'absolute',
+                        bottom: '-8px',
+                        left: '50%',
+                        transform: 'translateX(-50%)',
+                        background: 'white',
+                        border: '1.5px solid var(--accent-brass)',
+                        color: 'var(--accent-brass)',
+                        fontWeight: 800,
+                        fontSize: '0.78rem',
+                        padding: '3px 12px',
+                        borderRadius: 'var(--radius-full)',
+                        boxShadow: '0 2px 6px rgba(0,0,0,0.12)',
+                        whiteSpace: 'nowrap',
+                        cursor: item.is_available ? 'pointer' : 'not-allowed',
                         opacity: item.is_available ? 1 : 0.6
                       }}
                     >
-                      {/* Left: Info */}
-                      <div style={{ flex: 1 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                          <span className={item.is_veg ? 'veg-indicator' : 'non-veg-indicator'}>
-                            {item.is_veg ? <span className="veg-indicator-dot" /> : <span className="non-veg-indicator-triangle" />}
-                          </span>
-                          <h4 style={{ fontSize: '1.05rem', fontWeight: 700, color: 'var(--text-primary)' }}>
-                            {item.name}
-                          </h4>
-                        </div>
-
-                        <div style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '0.4rem' }}>
-                          ₹{item.price}
-                        </div>
-
-                        <p style={{ fontSize: '0.825rem', color: 'var(--text-secondary)', lineHeight: 1.4, margin: '0 0 0.5rem 0' }}>
-                          {item.description}
-                        </p>
-
-                        {item.customizations && item.customizations.length > 0 && (
-                          <span style={{ fontSize: '0.75rem', color: 'var(--primary)', fontWeight: 600 }}>
-                            Customizable Options
-                          </span>
-                        )}
-                      </div>
-
-                      {/* Right: Image + Action */}
-                      <div style={{ position: 'relative', width: '105px', height: '105px', flexShrink: 0, borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
-                        <img
-                          src={item.image}
-                          alt={item.name}
-                          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                        />
-                        <div style={{
-                          position: 'absolute',
-                          bottom: '6px',
-                          left: '50%',
-                          transform: 'translateX(-50%)',
-                          width: 'calc(100% - 12px)'
-                        }}>
-                          {item.is_available ? (
-                            <button
-                              className="btn btn-sm btn-primary"
-                              style={{
-                                width: '100%',
-                                padding: '0.35rem 0.5rem',
-                                fontSize: '0.78rem',
-                                boxShadow: '0 4px 8px rgba(0,0,0,0.2)'
-                              }}
-                              onClick={() => setSelectedItemForModal(item)}
-                            >
-                              <Plus size={13} /> Add to Order
-                            </button>
-                          ) : (
-                            <span style={{
-                              display: 'block',
-                              background: '#334155',
-                              color: '#ffffff',
-                              fontSize: '0.65rem',
-                              fontWeight: 700,
-                              textAlign: 'center',
-                              padding: '2px 4px',
-                              borderRadius: '4px'
-                            }}>
-                              Out of Stock
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+                      {item.is_available ? '+ ADD' : 'SOLD OUT'}
+                    </button>
+                  </div>
                 </div>
-              )}
-            </div>
-          ))}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
-      {/* Item Customization Modal */}
+      {/* Item Modal for customizations if any */}
       {selectedItemForModal && (
         <ItemModal
           item={selectedItemForModal}
           restaurant={restaurant}
-          isOpen={!!selectedItemForModal}
           onClose={() => setSelectedItemForModal(null)}
-          onAddToCart={handleAddToCart}
+          onAddToCart={(item, rest, quantity, selections) => {
+            addItem(item, rest, quantity, selections);
+            setSelectedItemForModal(null);
+          }}
         />
       )}
 
-      {/* Floating Bottom Sticky Cart Bar if cart has items */}
+      {/* Floating Sticky Cart Summary Bar */}
       {totalItemCount > 0 && (
         <div style={{
           position: 'fixed',
-          bottom: '24px',
+          bottom: '20px',
           left: '50%',
           transform: 'translateX(-50%)',
-          zIndex: 45,
           width: 'calc(100% - 40px)',
-          maxWidth: '560px'
+          maxWidth: '680px',
+          background: 'linear-gradient(135deg, #1c1917 0%, #292524 100%)',
+          color: 'white',
+          padding: '1rem 1.4rem',
+          borderRadius: 'var(--radius-xl)',
+          boxShadow: '0 10px 30px rgba(0,0,0,0.25)',
+          border: '1px solid rgba(217, 119, 6, 0.4)',
+          zIndex: 999,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: '0.75rem'
         }}>
-          <button
-            className="btn btn-primary"
-            style={{
-              width: '100%',
-              padding: '1rem 1.5rem',
-              borderRadius: 'var(--radius-full)',
-              boxShadow: '0 10px 25px rgba(5, 150, 105, 0.45)',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              fontSize: '1rem',
-              fontWeight: 700
-            }}
-            onClick={onOpenCart}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <ShoppingBag size={20} />
-              <span>{totalItemCount} {totalItemCount === 1 ? 'item' : 'items'} in your tray</span>
+          <div>
+            <div style={{ fontSize: '0.78rem', color: '#fbbf24', fontWeight: 800, textTransform: 'uppercase' }}>
+              {cartRestaurant?.name || restaurant.name}
             </div>
-            <span>Proceed to Checkout &rarr;</span>
-          </button>
+            <div style={{ fontSize: '1rem', fontWeight: 800 }}>
+              {totalItemCount} {totalItemCount === 1 ? 'item' : 'items'} • ₹{cartTotal.toFixed(2)}
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <button
+              type="button"
+              onClick={() => navigate('/cart')}
+              className="btn btn-sm"
+              style={{
+                background: 'rgba(255, 255, 255, 0.15)',
+                color: 'white',
+                fontWeight: 700,
+                border: '1px solid rgba(255, 255, 255, 0.25)',
+                padding: '0.5rem 0.9rem'
+              }}
+            >
+              View Tray
+            </button>
+            <button
+              type="button"
+              onClick={() => navigate('/checkout')}
+              className="btn btn-sm btn-primary"
+              style={{
+                background: 'linear-gradient(135deg, #b45309 0%, #d97706 100%)',
+                border: 'none',
+                color: 'white',
+                fontWeight: 800,
+                padding: '0.5rem 1.1rem',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '4px'
+              }}
+            >
+              <span>Pre-Order</span>
+              <ChevronRight size={16} />
+            </button>
+          </div>
         </div>
       )}
     </div>

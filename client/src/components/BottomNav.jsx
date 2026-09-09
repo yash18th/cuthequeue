@@ -32,14 +32,14 @@ export default function BottomNav({ activePage, setActivePage, onOpenCart }) {
 
       <button
         type="button"
-        className={`bottom-nav-item ${path === '/browse' || path.startsWith('/restaurant') ? 'active' : ''}`}
+        className={`bottom-nav-item ${path === '/restaurants' || path === '/browse' || path.startsWith('/restaurant') ? 'active' : ''}`}
         onClick={() => {
-          setActivePage?.('home');
-          navigate('/browse');
+          setActivePage?.('restaurants');
+          navigate('/restaurants');
         }}
       >
         <Compass size={20} />
-        <span>Browse</span>
+        <span>Restaurants</span>
       </button>
 
       <button

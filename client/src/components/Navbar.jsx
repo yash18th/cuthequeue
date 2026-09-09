@@ -68,8 +68,8 @@ export default function Navbar({ activePage, setActivePage, onOpenCart }) {
 
   // Helper to check active customer link
   const isHomeActive = pathname === '/';
-  const isBrowseActive = pathname === '/browse' || pathname.startsWith('/restaurant/');
-  const isOrdersActive = pathname.startsWith('/orders');
+  const isBrowseActive = pathname === '/restaurants' || pathname === '/browse' || pathname.startsWith('/restaurant');
+  const isOrdersActive = pathname.startsWith('/orders') || pathname.startsWith('/queue');
   const isCartActive = pathname === '/cart';
 
   return (
@@ -101,12 +101,12 @@ export default function Navbar({ activePage, setActivePage, onOpenCart }) {
               Home
             </Link>
             <Link
-              to="/browse"
-              onClick={() => setActivePage?.('home')}
+              to="/restaurants"
+              onClick={() => setActivePage?.('restaurants')}
               className={`btn btn-sm ${isBrowseActive ? 'btn-primary' : 'btn-ghost'}`}
               style={{ textDecoration: 'none', fontWeight: 600 }}
             >
-              Browse
+              Restaurants
             </Link>
             {user && (
               <Link
@@ -361,12 +361,12 @@ export default function Navbar({ activePage, setActivePage, onOpenCart }) {
                 Home
               </Link>
               <Link
-                to="/browse"
-                onClick={() => { setMobileMenuOpen(false); setActivePage?.('home'); }}
+                to="/restaurants"
+                onClick={() => { setMobileMenuOpen(false); setActivePage?.('restaurants'); }}
                 className={`btn btn-sm ${isBrowseActive ? 'btn-primary' : 'btn-ghost'}`}
                 style={{ textAlign: 'left', justifyContent: 'flex-start' }}
               >
-                Browse Restaurants
+                Restaurants
               </Link>
               {user && (
                 <Link
