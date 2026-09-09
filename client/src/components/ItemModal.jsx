@@ -1,19 +1,34 @@
 import React, { useState } from 'react';
 import { X, Plus, Minus, Check } from 'lucide-react';
 
-export default function ItemModal({ item, restaurant, isOpen, onClose, onAddToCart }) {
-  if (!isOpen || !item) return null;
+export default function ItemModal({ item, restaurant, isOpen = true, onClose, onAddToCart }) {
+  if (isOpen === false || !item) return null;
 
-  const customizations = item.customizations || [];
+  // Safely extract customizations whether from array or json string
+  let customizations = [];
+  try {
+    if (Array.isArray(item.customizations)) {
+      customizations = item.customizations;
+    } else if (typeof item.customizations_json === 'string' && item.customizations_json.trim()) {
+      const parsed = JSON.parse(item.customizations_json);
+      if (Array.isArray(parsed)) customizations = parsed;
+    } else if (Array.isArray(item.customizations_json)) {
+      customizations = item.customizations_json;
+    }
+  } catch {
+    customizations = [];
+  }
 
   // Initialize selections with default values
   const [selections, setSelections] = useState(() => {
     const initial = {};
     for (const group of customizations) {
-      if (group.type === 'single' && group.options.length > 0) {
-        initial[group.name] = group.options[0].label;
-      } else if (group.type === 'multiple') {
-        initial[group.name] = [];
+      if (group && group.name && Array.isArray(group.options)) {
+        if (group.type === 'single' && group.options.length > 0 && group.options[0]) {
+          initial[group.name] = group.options[0].label;
+        } else if (group.type === 'multiple') {
+          initial[group.name] = [];
+        }
       }
     }
     return initial;
@@ -21,8 +36,8 @@ export default function ItemModal({ item, restaurant, isOpen, onClose, onAddToCa
 
   const [quantity, setQuantity] = useState(1);
 
-  // Calculate dynamic unit price
-  let currentUnitPrice = Number(item.price);
+  // Calculate dynamic unit price safely
+  let currentUnitPrice = Number(String(item.price || 0).replace(/[^0-9.]/g, '')) || 0;
   for (const group of customizations) {
     const sel = selections[group.name];
     if (sel) {

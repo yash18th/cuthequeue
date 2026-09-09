@@ -10,6 +10,7 @@ import BottomNav from './components/BottomNav';
 import Footer from './components/Footer';
 import CartDrawer from './components/CartDrawer';
 import ProtectedRoute from './components/ProtectedRoute';
+import ErrorBoundary from './components/ErrorBoundary';
 
 import LandingPage from './pages/LandingPage';
 import AuthPage from './pages/AuthPage';
@@ -372,7 +373,9 @@ export default function App() {
         <NotificationProvider>
           <SocketProvider>
             <CartProvider>
-              <MainApp />
+              <ErrorBoundary>
+                <MainApp />
+              </ErrorBoundary>
             </CartProvider>
           </SocketProvider>
         </NotificationProvider>

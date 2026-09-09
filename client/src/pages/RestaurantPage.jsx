@@ -4,6 +4,7 @@ import { restaurantAPI } from '../utils/api';
 import { useCart } from '../context/CartContext';
 import ItemModal from '../components/ItemModal';
 import PageNavHeader from '../components/PageNavHeader';
+import ErrorBoundary from '../components/ErrorBoundary';
 import {
   Star,
   Clock,
@@ -12,6 +13,7 @@ import {
   ShoppingBag,
   AlertCircle,
   Plus,
+  Minus,
   Info,
   Search,
   Check,
@@ -31,7 +33,16 @@ export default function RestaurantPage({ restaurantId, setActivePage, onOpenCart
   const [selectedItemForModal, setSelectedItemForModal] = useState(null);
   const [vegOnly, setVegOnly] = useState(false);
 
-  const { addItem, totalItemCount, cartTotal, restaurant: cartRestaurant } = useCart();
+  const {
+    addItem,
+    updateQuantity,
+    removeItem,
+    totalItemCount = 0,
+    total = 0,
+    cartTotal = 0,
+    cartItems = [],
+    restaurant: cartRestaurant
+  } = useCart() || {};
 
   useEffect(() => {
     if (!effectiveId) return;
@@ -146,17 +157,74 @@ export default function RestaurantPage({ restaurantId, setActivePage, onOpenCart
     return matchesCategory && matchesSearch && matchesVeg;
   });
 
+  const getItemCustomizations = (item) => {
+    if (!item) return [];
+    try {
+      if (Array.isArray(item.customizations)) return item.customizations;
+      if (typeof item.customizations_json === 'string' && item.customizations_json.trim()) {
+        const parsed = JSON.parse(item.customizations_json);
+        if (Array.isArray(parsed)) return parsed;
+      }
+      if (Array.isArray(item.customizations_json)) return item.customizations_json;
+    } catch {
+      return [];
+    }
+    return [];
+  };
+
   const handleAddToCart = (item) => {
-    const customizations = item.customizations || JSON.parse(item.customizations_json || '[]');
-    if (customizations.length > 0) {
-      setSelectedItemForModal(item);
-    } else {
-      addItem(item, restaurant, 1, {});
+    if (!item || !restaurant) return;
+    try {
+      const customizations = getItemCustomizations(item);
+      if (customizations.length > 0) {
+        setSelectedItemForModal(item);
+      } else {
+        addItem(item, restaurant, 1, {});
+      }
+    } catch (err) {
+      console.error('Failed to add item to cart:', err);
+    }
+  };
+
+  const handleIncreaseQuantity = (item) => {
+    if (!item) return;
+    try {
+      const customizations = getItemCustomizations(item);
+      if (customizations.length > 0) {
+        setSelectedItemForModal(item);
+      } else {
+        const matching = (cartItems || []).find((ci) => ci.menu_item_id === item.id || ci.id === item.id);
+        if (matching) {
+          updateQuantity(matching.cartItemId, matching.quantity + 1);
+        } else {
+          addItem(item, restaurant, 1, {});
+        }
+      }
+    } catch (err) {
+      console.error('Failed to increase quantity:', err);
+    }
+  };
+
+  const handleDecreaseQuantity = (item) => {
+    if (!item) return;
+    try {
+      const matching = (cartItems || []).filter((ci) => ci.menu_item_id === item.id || ci.id === item.id);
+      if (matching.length > 0) {
+        const target = matching[matching.length - 1];
+        if (target.quantity > 1) {
+          updateQuantity(target.cartItemId, target.quantity - 1);
+        } else {
+          removeItem(target.cartItemId);
+        }
+      }
+    } catch (err) {
+      console.error('Failed to decrease quantity:', err);
     }
   };
 
   return (
-    <div className="bg-warm-canvas" style={{ minHeight: '90vh', paddingBottom: '7rem' }}>
+    <ErrorBoundary>
+      <div className="bg-warm-canvas" style={{ minHeight: '90vh', paddingBottom: '7rem' }}>
       {/* Top Nav Header with Back & Breadcrumb */}
       <div className="container" style={{ paddingTop: '1.5rem', paddingBottom: '0.5rem' }}>
         <PageNavHeader
@@ -408,124 +476,234 @@ export default function RestaurantPage({ restaurantId, setActivePage, onOpenCart
             gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
             gap: '1.5rem'
           }}>
-            {filteredItems.map((item) => (
-              <div
-                key={item.id}
-                className="heritage-card"
-                style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  padding: '1.25rem',
-                  position: 'relative',
-                  background: 'white',
-                  border: '1px solid #E8DDC8',
-                  borderRadius: 'var(--radius-lg)',
-                  boxShadow: 'var(--shadow-sm)'
-                }}
-              >
-                <div style={{ display: 'flex', gap: '1rem', flex: 1 }}>
-                  <div style={{ flex: 1 }}>
-                    {/* Veg / Non-veg Indicator */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
-                      <span style={{
-                        display: 'inline-block',
-                        width: '14px',
-                        height: '14px',
-                        border: item.is_veg ? '1.5px solid #15803d' : '1.5px solid #b91c1c',
-                        padding: '2px',
-                        borderRadius: '2px',
-                        textAlign: 'center',
-                        lineHeight: 0
-                      }}>
+            {filteredItems.map((item) => {
+              const itemCartQty = (cartItems || [])
+                .filter((ci) => ci.menu_item_id === item.id || ci.id === item.id)
+                .reduce((sum, ci) => sum + (Number(ci.quantity) || 0), 0);
+
+              return (
+                <div
+                  key={item.id}
+                  className="heritage-card"
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    padding: '1.25rem',
+                    position: 'relative',
+                    background: 'white',
+                    border: '1px solid #E9DDC7',
+                    borderRadius: 'var(--radius-lg)',
+                    boxShadow: 'var(--shadow-sm)'
+                  }}
+                >
+                  <div style={{ display: 'flex', gap: '1rem', flex: 1 }}>
+                    <div style={{ flex: 1 }}>
+                      {/* Veg / Non-veg Indicator */}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
                         <span style={{
                           display: 'inline-block',
-                          width: '6px',
-                          height: '6px',
-                          borderRadius: '50%',
-                          background: item.is_veg ? '#15803d' : '#b91c1c'
-                        }} />
-                      </span>
-                      <span style={{ fontSize: '0.72rem', fontWeight: 700, color: item.is_veg ? '#15803d' : '#b91c1c' }}>
-                        {item.is_veg ? 'VEG' : 'NON-VEG'}
-                      </span>
-                    </div>
+                          width: '14px',
+                          height: '14px',
+                          border: item.is_veg ? '1.5px solid #15803d' : '1.5px solid #b91c1c',
+                          padding: '2px',
+                          borderRadius: '2px',
+                          textAlign: 'center',
+                          lineHeight: 0
+                        }}>
+                          <span style={{
+                            display: 'inline-block',
+                            width: '6px',
+                            height: '6px',
+                            borderRadius: '50%',
+                            background: item.is_veg ? '#15803d' : '#b91c1c'
+                          }} />
+                        </span>
+                        <span style={{ fontSize: '0.72rem', fontWeight: 700, color: item.is_veg ? '#15803d' : '#b91c1c' }}>
+                          {item.is_veg ? 'VEG' : 'NON-VEG'}
+                        </span>
+                      </div>
 
-                    <h3 style={{
-                      fontSize: '1.05rem',
-                      fontWeight: 800,
-                      color: 'var(--text-charcoal)',
-                      margin: '2px 0 4px 0',
-                      fontFamily: 'var(--font-serif)'
-                    }}>
-                      {item.name}
-                    </h3>
-
-                    <div style={{
-                      fontSize: '1.05rem',
-                      fontWeight: 800,
-                      color: 'var(--bg-deep-green)',
-                      marginBottom: '0.4rem',
-                      fontFamily: 'var(--font-serif)'
-                    }}>
-                      ₹{item.price}
-                    </div>
-
-                    <p style={{
-                      fontSize: '0.8rem',
-                      color: 'var(--text-secondary)',
-                      lineHeight: 1.5,
-                      margin: 0,
-                      display: '-webkit-box',
-                      WebkitLineClamp: 2,
-                      WebkitBoxOrient: 'vertical',
-                      overflow: 'hidden'
-                    }}>
-                      {item.description}
-                    </p>
-                  </div>
-
-                  {/* Item Image & Add Button */}
-                  <div style={{ position: 'relative', width: '100px', height: '100px', flexShrink: 0 }}>
-                    <img
-                      src={item.image || 'https://images.unsplash.com/photo-1589301760014-d929f3979dbc?w=300'}
-                      alt={item.name}
-                      loading="lazy"
-                      style={{
-                        width: '100%',
-                        height: '100%',
-                        objectFit: 'cover',
-                        borderRadius: 'var(--radius-md)',
-                        border: '1px solid #E8DDC8'
-                      }}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => handleAddToCart(item)}
-                      disabled={!item.is_available}
-                      style={{
-                        position: 'absolute',
-                        bottom: '-8px',
-                        left: '50%',
-                        transform: 'translateX(-50%)',
-                        background: 'white',
-                        border: '1.5px solid var(--bg-deep-green)',
-                        color: 'var(--bg-deep-green)',
+                      <h3 style={{
+                        fontSize: '1.05rem',
                         fontWeight: 800,
-                        fontSize: '0.78rem',
-                        padding: '4px 14px',
-                        borderRadius: 'var(--radius-md)',
-                        boxShadow: '0 2px 6px rgba(0,0,0,0.12)',
-                        whiteSpace: 'nowrap',
-                        cursor: item.is_available ? 'pointer' : 'not-allowed',
-                        opacity: item.is_available ? 1 : 0.6
-                      }}
-                    >
-                      {item.is_available ? '+ ADD' : 'SOLD OUT'}
-                    </button>
+                        color: 'var(--text-charcoal)',
+                        margin: '2px 0 4px 0',
+                        fontFamily: 'var(--font-serif)'
+                      }}>
+                        {item.name}
+                      </h3>
+
+                      <div style={{
+                        fontSize: '1.05rem',
+                        fontWeight: 800,
+                        color: 'var(--bg-deep-green)',
+                        marginBottom: '0.4rem',
+                        fontFamily: 'var(--font-serif)'
+                      }}>
+                        ₹{item.price}
+                      </div>
+
+                      <p style={{
+                        fontSize: '0.8rem',
+                        color: 'var(--text-secondary)',
+                        lineHeight: 1.5,
+                        margin: 0,
+                        display: '-webkit-box',
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: 'vertical',
+                        overflow: 'hidden'
+                      }}>
+                        {item.description}
+                      </p>
+                    </div>
+
+                    {/* Item Image & Add / Quantity Button */}
+                    <div style={{ position: 'relative', width: '100px', height: '100px', flexShrink: 0 }}>
+                      <img
+                        src={item.image || 'https://images.unsplash.com/photo-1589301760014-d929f3979dbc?w=300'}
+                        alt={item.name}
+                        loading="lazy"
+                        style={{
+                          width: '100%',
+                          height: '100%',
+                          objectFit: 'cover',
+                          borderRadius: 'var(--radius-md)',
+                          border: '1px solid #E9DDC7'
+                        }}
+                      />
+                      {!item.is_available ? (
+                        <button
+                          type="button"
+                          disabled
+                          style={{
+                            position: 'absolute',
+                            bottom: '-8px',
+                            left: '50%',
+                            transform: 'translateX(-50%)',
+                            background: '#E9DDC7',
+                            border: '1.5px solid #C49A52',
+                            color: 'var(--text-secondary)',
+                            fontWeight: 800,
+                            fontSize: '0.72rem',
+                            padding: '4px 10px',
+                            borderRadius: 'var(--radius-md)',
+                            boxShadow: '0 2px 6px rgba(0,0,0,0.08)',
+                            whiteSpace: 'nowrap',
+                            cursor: 'not-allowed',
+                            opacity: 0.75
+                          }}
+                        >
+                          SOLD OUT
+                        </button>
+                      ) : itemCartQty > 0 ? (
+                        <div
+                          style={{
+                            position: 'absolute',
+                            bottom: '-8px',
+                            left: '50%',
+                            transform: 'translateX(-50%)',
+                            background: 'white',
+                            border: '1.5px solid var(--bg-deep-green)',
+                            borderRadius: 'var(--radius-md)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            padding: '2px 6px',
+                            boxShadow: '0 2px 8px rgba(11, 53, 45, 0.2)',
+                            width: '88px',
+                            height: '28px',
+                            userSelect: 'none'
+                          }}
+                        >
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDecreaseQuantity(item);
+                            }}
+                            style={{
+                              background: 'transparent',
+                              border: 'none',
+                              cursor: 'pointer',
+                              padding: '0 4px',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              color: 'var(--bg-deep-green)',
+                              fontWeight: 800,
+                              fontSize: '1rem',
+                              lineHeight: 1
+                            }}
+                            aria-label={`Decrease ${item.name} quantity`}
+                          >
+                            −
+                          </button>
+                          <span
+                            style={{
+                              fontWeight: 800,
+                              fontSize: '0.85rem',
+                              color: 'var(--bg-deep-green)',
+                              minWidth: '20px',
+                              textAlign: 'center',
+                              fontFamily: 'var(--font-serif)'
+                            }}
+                          >
+                            {itemCartQty}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleIncreaseQuantity(item);
+                            }}
+                            style={{
+                              background: 'transparent',
+                              border: 'none',
+                              cursor: 'pointer',
+                              padding: '0 4px',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              color: 'var(--bg-deep-green)',
+                              fontWeight: 800,
+                              fontSize: '0.95rem',
+                              lineHeight: 1
+                            }}
+                            aria-label={`Increase ${item.name} quantity`}
+                          >
+                            +
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => handleAddToCart(item)}
+                          style={{
+                            position: 'absolute',
+                            bottom: '-8px',
+                            left: '50%',
+                            transform: 'translateX(-50%)',
+                            background: 'white',
+                            border: '1.5px solid var(--bg-deep-green)',
+                            color: 'var(--bg-deep-green)',
+                            fontWeight: 800,
+                            fontSize: '0.78rem',
+                            padding: '4px 14px',
+                            borderRadius: 'var(--radius-md)',
+                            boxShadow: '0 2px 6px rgba(0,0,0,0.12)',
+                            whiteSpace: 'nowrap',
+                            cursor: 'pointer',
+                            transition: 'all 0.15s ease'
+                          }}
+                        >
+                          + ADD
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
@@ -535,6 +713,7 @@ export default function RestaurantPage({ restaurantId, setActivePage, onOpenCart
         <ItemModal
           item={selectedItemForModal}
           restaurant={restaurant}
+          isOpen={Boolean(selectedItemForModal)}
           onClose={() => setSelectedItemForModal(null)}
           onAddToCart={(item, rest, quantity, selections) => {
             addItem(item, rest, quantity, selections);
@@ -570,7 +749,7 @@ export default function RestaurantPage({ restaurantId, setActivePage, onOpenCart
               {cartRestaurant?.name || restaurant.name}
             </div>
             <div style={{ fontSize: '1rem', fontWeight: 800, fontFamily: 'var(--font-serif)' }}>
-              {totalItemCount} {totalItemCount === 1 ? 'item' : 'items'} • ₹{cartTotal.toFixed(2)}
+              {totalItemCount} {totalItemCount === 1 ? 'item' : 'items'} • ₹{(Number(cartTotal || total) || 0).toFixed(2)}
             </div>
           </div>
 
@@ -604,6 +783,7 @@ export default function RestaurantPage({ restaurantId, setActivePage, onOpenCart
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </ErrorBoundary>
   );
 }
