@@ -417,12 +417,11 @@ input, textarea, select {
   bottom: 0;
   left: 0;
   right: 0;
-  background: rgba(255, 255, 255, 0.96);
-  backdrop-filter: blur(12px);
-  border-top: 1px solid var(--border-subtle);
+  background: #0B2923;
+  border-top: 1px solid rgba(198, 161, 91, 0.35);
   padding: 0.5rem 1rem;
   z-index: 60;
-  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.25);
 }
 
 @media (max-width: 768px) {
@@ -443,20 +442,27 @@ input, textarea, select {
   gap: 0.2rem;
   font-size: 0.75rem;
   font-weight: 600;
-  color: var(--text-muted);
+  color: #E8DDC8;
+  background: transparent;
+  border: none;
+  cursor: pointer;
   transition: color var(--transition-fast);
   padding: 0.25rem 0.5rem;
 }
 
 .bottom-nav-item.active {
-  color: var(--primary);
+  color: #C6A15B;
+}
+
+.bottom-nav-item:hover {
+  color: #F7F1E5;
 }
 
 /* Modals & Popups */
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.6);
+  background: rgba(11, 41, 35, 0.7);
   backdrop-filter: blur(4px);
   z-index: 100;
   display: flex;
@@ -467,13 +473,14 @@ input, textarea, select {
 }
 
 .modal-content {
-  background: var(--bg-card);
-  border-radius: var(--radius-xl);
+  background: #F7F1E5;
+  border: 1.5px solid #C6A15B;
+  border-radius: 12px;
   max-width: 520px;
   width: 100%;
   max-height: 90vh;
   overflow-y: auto;
-  box-shadow: var(--shadow-xl);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.3);
   animation: slideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 

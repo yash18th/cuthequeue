@@ -74,16 +74,17 @@ export default function BottomNav({ activePage, setActivePage, onOpenCart }) {
               position: 'absolute',
               top: '-6px',
               right: '-8px',
-              background: 'var(--primary)',
-              color: 'white',
+              background: '#C6A15B',
+              color: '#0B2923',
               fontSize: '0.65rem',
               fontWeight: 800,
-              width: '16px',
-              height: '16px',
+              width: '17px',
+              height: '17px',
               borderRadius: '50%',
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'center'
+              justifyContent: 'center',
+              boxShadow: '0 2px 5px rgba(0,0,0,0.3)'
             }}>
               {totalItemCount}
             </span>
