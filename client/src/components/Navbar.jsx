@@ -13,7 +13,9 @@ import {
   Home,
   ClipboardList,
   Menu as MenuIcon,
-  X
+  X,
+  BarChart3,
+  Settings
 } from 'lucide-react';
 
 export default function Navbar({ activePage, setActivePage, onOpenCart }) {
@@ -89,11 +91,15 @@ export default function Navbar({ activePage, setActivePage, onOpenCart }) {
         position: 'sticky',
         top: 0,
         zIndex: 1000,
-        background: 'linear-gradient(180deg, #0B2923 0%, #123C32 100%)',
-        borderBottom: '1px solid rgba(198, 161, 91, 0.3)',
-        boxShadow: '0 4px 20px rgba(11, 41, 35, 0.25)'
+        background: 'linear-gradient(180deg, #0B352D 0%, #123F35 100%)',
+        borderBottom: '1px solid rgba(201, 162, 74, 0.45)',
+        boxShadow: '0 4px 20px rgba(11, 53, 45, 0.35)',
+        position: 'relative'
       }}
     >
+      {/* South Indian Temple-Border Detailing along bottom */}
+      <div className="navbar-temple-frieze" aria-hidden="true" />
+
       <div className="container navbar-inner" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', minHeight: '68px' }}>
         {/* Brand Logo with Heritage Hospitality Emblem */}
         <div
@@ -170,7 +176,7 @@ export default function Navbar({ activePage, setActivePage, onOpenCart }) {
 
         {/* Customer Desktop Navigation Links */}
         {(!user || isCustomer) && (
-          <nav className="desktop-links" style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+          <nav className="desktop-links" style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
             <Link
               to="/"
               onClick={() => setActivePage?.('landing')}
@@ -180,10 +186,10 @@ export default function Navbar({ activePage, setActivePage, onOpenCart }) {
                 fontSize: '0.9rem',
                 padding: '0.45rem 0.9rem',
                 borderRadius: '6px',
-                color: isHomeActive ? '#C6A15B' : '#F7F1E5',
-                background: isHomeActive ? 'rgba(198, 161, 91, 0.14)' : 'transparent',
-                border: isHomeActive ? '1px solid rgba(198, 161, 91, 0.35)' : '1px solid transparent',
-                transition: 'all 0.2s ease'
+                color: isHomeActive ? '#C9A24A' : '#F8F1DF',
+                background: isHomeActive ? 'rgba(201, 162, 74, 0.16)' : 'transparent',
+                border: isHomeActive ? '1px solid rgba(201, 162, 74, 0.45)' : '1px solid transparent',
+                transition: 'all 0.18s ease'
               }}
             >
               Home
@@ -197,10 +203,10 @@ export default function Navbar({ activePage, setActivePage, onOpenCart }) {
                 fontSize: '0.9rem',
                 padding: '0.45rem 0.9rem',
                 borderRadius: '6px',
-                color: isBrowseActive ? '#C6A15B' : '#F7F1E5',
-                background: isBrowseActive ? 'rgba(198, 161, 91, 0.14)' : 'transparent',
-                border: isBrowseActive ? '1px solid rgba(198, 161, 91, 0.35)' : '1px solid transparent',
-                transition: 'all 0.2s ease'
+                color: isBrowseActive ? '#C9A24A' : '#F8F1DF',
+                background: isBrowseActive ? 'rgba(201, 162, 74, 0.16)' : 'transparent',
+                border: isBrowseActive ? '1px solid rgba(201, 162, 74, 0.45)' : '1px solid transparent',
+                transition: 'all 0.18s ease'
               }}
             >
               Restaurants
@@ -213,11 +219,11 @@ export default function Navbar({ activePage, setActivePage, onOpenCart }) {
                 fontSize: '0.9rem',
                 padding: '0.45rem 0.9rem',
                 borderRadius: '6px',
-                color: '#F7F1E5',
+                color: '#F8F1DF',
                 background: 'transparent',
                 border: '1px solid transparent',
                 cursor: 'pointer',
-                transition: 'all 0.2s ease'
+                transition: 'all 0.18s ease'
               }}
             >
               How It Works
@@ -232,10 +238,10 @@ export default function Navbar({ activePage, setActivePage, onOpenCart }) {
                   fontSize: '0.9rem',
                   padding: '0.45rem 0.9rem',
                   borderRadius: '6px',
-                  color: isOrdersActive ? '#C6A15B' : '#F7F1E5',
-                  background: isOrdersActive ? 'rgba(198, 161, 91, 0.14)' : 'transparent',
-                  border: isOrdersActive ? '1px solid rgba(198, 161, 91, 0.35)' : '1px solid transparent',
-                  transition: 'all 0.2s ease'
+                  color: isOrdersActive ? '#C9A24A' : '#F8F1DF',
+                  background: isOrdersActive ? 'rgba(201, 162, 74, 0.16)' : 'transparent',
+                  border: isOrdersActive ? '1px solid rgba(201, 162, 74, 0.45)' : '1px solid transparent',
+                  transition: 'all 0.18s ease'
                 }}
               >
                 Orders
@@ -246,38 +252,38 @@ export default function Navbar({ activePage, setActivePage, onOpenCart }) {
 
         {/* Kitchen Staff Navigation Links */}
         {isRestaurantAdmin && (
-          <nav className="desktop-links" style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
+          <nav className="desktop-links kitchen-nav-container" aria-label="Kitchen Management Navigation">
             <Link
               to="/kitchen"
               onClick={() => setActivePage?.('restaurant-dashboard')}
-              className={`btn btn-sm ${pathname === '/kitchen' || pathname === '/kitchen/orders' ? 'btn-primary' : 'btn-ghost'}`}
-              style={{ textDecoration: 'none', fontWeight: 600 }}
+              className={`kitchen-nav-item ${pathname === '/kitchen' || pathname === '/kitchen/orders' ? 'active' : ''}`}
             >
-              Kitchen Orders
+              <ClipboardList size={15} />
+              <span>Kitchen Orders</span>
             </Link>
             <Link
               to="/kitchen/menu"
               onClick={() => setActivePage?.('restaurant-menu')}
-              className={`btn btn-sm ${pathname === '/kitchen/menu' ? 'btn-primary' : 'btn-ghost'}`}
-              style={{ textDecoration: 'none', fontWeight: 600 }}
+              className={`kitchen-nav-item ${pathname === '/kitchen/menu' ? 'active' : ''}`}
             >
-              Menu
+              <UtensilsCrossed size={15} />
+              <span>Menu</span>
             </Link>
             <Link
               to="/kitchen/analytics"
               onClick={() => setActivePage?.('restaurant-analytics')}
-              className={`btn btn-sm ${pathname === '/kitchen/analytics' ? 'btn-primary' : 'btn-ghost'}`}
-              style={{ textDecoration: 'none', fontWeight: 600 }}
+              className={`kitchen-nav-item ${pathname === '/kitchen/analytics' ? 'active' : ''}`}
             >
-              Analytics
+              <BarChart3 size={15} />
+              <span>Analytics</span>
             </Link>
             <Link
               to="/kitchen/settings"
               onClick={() => setActivePage?.('restaurant-settings')}
-              className={`btn btn-sm ${pathname === '/kitchen/settings' ? 'btn-primary' : 'btn-ghost'}`}
-              style={{ textDecoration: 'none', fontWeight: 600 }}
+              className={`kitchen-nav-item ${pathname === '/kitchen/settings' ? 'active' : ''}`}
             >
-              Settings
+              <Settings size={15} />
+              <span>Settings</span>
             </Link>
           </nav>
         )}
@@ -354,19 +360,19 @@ export default function Navbar({ activePage, setActivePage, onOpenCart }) {
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: '5px',
-                background: 'rgba(247, 241, 229, 0.1)',
-                border: '1px solid rgba(198, 161, 91, 0.35)',
-                color: '#F7F1E5',
+                background: 'rgba(248, 241, 223, 0.1)',
+                border: '1px solid rgba(201, 162, 74, 0.45)',
+                color: '#F8F1DF',
                 borderRadius: '6px',
                 cursor: 'pointer'
               }}
               onClick={() => setShowDemoMenu(!showDemoMenu)}
               aria-label="Switch Role"
             >
-              Role: <span style={{ color: '#C6A15B', fontWeight: 700 }}>
+              Role: <span style={{ color: '#C9A24A', fontWeight: 700 }}>
                 {user ? (isCustomer ? 'Customer' : isRestaurantAdmin ? 'Kitchen' : 'Admin') : 'Guest'}
               </span>
-              <ChevronDown size={14} style={{ color: '#C6A15B' }} />
+              <ChevronDown size={14} style={{ color: '#C9A24A' }} />
             </button>
 
             {showDemoMenu && (
@@ -445,9 +451,9 @@ export default function Navbar({ activePage, setActivePage, onOpenCart }) {
                   display: 'inline-flex',
                   alignItems: 'center',
                   gap: '6px',
-                  background: 'rgba(247, 241, 229, 0.12)',
-                  border: '1px solid rgba(198, 161, 91, 0.35)',
-                  color: '#F7F1E5',
+                  background: 'rgba(248, 241, 223, 0.12)',
+                  border: '1px solid rgba(201, 162, 74, 0.45)',
+                  color: '#F8F1DF',
                   padding: '0.45rem 0.8rem',
                   borderRadius: '6px',
                   fontSize: '0.85rem',
@@ -455,7 +461,7 @@ export default function Navbar({ activePage, setActivePage, onOpenCart }) {
                 }}
                 title="Profile & Settings"
               >
-                <User size={15} style={{ color: '#C6A15B' }} />
+                <User size={15} style={{ color: '#C9A24A' }} />
                 <span className="desktop-name">{user.name?.split(' ')[0] || 'Profile'}</span>
               </Link>
               <button
@@ -466,8 +472,8 @@ export default function Navbar({ activePage, setActivePage, onOpenCart }) {
                   padding: '0.45rem',
                   borderRadius: '6px',
                   background: 'transparent',
-                  border: '1px solid rgba(198, 161, 91, 0.25)',
-                  color: '#F7F1E5',
+                  border: '1px solid rgba(201, 162, 74, 0.35)',
+                  color: '#F8F1DF',
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
@@ -493,15 +499,6 @@ export default function Navbar({ activePage, setActivePage, onOpenCart }) {
             type="button"
             className="mobile-menu-btn"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            style={{
-              display: 'none',
-              background: 'transparent',
-              border: '1px solid rgba(198, 161, 91, 0.35)',
-              borderRadius: '6px',
-              cursor: 'pointer',
-              padding: '6px',
-              color: '#C6A15B'
-            }}
             aria-label="Toggle navigation menu"
           >
             {mobileMenuOpen ? <X size={20} /> : <MenuIcon size={20} />}
@@ -512,10 +509,11 @@ export default function Navbar({ activePage, setActivePage, onOpenCart }) {
       {/* Mobile Responsive Navigation Drawer / Dropdown */}
       {mobileMenuOpen && (
         <div style={{
-          background: '#0B2923',
-          borderTop: '1px solid rgba(198, 161, 91, 0.3)',
+          background: '#0B352D',
+          borderTop: '1px solid rgba(201, 162, 74, 0.4)',
+          borderBottom: '2px solid #C9A24A',
           padding: '1.25rem',
-          boxShadow: '0 8px 24px rgba(0, 0, 0, 0.3)'
+          boxShadow: '0 8px 24px rgba(0, 0, 0, 0.35)'
         }}>
           {(!user || isCustomer) && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
@@ -600,62 +598,38 @@ export default function Navbar({ activePage, setActivePage, onOpenCart }) {
             </div>
           )}
           {isRestaurantAdmin && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
               <Link
                 to="/kitchen"
                 onClick={() => { setMobileMenuOpen(false); setActivePage?.('restaurant-dashboard'); }}
-                style={{
-                  padding: '0.5rem 0.75rem',
-                  borderRadius: '6px',
-                  color: pathname === '/kitchen' ? '#C6A15B' : '#F7F1E5',
-                  background: pathname === '/kitchen' ? 'rgba(198, 161, 91, 0.15)' : 'transparent',
-                  textDecoration: 'none',
-                  fontWeight: 600
-                }}
+                className={`kitchen-nav-mobile-item ${pathname === '/kitchen' || pathname === '/kitchen/orders' ? 'active' : ''}`}
               >
-                Kitchen Orders
+                <ClipboardList size={18} />
+                <span>Kitchen Orders</span>
               </Link>
               <Link
                 to="/kitchen/menu"
                 onClick={() => { setMobileMenuOpen(false); setActivePage?.('restaurant-menu'); }}
-                style={{
-                  padding: '0.5rem 0.75rem',
-                  borderRadius: '6px',
-                  color: pathname === '/kitchen/menu' ? '#C6A15B' : '#F7F1E5',
-                  background: pathname === '/kitchen/menu' ? 'rgba(198, 161, 91, 0.15)' : 'transparent',
-                  textDecoration: 'none',
-                  fontWeight: 600
-                }}
+                className={`kitchen-nav-mobile-item ${pathname === '/kitchen/menu' ? 'active' : ''}`}
               >
-                Menu Items
+                <UtensilsCrossed size={18} />
+                <span>Menu</span>
               </Link>
               <Link
                 to="/kitchen/analytics"
                 onClick={() => { setMobileMenuOpen(false); setActivePage?.('restaurant-analytics'); }}
-                style={{
-                  padding: '0.5rem 0.75rem',
-                  borderRadius: '6px',
-                  color: pathname === '/kitchen/analytics' ? '#C6A15B' : '#F7F1E5',
-                  background: pathname === '/kitchen/analytics' ? 'rgba(198, 161, 91, 0.15)' : 'transparent',
-                  textDecoration: 'none',
-                  fontWeight: 600
-                }}
+                className={`kitchen-nav-mobile-item ${pathname === '/kitchen/analytics' ? 'active' : ''}`}
               >
-                Analytics
+                <BarChart3 size={18} />
+                <span>Analytics</span>
               </Link>
               <Link
                 to="/kitchen/settings"
                 onClick={() => { setMobileMenuOpen(false); setActivePage?.('restaurant-settings'); }}
-                style={{
-                  padding: '0.5rem 0.75rem',
-                  borderRadius: '6px',
-                  color: pathname === '/kitchen/settings' ? '#C6A15B' : '#F7F1E5',
-                  background: pathname === '/kitchen/settings' ? 'rgba(198, 161, 91, 0.15)' : 'transparent',
-                  textDecoration: 'none',
-                  fontWeight: 600
-                }}
+                className={`kitchen-nav-mobile-item ${pathname === '/kitchen/settings' ? 'active' : ''}`}
               >
-                Settings
+                <Settings size={18} />
+                <span>Settings</span>
               </Link>
             </div>
           )}
