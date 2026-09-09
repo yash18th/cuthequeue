@@ -44,7 +44,13 @@ export const authAPI = {
 
 export const restaurantAPI = {
   getAll: (params = {}) => {
-    const query = new URLSearchParams(params).toString();
+    const cleanParams = Object.entries(params).reduce((acc, [key, val]) => {
+      if (val !== undefined && val !== null && val !== '') {
+        acc[key] = val;
+      }
+      return acc;
+    }, {});
+    const query = new URLSearchParams(cleanParams).toString();
     return apiRequest(`/restaurants${query ? `?${query}` : ''}`);
   },
   getById: (id) => apiRequest(`/restaurants/${id}`),

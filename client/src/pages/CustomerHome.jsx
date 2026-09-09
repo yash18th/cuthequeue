@@ -1,17 +1,47 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { restaurantAPI } from '../utils/api';
-import { Search, Star, Clock, MapPin, CheckCircle2, ChevronRight, SlidersHorizontal, Sparkles } from 'lucide-react';
+import RestaurantCard from '../components/RestaurantCard';
+import {
+  Search,
+  Sparkles,
+  Navigation,
+  RefreshCw,
+  AlertCircle,
+  X
+} from 'lucide-react';
+
+// Distance calculation using Haversine formula (km)
+function calculateDistance(lat1, lon1, lat2, lon2) {
+  const R = 6371;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return Number((R * c).toFixed(1));
+}
 
 export default function CustomerHome({ setActivePage, setSelectedRestaurantId }) {
   const { user } = useAuth();
   const [restaurants, setRestaurants] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [selectedCuisine, setSelectedCuisine] = useState('All');
   const [openOnly, setOpenOnly] = useState(false);
 
-  // Time-based greeting helper
+  // Geolocation state
+  const [userCoords, setUserCoords] = useState(null);
+  const [locationStatus, setLocationStatus] = useState('idle'); // 'idle' | 'requesting' | 'granted' | 'denied' | 'unsupported'
+  const [locationMessage, setLocationMessage] = useState('');
+
+  // Time-based greeting
   const getGreeting = () => {
     const hour = new Date().getHours();
     if (hour < 12) return 'Good morning';
@@ -19,30 +49,107 @@ export default function CustomerHome({ setActivePage, setSelectedRestaurantId })
     return 'Good evening';
   };
 
-  const loadRestaurants = async () => {
+  // Debounce search input for instant live search without page reloads
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search.trim());
+    }, 280);
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  // Load restaurants from backend API
+  const loadRestaurants = useCallback(async () => {
     setLoading(true);
+    setError(null);
     try {
       const data = await restaurantAPI.getAll({
-        search: search.trim() || undefined,
+        search: debouncedSearch || undefined,
         cuisine: selectedCuisine !== 'All' ? selectedCuisine : undefined,
         open_only: openOnly ? 'true' : undefined
       });
-      setRestaurants(data);
+      setRestaurants(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error('Failed to load restaurants:', err);
+      setError(err.message || 'Unable to load restaurants');
     } finally {
       setLoading(false);
     }
-  };
+  }, [debouncedSearch, selectedCuisine, openOnly]);
 
   useEffect(() => {
     loadRestaurants();
-  }, [selectedCuisine, openOnly]);
+  }, [loadRestaurants]);
 
-  const handleSearchSubmit = (e) => {
-    e.preventDefault();
-    loadRestaurants();
+  // Handle Geolocation request
+  const handleRequestLocation = () => {
+    if (!navigator.geolocation) {
+      setLocationStatus('unsupported');
+      setLocationMessage('Geolocation is not supported by your browser.');
+      return;
+    }
+
+    setLocationStatus('requesting');
+    setLocationMessage('Getting your current location...');
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        setUserCoords({ latitude, longitude });
+        setLocationStatus('granted');
+        setLocationMessage('Location enabled. Showing nearest kitchens first.');
+      },
+      (geoError) => {
+        console.warn('Geolocation access denied or unavailable:', geoError.message);
+        setLocationStatus('denied');
+        setLocationMessage('Location permission was not granted. Showing all available restaurants.');
+      },
+      { timeout: 10000, enableHighAccuracy: true }
+    );
   };
+
+  // Process sorting with coordinates if available in database, otherwise fallback gracefully
+  const hasCoordinatesInDB = restaurants.some(
+    (r) => r.latitude !== undefined && r.latitude !== null && r.longitude !== undefined && r.longitude !== null
+  );
+
+  let processedRestaurants = [...restaurants];
+
+  if (userCoords && hasCoordinatesInDB) {
+    // Sort by calculated distance
+    processedRestaurants = processedRestaurants.map((r) => {
+      if (r.latitude && r.longitude) {
+        const dist = calculateDistance(userCoords.latitude, userCoords.longitude, r.latitude, r.longitude);
+        return { ...r, calculatedDistance: dist };
+      }
+      return { ...r, calculatedDistance: null };
+    });
+
+    processedRestaurants.sort((a, b) => {
+      if (a.calculatedDistance !== null && b.calculatedDistance !== null) {
+        return a.calculatedDistance - b.calculatedDistance;
+      }
+      return 0;
+    });
+  }
+
+  // Section title dynamically adjusts based on location state and DB schema
+  const getSectionTitle = () => {
+    if (locationStatus === 'granted' && hasCoordinatesInDB) {
+      return 'Nearest Restaurants';
+    }
+    if (locationStatus === 'granted' && !hasCoordinatesInDB) {
+      return 'Available Restaurants';
+    }
+    return 'Nearby & Available Restaurants';
+  };
+
+  const handleClearFilters = () => {
+    setSearch('');
+    setSelectedCuisine('All');
+    setOpenOnly(false);
+  };
+
+  const hasActiveFilters = Boolean(search.trim() || selectedCuisine !== 'All' || openOnly);
 
   const cuisines = ['All', 'Burgers', 'Fast Food', 'South Indian', 'Sandwiches', 'Beverages'];
 
@@ -51,10 +158,25 @@ export default function CustomerHome({ setActivePage, setSelectedRestaurantId })
       <div className="container">
         {/* Personalized Greeting Header */}
         <div style={{ marginBottom: '2rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--primary)', fontSize: '0.85rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+          <div style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '8px',
+            color: 'var(--primary)',
+            fontSize: '0.85rem',
+            fontWeight: 700,
+            textTransform: 'uppercase',
+            letterSpacing: '0.05em'
+          }}>
             <Sparkles size={16} /> Campus Dining Hub
           </div>
-          <h1 style={{ fontSize: 'clamp(1.8rem, 3.5vw, 2.4rem)', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.02em', marginTop: '0.2rem' }}>
+          <h1 style={{
+            fontSize: 'clamp(1.8rem, 3.5vw, 2.4rem)',
+            fontWeight: 800,
+            color: 'var(--text-primary)',
+            letterSpacing: '-0.02em',
+            marginTop: '0.2rem'
+          }}>
             {getGreeting()}, {user ? user.name.split(' ')[0] : 'Foodie'} 👋
           </h1>
           <p style={{ color: 'var(--text-secondary)', fontSize: '1rem' }}>
@@ -62,7 +184,7 @@ export default function CustomerHome({ setActivePage, setSelectedRestaurantId })
           </p>
         </div>
 
-        {/* Search & Filter Bar */}
+        {/* Search & Filter Control Bar */}
         <div style={{
           background: 'white',
           borderRadius: 'var(--radius-xl)',
@@ -71,29 +193,110 @@ export default function CustomerHome({ setActivePage, setSelectedRestaurantId })
           border: '1px solid var(--border-subtle)',
           marginBottom: '2rem'
         }}>
-          <form onSubmit={handleSearchSubmit} style={{ display: 'flex', gap: '0.75rem', marginBottom: '1rem' }}>
+          {/* Search Input Box */}
+          <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1rem' }}>
             <div style={{ position: 'relative', flex: 1 }}>
-              <Search size={18} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+              <Search
+                size={18}
+                style={{
+                  position: 'absolute',
+                  left: '14px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  color: 'var(--text-muted)'
+                }}
+              />
               <input
                 type="text"
                 className="input-field"
                 placeholder="Search restaurants or food items..."
-                style={{ paddingLeft: '40px' }}
+                style={{ paddingLeft: '40px', paddingRight: search ? '36px' : '14px' }}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
+              {search && (
+                <button
+                  type="button"
+                  onClick={() => setSearch('')}
+                  style={{
+                    position: 'absolute',
+                    right: '12px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    color: 'var(--text-muted)',
+                    padding: '4px'
+                  }}
+                  title="Clear search"
+                >
+                  <X size={16} />
+                </button>
+              )}
             </div>
-            <button type="submit" className="btn btn-primary">
-              Search
-            </button>
-          </form>
 
-          {/* Cuisine Pill Tags & Filter toggles */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' }}>
+            {/* Geolocation Button */}
+            <button
+              type="button"
+              className={`btn btn-sm ${locationStatus === 'granted' ? 'btn-primary' : 'btn-secondary'}`}
+              onClick={handleRequestLocation}
+              disabled={locationStatus === 'requesting'}
+              title="Locate nearest restaurants"
+              style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
+            >
+              <Navigation
+                size={15}
+                style={{
+                  transform: locationStatus === 'requesting' ? 'rotate(45deg)' : 'none',
+                  transition: 'transform 0.3s ease'
+                }}
+              />
+              <span className="desktop-links">
+                {locationStatus === 'requesting'
+                  ? 'Locating...'
+                  : locationStatus === 'granted'
+                  ? 'Location Active'
+                  : 'Use my location'}
+              </span>
+            </button>
+          </div>
+
+          {/* Location status feedback message if present */}
+          {locationMessage && (
+            <div style={{
+              fontSize: '0.8rem',
+              color: locationStatus === 'denied' ? 'var(--accent-amber)' : 'var(--primary)',
+              marginBottom: '0.85rem',
+              padding: '0.4rem 0.75rem',
+              borderRadius: 'var(--radius-sm)',
+              background: locationStatus === 'denied' ? 'var(--accent-amber-light)' : 'var(--primary-light)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between'
+            }}>
+              <span>{locationMessage}</span>
+              <button
+                type="button"
+                onClick={() => setLocationMessage('')}
+                style={{ color: 'inherit', padding: '2px' }}
+              >
+                <X size={14} />
+              </button>
+            </div>
+          )}
+
+          {/* Cuisine Pill Tags & Filter Toggles */}
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: '0.75rem'
+          }}>
+            {/* Category Buttons */}
             <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
               {cuisines.map((c) => (
                 <button
                   key={c}
+                  type="button"
                   onClick={() => setSelectedCuisine(c)}
                   style={{
                     padding: '0.4rem 0.9rem',
@@ -104,7 +307,7 @@ export default function CustomerHome({ setActivePage, setSelectedRestaurantId })
                     borderColor: selectedCuisine === c ? 'var(--primary)' : 'var(--border-subtle)',
                     background: selectedCuisine === c ? 'var(--primary)' : 'var(--bg-card)',
                     color: selectedCuisine === c ? 'white' : 'var(--text-secondary)',
-                    transition: 'all 0.15s'
+                    transition: 'all 0.15s ease'
                   }}
                 >
                   {c}
@@ -112,161 +315,176 @@ export default function CustomerHome({ setActivePage, setSelectedRestaurantId })
               ))}
             </div>
 
-            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}>
+            {/* Open Now Only Toggle */}
+            <label style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              cursor: 'pointer',
+              fontSize: '0.85rem',
+              fontWeight: 600,
+              color: 'var(--text-secondary)',
+              userSelect: 'none'
+            }}>
               <input
                 type="checkbox"
                 checked={openOnly}
                 onChange={(e) => setOpenOnly(e.target.checked)}
-                style={{ width: '16px', height: '16px', accentColor: 'var(--primary)', cursor: 'pointer' }}
+                style={{
+                  width: '16px',
+                  height: '16px',
+                  accentColor: 'var(--primary)',
+                  cursor: 'pointer'
+                }}
               />
               Open Now Only
             </label>
           </div>
         </div>
 
-        {/* Restaurants Grid */}
-        <div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
-            <h2 style={{ fontSize: '1.35rem', fontWeight: 800, letterSpacing: '-0.02em' }}>
-              Nearby & Available Restaurants
-            </h2>
-            <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-              {restaurants.length} kitchens ready
+        {/* Section Header */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: '1.25rem'
+        }}>
+          <h2 style={{ fontSize: '1.35rem', fontWeight: 800, letterSpacing: '-0.02em', color: 'var(--text-primary)' }}>
+            {getSectionTitle()}
+          </h2>
+          {!loading && !error && (
+            <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)' }}>
+              {processedRestaurants.length} {processedRestaurants.length === 1 ? 'kitchen' : 'kitchens'} ready
             </span>
-          </div>
+          )}
+        </div>
 
-          {loading ? (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1.5rem' }}>
-              {[1, 2, 3].map((n) => (
-                <div key={n} className="card" style={{ height: '340px', background: 'white', animation: 'pulse 1.5s infinite' }} />
-              ))}
+        {/* Loading State: Finding restaurants... with skeleton cards */}
+        {loading && (
+          <div>
+            <div style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '8px',
+              color: 'var(--primary)',
+              fontWeight: 600,
+              fontSize: '0.95rem',
+              marginBottom: '1.25rem'
+            }}>
+              <RefreshCw size={16} className="spin" /> Finding restaurants...
             </div>
-          ) : restaurants.length === 0 ? (
-            <div className="card" style={{ padding: '3.5rem 1rem', textAlign: 'center', background: 'white' }}>
-              <p style={{ fontSize: '1.1rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
-                No restaurants matched your filters.
-              </p>
-              <button
-                className="btn btn-secondary btn-sm"
-                onClick={() => { setSearch(''); setSelectedCuisine('All'); setOpenOnly(false); }}
-              >
-                Reset All Filters
-              </button>
-            </div>
-          ) : (
             <div style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))',
               gap: '1.5rem'
             }}>
-              {restaurants.map((rest) => (
+              {[1, 2, 3].map((n) => (
                 <div
-                  key={rest.id}
-                  className="card card-hover"
+                  key={n}
+                  className="card"
                   style={{
+                    background: 'white',
+                    height: '380px',
                     display: 'flex',
                     flexDirection: 'column',
-                    cursor: 'pointer',
-                    opacity: rest.is_open ? 1 : 0.82
-                  }}
-                  onClick={() => {
-                    setSelectedRestaurantId(rest.id);
-                    setActivePage('restaurant-menu-view');
+                    overflow: 'hidden'
                   }}
                 >
-                  {/* Cover Image + Badges */}
-                  <div style={{ position: 'relative', height: '190px', width: '100%', overflow: 'hidden' }}>
-                    <img
-                      src={rest.cover_image}
-                      alt={rest.name}
-                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                    />
-                    <div style={{ position: 'absolute', top: '12px', right: '12px', display: 'flex', gap: '6px' }}>
-                      <span className={`badge ${rest.is_open ? 'badge-open' : 'badge-closed'}`}>
-                        {rest.is_open ? '🟢 Open' : '🔴 Currently Closed'}
-                      </span>
-                    </div>
-                    {rest.distance_km && (
-                      <div style={{
-                        position: 'absolute',
-                        bottom: '12px',
-                        left: '12px',
-                        background: 'rgba(15, 23, 42, 0.75)',
-                        color: 'white',
-                        padding: '3px 8px',
-                        borderRadius: '6px',
-                        fontSize: '0.75rem',
-                        fontWeight: 600,
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '4px',
-                        backdropFilter: 'blur(4px)'
-                      }}>
-                        <MapPin size={12} /> {rest.distance_km} km away
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Body Info */}
-                  <div style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column', flex: 1 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.4rem' }}>
-                      <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary)' }}>
-                        {rest.name}
-                      </h3>
-                      <div style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '3px',
-                        background: '#fef3c7',
-                        color: '#b45309',
-                        padding: '2px 7px',
-                        borderRadius: '6px',
-                        fontSize: '0.8rem',
-                        fontWeight: 700
-                      }}>
-                        <Star size={12} fill="#b45309" strokeWidth={0} />
-                        {rest.rating || 4.5}
-                      </div>
-                    </div>
-
-                    <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.75rem', fontWeight: 500 }}>
-                      {rest.cuisine}
-                    </p>
-
-                    <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.4, marginBottom: '1rem', flex: 1 }}>
-                      {rest.description}
-                    </p>
-
-                    {/* Metadata Footer */}
-                    <div style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      paddingTop: '0.85rem',
-                      borderTop: '1px solid var(--border-subtle)'
-                    }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-secondary)' }}>
-                        <Clock size={16} style={{ color: 'var(--primary)' }} />
-                        <span>{rest.prep_time_minutes || 15}–{(rest.prep_time_minutes || 15) + 5} min</span>
-                      </div>
-
-                      <button
-                        className="btn btn-sm btn-primary"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSelectedRestaurantId(rest.id);
-                          setActivePage('restaurant-menu-view');
-                        }}
-                      >
-                        View Menu <ChevronRight size={14} />
-                      </button>
-                    </div>
+                  <div style={{
+                    height: '180px',
+                    background: 'linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%)',
+                    backgroundSize: '200% 100%',
+                    animation: 'skeletonPulse 1.5s infinite ease-in-out'
+                  }} />
+                  <div style={{ padding: '1.25rem', flex: 1, display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                    <div style={{ height: '22px', width: '60%', background: '#e2e8f0', borderRadius: '4px' }} />
+                    <div style={{ height: '14px', width: '40%', background: '#f1f5f9', borderRadius: '4px' }} />
+                    <div style={{ height: '14px', width: '90%', background: '#f1f5f9', borderRadius: '4px' }} />
+                    <div style={{ height: '14px', width: '75%', background: '#f1f5f9', borderRadius: '4px' }} />
+                    <div style={{ marginTop: 'auto', height: '36px', background: '#f1f5f9', borderRadius: '8px' }} />
                   </div>
                 </div>
               ))}
             </div>
-          )}
-        </div>
+          </div>
+        )}
+
+        {/* Error State: Unable to load restaurants with Try Again button */}
+        {!loading && error && (
+          <div className="card" style={{ padding: '3.5rem 1.5rem', textAlign: 'center', background: 'white' }}>
+            <div style={{
+              width: '56px',
+              height: '56px',
+              borderRadius: '50%',
+              background: 'var(--accent-rose-light)',
+              color: 'var(--accent-rose)',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginBottom: '1rem'
+            }}>
+              <AlertCircle size={28} />
+            </div>
+            <h3 style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: '0.5rem', color: 'var(--text-primary)' }}>
+              Unable to load restaurants
+            </h3>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.925rem', marginBottom: '1.5rem', maxWidth: '440px', margin: '0 auto 1.5rem auto' }}>
+              We could not connect to the kitchen servers. Please check your network connection and try again.
+            </p>
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={loadRestaurants}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+            >
+              <RefreshCw size={16} /> Try Again
+            </button>
+          </div>
+        )}
+
+        {/* Empty Filter State vs Empty Database State */}
+        {!loading && !error && processedRestaurants.length === 0 && (
+          <div className="card" style={{ padding: '3.5rem 1.5rem', textAlign: 'center', background: 'white' }}>
+            <h3 style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: '0.5rem', color: 'var(--text-primary)' }}>
+              {hasActiveFilters ? 'No restaurants match your search.' : 'No restaurants available right now.'}
+            </h3>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.925rem', marginBottom: '1.5rem', maxWidth: '420px', margin: '0 auto 1.5rem auto' }}>
+              {hasActiveFilters
+                ? 'Try adjusting your search query, switching cuisine categories, or unchecking "Open Now Only".'
+                : 'There are currently no active dining kitchens registered on campus. Please check back shortly.'}
+            </p>
+            {hasActiveFilters && (
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={handleClearFilters}
+              >
+                Clear Filters
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* Restaurant Cards Responsive Grid */}
+        {!loading && !error && processedRestaurants.length > 0 && (
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))',
+            gap: '1.5rem'
+          }}>
+            {processedRestaurants.map((rest) => (
+              <RestaurantCard
+                key={rest.id}
+                restaurant={rest}
+                calculatedDistance={rest.calculatedDistance}
+                onSelectRestaurant={(id) => {
+                  setSelectedRestaurantId(id);
+                  setActivePage('restaurant-menu-view');
+                }}
+              />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

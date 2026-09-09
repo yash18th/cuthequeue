@@ -4,6 +4,32 @@ const { authenticate, requireRole, requireRestaurantOwner } = require('../middle
 
 const router = express.Router();
 
+// Helper to calculate whether a restaurant is currently open based on is_open and operational hours
+function checkIsCurrentlyOpen(r) {
+  if (!r.is_open) return false;
+  if (!r.opening_time || !r.closing_time) return true;
+
+  try {
+    const now = new Date();
+    const currentMinutes = now.getHours() * 60 + now.getMinutes();
+
+    const [openH, openM] = r.opening_time.split(':').map(Number);
+    const [closeH, closeM] = r.closing_time.split(':').map(Number);
+
+    const openMinutes = openH * 60 + (openM || 0);
+    const closeMinutes = closeH * 60 + (closeM || 0);
+
+    if (openMinutes <= closeMinutes) {
+      return currentMinutes >= openMinutes && currentMinutes < closeMinutes;
+    } else {
+      // Over midnight (e.g., 18:00 to 02:00)
+      return currentMinutes >= openMinutes || currentMinutes < closeMinutes;
+    }
+  } catch {
+    return !!r.is_open;
+  }
+}
+
 // Get all restaurants (Public, filterable)
 router.get('/', (req, res) => {
   try {
@@ -12,15 +38,47 @@ router.get('/', (req, res) => {
     let query = 'SELECT * FROM restaurants WHERE is_approved = 1 AND is_suspended = 0';
     const params = [];
 
-    if (search) {
-      query += ' AND (name LIKE ? OR cuisine LIKE ? OR description LIKE ?)';
-      const term = `%${search}%`;
-      params.push(term, term, term);
+    // Filter out invalid/empty strings
+    const validSearch = search && typeof search === 'string' && search.trim() !== '' && search !== 'undefined' && search !== 'null' ? search.trim() : null;
+    const validCuisine = cuisine && typeof cuisine === 'string' && cuisine.trim() !== '' && cuisine !== 'All' && cuisine !== 'undefined' && cuisine !== 'null' ? cuisine.trim() : null;
+
+    if (validSearch) {
+      query += ` AND (
+        restaurants.name LIKE ? 
+        OR restaurants.cuisine LIKE ? 
+        OR restaurants.description LIKE ? 
+        OR restaurants.address LIKE ? 
+        OR EXISTS (
+          SELECT 1 FROM menu_items mi 
+          WHERE mi.restaurant_id = restaurants.id 
+          AND (mi.name LIKE ? OR mi.description LIKE ?)
+        )
+        OR EXISTS (
+          SELECT 1 FROM categories c 
+          WHERE c.restaurant_id = restaurants.id 
+          AND c.name LIKE ?
+        )
+      )`;
+      const term = `%${validSearch}%`;
+      params.push(term, term, term, term, term, term, term);
     }
 
-    if (cuisine && cuisine !== 'All') {
-      query += ' AND cuisine LIKE ?';
-      params.push(`%${cuisine}%`);
+    if (validCuisine) {
+      query += ` AND (
+        restaurants.cuisine LIKE ?
+        OR EXISTS (
+          SELECT 1 FROM categories c 
+          WHERE c.restaurant_id = restaurants.id 
+          AND c.name LIKE ?
+        )
+        OR EXISTS (
+          SELECT 1 FROM menu_items mi 
+          WHERE mi.restaurant_id = restaurants.id 
+          AND (mi.name LIKE ? OR mi.description LIKE ?)
+        )
+      )`;
+      const cuisineTerm = `%${validCuisine}%`;
+      params.push(cuisineTerm, cuisineTerm, cuisineTerm, cuisineTerm);
     }
 
     if (open_only === 'true') {
@@ -31,12 +89,18 @@ router.get('/', (req, res) => {
 
     const restaurants = db.prepare(query).all(...params);
 
-    // Attach active item counts
+    // Attach active item counts and computed live open status
     const countStmt = db.prepare('SELECT COUNT(*) as count FROM menu_items WHERE restaurant_id = ? AND is_available = 1');
-    const result = restaurants.map(r => ({
+    let result = restaurants.map(r => ({
       ...r,
+      is_currently_open: checkIsCurrentlyOpen(r),
       available_items_count: countStmt.get(r.id).count
     }));
+
+    // If open_only requested, additionally filter out closed by hours
+    if (open_only === 'true') {
+      result = result.filter(r => r.is_currently_open);
+    }
 
     res.json(result);
   } catch (err) {

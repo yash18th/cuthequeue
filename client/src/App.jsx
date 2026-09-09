@@ -31,6 +31,7 @@ function MainApp() {
   const [selectedRestaurantId, setSelectedRestaurantId] = useState(1); // Default Campus Cafe
   const [trackedOrderId, setTrackedOrderId] = useState(2); // Default active preparing order #CQ1042
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [ordersInitialTab, setOrdersInitialTab] = useState('browse');
 
   // Render current page component
   const renderContent = () => {
@@ -85,6 +86,7 @@ function MainApp() {
             setActivePage={setActivePage}
             setTrackedOrderId={setTrackedOrderId}
             setSelectedRestaurantId={setSelectedRestaurantId}
+            initialTab={ordersInitialTab}
           />
         );
 
@@ -123,6 +125,8 @@ function MainApp() {
       <Navbar
         activePage={activePage}
         setActivePage={setActivePage}
+        ordersInitialTab={ordersInitialTab}
+        setOrdersInitialTab={setOrdersInitialTab}
         onOpenCart={() => setIsCartOpen(true)}
       />
 
@@ -139,6 +143,8 @@ function MainApp() {
       <BottomNav
         activePage={activePage}
         setActivePage={setActivePage}
+        ordersInitialTab={ordersInitialTab}
+        setOrdersInitialTab={setOrdersInitialTab}
         onOpenCart={() => setIsCartOpen(true)}
       />
 

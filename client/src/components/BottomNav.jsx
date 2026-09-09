@@ -3,7 +3,7 @@ import { Home, ClipboardList, ShoppingBag, User } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 
-export default function BottomNav({ activePage, setActivePage, onOpenCart }) {
+export default function BottomNav({ activePage, setActivePage, onOpenCart, ordersInitialTab, setOrdersInitialTab }) {
   const { totalItemCount } = useCart();
   const { isRestaurantAdmin, isSuperAdmin } = useAuth();
 
@@ -24,7 +24,10 @@ export default function BottomNav({ activePage, setActivePage, onOpenCart }) {
 
       <button
         className={`bottom-nav-item ${activePage === 'orders' ? 'active' : ''}`}
-        onClick={() => setActivePage('orders')}
+        onClick={() => {
+          if (setOrdersInitialTab) setOrdersInitialTab('browse');
+          setActivePage('orders');
+        }}
       >
         <ClipboardList size={20} />
         <span>Orders</span>

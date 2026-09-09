@@ -3,7 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { UtensilsCrossed, ShoppingBag, User, LogOut, ChevronDown, Shield, Store, Bell } from 'lucide-react';
 
-export default function Navbar({ activePage, setActivePage, onOpenCart }) {
+export default function Navbar({ activePage, setActivePage, onOpenCart, ordersInitialTab, setOrdersInitialTab }) {
   const { user, logout, isCustomer, isRestaurantAdmin, isSuperAdmin, login } = useAuth();
   const { totalItemCount } = useCart();
   const [showDemoMenu, setShowDemoMenu] = useState(false);
@@ -53,7 +53,10 @@ export default function Navbar({ activePage, setActivePage, onOpenCart }) {
               </button>
               <button
                 className={`btn btn-sm ${activePage === 'orders' ? 'btn-primary' : 'btn-secondary'}`}
-                onClick={() => setActivePage('orders')}
+                onClick={() => {
+                  if (setOrdersInitialTab) setOrdersInitialTab('orders');
+                  setActivePage('orders');
+                }}
               >
                 My Orders
               </button>

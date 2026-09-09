@@ -5,7 +5,8 @@ const cors = require('cors');
 const path = require('path');
 require('dotenv').config();
 
-const { initDatabase } = require('./db/database');
+const { db, initDatabase } = require('./db/database');
+const { seed } = require('./db/seed');
 const authRoutes = require('./routes/auth');
 const restaurantRoutes = require('./routes/restaurants');
 const menuRoutes = require('./routes/menu');
@@ -16,6 +17,17 @@ const superadminRoutes = require('./routes/superadmin');
 
 // Ensure database is initialized
 initDatabase();
+
+// Auto-seed initial kitchens and menu data if database is empty (e.g. fresh Render deployment)
+try {
+  const row = db.prepare('SELECT count(*) as count FROM restaurants').get();
+  if (!row || row.count === 0) {
+    console.log('⚡ Empty database detected on startup. Auto-seeding initial restaurants and demo accounts...');
+    seed().catch(err => console.error('Auto-seeding error:', err));
+  }
+} catch (err) {
+  console.error('Auto-seed check failed:', err);
+}
 
 const app = express();
 const server = http.createServer(app);
