@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node server/index.js",
     "server": "node server/index.js",
-    "build": "node server/db/seed.js",
+    "build": "echo 'Build complete.'",
     "seed": "node server/db/seed.js",
     "client": "npm run dev --prefix client",
     "dev": "node -e \"const { spawn } = require('child_process'); spawn('npm', ['run', 'server'], { stdio: 'inherit', shell: true }); spawn('npm', ['run', 'client'], { stdio: 'inherit', shell: true });\""

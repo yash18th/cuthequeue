@@ -18,17 +18,6 @@ const superadminRoutes = require('./routes/superadmin');
 // Ensure database is initialized
 initDatabase();
 
-// Auto-seed initial kitchens and menu data if database is empty (e.g. fresh Render deployment)
-try {
-  const row = db.prepare('SELECT count(*) as count FROM restaurants').get();
-  if (!row || row.count === 0) {
-    console.log('⚡ Empty database detected on startup. Auto-seeding initial restaurants and demo accounts...');
-    seed().catch(err => console.error('Auto-seeding error:', err));
-  }
-} catch (err) {
-  console.error('Auto-seed check failed:', err);
-}
-
 const app = express();
 const server = http.createServer(app);
 
@@ -112,7 +101,25 @@ io.on('connection', (socket) => {
 });
 
 const PORT = process.env.PORT || 5001;
-server.listen(PORT, () => {
-  console.log(`🚀 Cut the Queue Server running on http://localhost:${PORT}`);
-  console.log(`⚡ Real-Time WebSockets active on ws://localhost:${PORT}`);
-});
+
+async function startServer() {
+  // Auto-seed initial kitchens and demo accounts if database is empty (e.g. fresh Render container deployment)
+  try {
+    const row = db.prepare('SELECT count(*) as count FROM restaurants').get();
+    if (!row || row.count === 0) {
+      console.log('⚡ Empty database detected on startup. Auto-seeding initial restaurants and demo accounts...');
+      await seed();
+      console.log('✅ Database successfully initialized and seeded with demo data.');
+    }
+  } catch (err) {
+    console.error('Auto-seed check failed:', err);
+  }
+
+  // Bind to 0.0.0.0 so Render can route incoming requests
+  server.listen(PORT, '0.0.0.0', () => {
+    console.log(`🚀 Cut the Queue Server running on http://0.0.0.0:${PORT}`);
+    console.log(`⚡ Real-Time WebSockets active on port ${PORT}`);
+  });
+}
+
+startServer();
