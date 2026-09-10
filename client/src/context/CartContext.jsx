@@ -1,6 +1,61 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { AlertCircle, Trash2, ArrowRight, X } from 'lucide-react';
 
 const CartContext = createContext(null);
+
+// Safely sanitize and validate cart items from localStorage or updates
+function sanitizeCartItems(items) {
+  if (!Array.isArray(items)) return [];
+  const valid = [];
+  for (const item of items) {
+    if (!item || typeof item !== 'object') continue;
+    const rawId = item.id || item.menu_item_id;
+    if (!rawId) continue;
+
+    const unitPrice = Number.isFinite(Number(item.unitPrice))
+      ? Number(item.unitPrice)
+      : (Number.isFinite(Number(item.price)) ? Number(item.price) : 0);
+
+    const quantity = Math.max(1, Math.floor(Number(item.quantity) || 1));
+    const totalPrice = Number.isFinite(Number(item.totalPrice))
+      ? Number(item.totalPrice)
+      : unitPrice * quantity;
+
+    const customizations = item.customizations && typeof item.customizations === 'object' && !Array.isArray(item.customizations)
+      ? item.customizations
+      : {};
+
+    const cartItemId = item.cartItemId || `${rawId}_${JSON.stringify(customizations)}`;
+
+    valid.push({
+      cartItemId,
+      id: rawId,
+      menu_item_id: rawId,
+      name: String(item.name || 'Food Item'),
+      image: String(item.image || ''),
+      is_veg: item.is_veg !== undefined ? Boolean(item.is_veg) : true,
+      unitPrice: Math.max(0, unitPrice),
+      quantity,
+      customizations,
+      totalPrice: Math.max(0, totalPrice),
+      restaurant_id: item.restaurant_id || null
+    });
+  }
+  return valid;
+}
+
+// Safely sanitize and validate restaurant object from localStorage or updates
+function sanitizeRestaurant(rest) {
+  if (!rest || typeof rest !== 'object' || Array.isArray(rest)) return null;
+  if (!rest.id && !rest.name) return null;
+  return {
+    ...rest,
+    id: rest.id,
+    name: rest.name || 'Restaurant Kitchen',
+    tax_rate: Number.isFinite(Number(rest.tax_rate)) ? Number(rest.tax_rate) : 0.05,
+    prep_time_minutes: Number(rest.prep_time_minutes) || 15
+  };
+}
 
 export function CartProvider({ children }) {
   const [cartItems, setCartItems] = useState(() => {
@@ -8,7 +63,7 @@ export function CartProvider({ children }) {
       const saved = localStorage.getItem('cq_cart');
       if (!saved) return [];
       const parsed = JSON.parse(saved);
-      return Array.isArray(parsed) ? parsed : [];
+      return sanitizeCartItems(parsed);
     } catch (err) {
       console.warn('Failed to parse cq_cart from localStorage:', err);
       return [];
@@ -19,51 +74,40 @@ export function CartProvider({ children }) {
     try {
       const saved = localStorage.getItem('cq_cart_restaurant');
       if (!saved) return null;
-      return JSON.parse(saved);
+      const parsed = JSON.parse(saved);
+      return sanitizeRestaurant(parsed);
     } catch (err) {
       console.warn('Failed to parse cq_cart_restaurant from localStorage:', err);
       return null;
     }
   });
 
+  // State to hold a conflict when adding an item from a different restaurant
+  const [conflictData, setConflictData] = useState(null);
+
   useEffect(() => {
     try {
       localStorage.setItem('cq_cart', JSON.stringify(cartItems));
-      localStorage.setItem('cq_cart_restaurant', JSON.stringify(restaurant));
+      if (restaurant) {
+        localStorage.setItem('cq_cart_restaurant', JSON.stringify(restaurant));
+      } else {
+        localStorage.removeItem('cq_cart_restaurant');
+      }
     } catch (err) {
       console.error('Failed to save cart to localStorage:', err);
     }
   }, [cartItems, restaurant]);
 
-  // Add item with customizations
-  const addItem = (item, restInfo, quantity = 1, selectedCustomizations = {}) => {
+  // Internal helper to perform the actual addition to cartItems
+  const executeAddItem = (item, rest, quantity = 1, selectedCustomizations = {}) => {
     if (!item) return false;
-
     const itemId = item.id || item.menu_item_id;
-    if (!itemId) {
-      console.error('Cannot add item without id:', item);
-      return false;
-    }
-
-    const rest = restInfo || restaurant;
-
-    // If cart has items from a different restaurant, confirm with user
-    if (restaurant && rest && restaurant.id && rest.id && restaurant.id !== rest.id && cartItems.length > 0) {
-      const confirmReset = window.confirm(
-        `Your cart contains items from "${restaurant.name || 'another restaurant'}". Would you like to clear your existing cart and start an order with "${rest.name || 'this restaurant'}"?`
-      );
-      if (!confirmReset) return false;
-      setCartItems([]);
-    }
-
-    if (rest) {
-      setRestaurant(rest);
-    }
+    if (!itemId) return false;
 
     // Calculate effective unit price with customizations safely
-    let unitPrice = Number(String(item.price || 0).replace(/[^0-9.]/g, '')) || 0;
-    
-    // Safely extract customizations
+    let unitPrice = Number(String(item.price || 0).replace(/[^0-9.]/g, ''));
+    if (!Number.isFinite(unitPrice)) unitPrice = 0;
+
     let itemCustomizations = [];
     try {
       if (Array.isArray(item.customizations)) {
@@ -78,7 +122,9 @@ export function CartProvider({ children }) {
       itemCustomizations = [];
     }
 
-    const safeSelections = selectedCustomizations && typeof selectedCustomizations === 'object' ? selectedCustomizations : {};
+    const safeSelections = selectedCustomizations && typeof selectedCustomizations === 'object' && !Array.isArray(selectedCustomizations)
+      ? selectedCustomizations
+      : {};
 
     for (const group of itemCustomizations) {
       if (!group || !group.name || !Array.isArray(group.options)) continue;
@@ -86,31 +132,37 @@ export function CartProvider({ children }) {
       if (selected) {
         if (group.type === 'single') {
           const opt = group.options.find((o) => o && o.label === selected);
-          if (opt) unitPrice += Number(opt.price || 0);
+          if (opt) unitPrice += (Number(opt.price) || 0);
         } else if (group.type === 'multiple' && Array.isArray(selected)) {
           for (const label of selected) {
             const opt = group.options.find((o) => o && o.label === label);
-            if (opt) unitPrice += Number(opt.price || 0);
+            if (opt) unitPrice += (Number(opt.price) || 0);
           }
         }
       }
     }
 
-    // Generate unique key based on item id and selected customizations
     const customizationKey = JSON.stringify(safeSelections);
     const cartItemId = `${itemId}_${customizationKey}`;
-    const addQty = Math.max(1, Number(quantity) || 1);
+    const addQty = Math.max(1, Math.floor(Number(quantity) || 1));
+
+    if (rest) {
+      setRestaurant(sanitizeRestaurant(rest));
+    }
 
     setCartItems((prev) => {
       const safePrev = Array.isArray(prev) ? prev : [];
-      const existingIndex = safePrev.findIndex((i) => i.cartItemId === cartItemId);
+      const existingIndex = safePrev.findIndex((i) => i && i.cartItemId === cartItemId);
       if (existingIndex > -1) {
         const copy = [...safePrev];
-        const newQty = copy[existingIndex].quantity + addQty;
+        const existing = copy[existingIndex];
+        const effectiveUnit = Number.isFinite(Number(existing.unitPrice)) ? Number(existing.unitPrice) : unitPrice;
+        const newQty = (Number(existing.quantity) || 0) + addQty;
         copy[existingIndex] = {
-          ...copy[existingIndex],
+          ...existing,
           quantity: newQty,
-          totalPrice: newQty * copy[existingIndex].unitPrice
+          unitPrice: effectiveUnit,
+          totalPrice: newQty * effectiveUnit
         };
         return copy;
       } else {
@@ -120,14 +172,14 @@ export function CartProvider({ children }) {
             cartItemId,
             id: itemId,
             menu_item_id: itemId,
-            name: item.name || 'Food Item',
-            image: item.image || '',
+            name: String(item.name || 'Food Item'),
+            image: String(item.image || ''),
             is_veg: item.is_veg !== undefined ? Boolean(item.is_veg) : true,
             unitPrice,
             quantity: addQty,
             customizations: safeSelections,
             totalPrice: unitPrice * addQty,
-            restaurant_id: rest?.id || restaurant?.id
+            restaurant_id: rest?.id || restaurant?.id || item.restaurant_id || null
           }
         ];
       }
@@ -136,29 +188,84 @@ export function CartProvider({ children }) {
     return true;
   };
 
+  // Add item with conflict check
+  const addItem = (item, restInfo, quantity = 1, selectedCustomizations = {}) => {
+    if (!item) return false;
+
+    const itemId = item.id || item.menu_item_id;
+    if (!itemId) {
+      console.error('Cannot add item without id:', item);
+      return false;
+    }
+
+    const rest = sanitizeRestaurant(restInfo || restaurant);
+
+    // If cart has items from a DIFFERENT restaurant, prompt user with confirmation
+    if (
+      restaurant &&
+      rest &&
+      restaurant.id &&
+      rest.id &&
+      String(restaurant.id) !== String(rest.id) &&
+      cartItems.length > 0
+    ) {
+      // Trigger conflict modal
+      setConflictData({
+        incomingItem: item,
+        incomingRestaurant: rest,
+        quantity,
+        selectedCustomizations,
+        existingRestaurant: restaurant
+      });
+      return false;
+    }
+
+    return executeAddItem(item, rest, quantity, selectedCustomizations);
+  };
+
+  // Resolve conflict: Clear & Add
+  const handleClearAndAdd = () => {
+    if (!conflictData) return;
+    const { incomingItem, incomingRestaurant, quantity, selectedCustomizations } = conflictData;
+    setCartItems([]);
+    setRestaurant(incomingRestaurant);
+    executeAddItem(incomingItem, incomingRestaurant, quantity, selectedCustomizations);
+    setConflictData(null);
+  };
+
+  // Resolve conflict: Cancel
+  const handleCancelConflict = () => {
+    setConflictData(null);
+  };
+
   const updateQuantity = (cartItemId, newQty) => {
-    const qty = Number(newQty) || 0;
+    const qty = Math.floor(Number(newQty) || 0);
     if (qty <= 0) {
       removeItem(cartItemId);
       return;
     }
     setCartItems((prev) =>
-      (Array.isArray(prev) ? prev : []).map((item) => {
-        if (item.cartItemId === cartItemId) {
-          return {
-            ...item,
-            quantity: qty,
-            totalPrice: item.unitPrice * qty
-          };
-        }
-        return item;
-      })
+      (Array.isArray(prev) ? prev : [])
+        .filter(Boolean)
+        .map((item) => {
+          if (item.cartItemId === cartItemId) {
+            const unit = Number(item.unitPrice) || 0;
+            return {
+              ...item,
+              quantity: qty,
+              totalPrice: unit * qty
+            };
+          }
+          return item;
+        })
     );
   };
 
   const removeItem = (cartItemId) => {
     setCartItems((prev) => {
-      const updated = (Array.isArray(prev) ? prev : []).filter((i) => i.cartItemId !== cartItemId);
+      const updated = (Array.isArray(prev) ? prev : [])
+        .filter(Boolean)
+        .filter((i) => i.cartItemId !== cartItemId);
       if (updated.length === 0) {
         setRestaurant(null);
       }
@@ -174,19 +281,29 @@ export function CartProvider({ children }) {
   // Helper to get total quantity of a specific menu item in cart
   const getItemQuantity = (menuItemId) => {
     if (!menuItemId) return 0;
+    const targetStr = String(menuItemId);
     return (cartItems || [])
-      .filter((i) => i.menu_item_id === menuItemId || i.id === menuItemId)
+      .filter(Boolean)
+      .filter((i) => String(i.menu_item_id) === targetStr || String(i.id) === targetStr)
       .reduce((sum, i) => sum + (Number(i.quantity) || 0), 0);
   };
 
   // Calculations with safe fallbacks
-  const subtotal = (cartItems || []).reduce((sum, item) => sum + (Number(item.totalPrice) || 0), 0);
-  const taxRate = restaurant?.tax_rate || 0.05;
-  const tax = Math.round(subtotal * taxRate * 100) / 100;
+  const subtotal = (cartItems || [])
+    .filter(Boolean)
+    .reduce((sum, item) => sum + (Number(item.totalPrice) || 0), 0);
+
+  const taxRate = Number(restaurant?.tax_rate) || 0.05;
+  const rawTax = subtotal * taxRate;
+  const tax = Number.isFinite(rawTax) ? Math.round(rawTax * 100) / 100 : 0;
   const convenienceFee = (cartItems || []).length > 0 ? 10 : 0;
   const discount = 0;
-  const total = Math.round((subtotal + tax + convenienceFee - discount) * 100) / 100;
-  const totalItemCount = (cartItems || []).reduce((sum, item) => sum + (Number(item.quantity) || 0), 0);
+  const rawTotal = subtotal + tax + convenienceFee - discount;
+  const total = Number.isFinite(rawTotal) ? Math.round(rawTotal * 100) / 100 : 0;
+
+  const totalItemCount = (cartItems || [])
+    .filter(Boolean)
+    .reduce((sum, item) => sum + (Number(item.quantity) || 0), 0);
 
   const value = {
     cartItems,
@@ -202,11 +319,129 @@ export function CartProvider({ children }) {
     convenienceFee,
     discount,
     total,
-    cartTotal: total, // Exported alias to ensure RestaurantPage and other pages never encounter undefined
+    cartTotal: total,
     totalItemCount
   };
 
-  return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
+  return (
+    <CartContext.Provider value={value}>
+      {children}
+
+      {/* Royal South Indian Restaurant Conflict Modal */}
+      {conflictData && (
+        <div
+          className="modal-overlay"
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(11, 53, 45, 0.75)',
+            backdropFilter: 'blur(4px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 9999,
+            padding: '1.25rem'
+          }}
+          onClick={handleCancelConflict}
+        >
+          <div
+            className="modal-content"
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: '#FFFFFF',
+              borderRadius: '16px',
+              border: '1.5px solid #C49A52',
+              maxWidth: '460px',
+              width: '100%',
+              padding: '1.75rem',
+              boxShadow: '0 20px 40px rgba(0,0,0,0.3)',
+              position: 'relative'
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '1rem' }}>
+              <div
+                style={{
+                  width: '40px',
+                  height: '40px',
+                  borderRadius: '50%',
+                  background: '#FDF6E2',
+                  border: '1px solid #C49A52',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: '#C49A52',
+                  flexShrink: 0
+                }}
+              >
+                <AlertCircle size={22} />
+              </div>
+              <h3
+                style={{
+                  fontSize: '1.25rem',
+                  fontWeight: 800,
+                  color: '#0B352D',
+                  fontFamily: 'var(--font-serif)',
+                  margin: 0
+                }}
+              >
+                Start a New Tray?
+              </h3>
+            </div>
+
+            <p style={{ color: '#4A5568', fontSize: '0.9rem', lineHeight: 1.55, marginBottom: '1.5rem' }}>
+              Your cart contains items from{' '}
+              <strong style={{ color: '#0B352D' }}>
+                {conflictData.existingRestaurant?.name || 'another restaurant'}
+              </strong>
+              . Clear the existing cart and add this item from{' '}
+              <strong style={{ color: '#0B352D' }}>
+                {conflictData.incomingRestaurant?.name || 'this restaurant'}
+              </strong>
+              ?
+            </p>
+
+            <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
+              <button
+                type="button"
+                onClick={handleCancelConflict}
+                className="btn btn-secondary"
+                style={{
+                  padding: '0.65rem 1.25rem',
+                  fontSize: '0.875rem',
+                  fontWeight: 600,
+                  border: '1px solid #E8DDC8',
+                  background: '#F7F1E5',
+                  color: '#4A5568',
+                  borderRadius: '8px',
+                  cursor: 'pointer'
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleClearAndAdd}
+                className="btn btn-gold"
+                style={{
+                  padding: '0.65rem 1.4rem',
+                  fontSize: '0.875rem',
+                  fontWeight: 700,
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px'
+                }}
+              >
+                <span>Clear & Add</span>
+                <ArrowRight size={16} />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </CartContext.Provider>
+  );
 }
 
 export function useCart() {
@@ -232,4 +467,3 @@ export function useCart() {
   }
   return context;
 }
-

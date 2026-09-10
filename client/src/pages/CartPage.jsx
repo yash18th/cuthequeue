@@ -202,7 +202,7 @@ export default function CartPage() {
                         </p>
                       )}
                       <div style={{ fontSize: '0.95rem', fontWeight: 800, color: 'var(--bg-deep-green)', marginTop: '4px', fontFamily: 'var(--font-serif)' }}>
-                        ₹{item.totalPrice.toFixed(2)}
+                        ₹{(Number(item.totalPrice) || 0).toFixed(2)}
                       </div>
                     </div>
                   </div>
@@ -239,19 +239,19 @@ export default function CartPage() {
             <div style={{ marginTop: '1.75rem', paddingTop: '1.25rem', borderTop: '2px dashed #E8DDC8' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
                 <span>Subtotal</span>
-                <span style={{ fontWeight: 700 }}>₹{subtotal.toFixed(2)}</span>
+                <span style={{ fontWeight: 700 }}>₹{(Number(subtotal) || 0).toFixed(2)}</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
                 <span>Taxes & GST (5%)</span>
-                <span style={{ fontWeight: 700 }}>₹{tax.toFixed(2)}</span>
+                <span style={{ fontWeight: 700 }}>₹{(Number(tax) || 0).toFixed(2)}</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '0.75rem' }}>
                 <span>Convenience & Queue Skip Fee</span>
-                <span style={{ fontWeight: 700 }}>₹{convenienceFee.toFixed(2)}</span>
+                <span style={{ fontWeight: 700 }}>₹{(Number(convenienceFee) || 0).toFixed(2)}</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-charcoal)', borderTop: '1px solid #E8DDC8', paddingTop: '0.85rem', fontFamily: 'var(--font-serif)' }}>
                 <span>Total Amount</span>
-                <span style={{ color: 'var(--bg-deep-green)' }}>₹{total.toFixed(2)}</span>
+                <span style={{ color: 'var(--bg-deep-green)' }}>₹{(Number(total) || 0).toFixed(2)}</span>
               </div>
             </div>
 

@@ -24,7 +24,7 @@ import {
 export default function RestaurantPage({ restaurantId, setActivePage, onOpenCart }) {
   const params = useParams();
   const navigate = useNavigate();
-  const effectiveId = restaurantId || params.branchId || params.restaurantId || params.id;
+  const effectiveId = params.restaurantId || params.branchId || params.id || restaurantId;
 
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -41,7 +41,8 @@ export default function RestaurantPage({ restaurantId, setActivePage, onOpenCart
     total = 0,
     cartTotal = 0,
     cartItems = [],
-    restaurant: cartRestaurant
+    restaurant: cartRestaurant,
+    getItemQuantity
   } = useCart() || {};
 
   useEffect(() => {
@@ -173,7 +174,7 @@ export default function RestaurantPage({ restaurantId, setActivePage, onOpenCart
   };
 
   const handleAddToCart = (item) => {
-    if (!item || !restaurant) return;
+    if (!item) return;
     try {
       const customizations = getItemCustomizations(item);
       if (customizations.length > 0) {
@@ -193,9 +194,12 @@ export default function RestaurantPage({ restaurantId, setActivePage, onOpenCart
       if (customizations.length > 0) {
         setSelectedItemForModal(item);
       } else {
-        const matching = (cartItems || []).find((ci) => ci.menu_item_id === item.id || ci.id === item.id);
-        if (matching) {
-          updateQuantity(matching.cartItemId, matching.quantity + 1);
+        const targetIdStr = String(item.id);
+        const matching = (cartItems || [])
+          .filter(Boolean)
+          .find((ci) => String(ci.menu_item_id) === targetIdStr || String(ci.id) === targetIdStr);
+        if (matching && matching.cartItemId) {
+          updateQuantity(matching.cartItemId, (Number(matching.quantity) || 0) + 1);
         } else {
           addItem(item, restaurant, 1, {});
         }
@@ -208,13 +212,19 @@ export default function RestaurantPage({ restaurantId, setActivePage, onOpenCart
   const handleDecreaseQuantity = (item) => {
     if (!item) return;
     try {
-      const matching = (cartItems || []).filter((ci) => ci.menu_item_id === item.id || ci.id === item.id);
+      const targetIdStr = String(item.id);
+      const matching = (cartItems || [])
+        .filter(Boolean)
+        .filter((ci) => String(ci.menu_item_id) === targetIdStr || String(ci.id) === targetIdStr);
       if (matching.length > 0) {
         const target = matching[matching.length - 1];
-        if (target.quantity > 1) {
-          updateQuantity(target.cartItemId, target.quantity - 1);
-        } else {
-          removeItem(target.cartItemId);
+        if (target && target.cartItemId) {
+          const curQty = Number(target.quantity) || 0;
+          if (curQty > 1) {
+            updateQuantity(target.cartItemId, curQty - 1);
+          } else {
+            removeItem(target.cartItemId);
+          }
         }
       }
     } catch (err) {
@@ -477,9 +487,13 @@ export default function RestaurantPage({ restaurantId, setActivePage, onOpenCart
             gap: '1.5rem'
           }}>
             {filteredItems.map((item) => {
-              const itemCartQty = (cartItems || [])
-                .filter((ci) => ci.menu_item_id === item.id || ci.id === item.id)
-                .reduce((sum, ci) => sum + (Number(ci.quantity) || 0), 0);
+              const targetIdStr = String(item.id);
+              const itemCartQty = typeof getItemQuantity === 'function'
+                ? getItemQuantity(item.id)
+                : (cartItems || [])
+                    .filter(Boolean)
+                    .filter((ci) => String(ci.menu_item_id) === targetIdStr || String(ci.id) === targetIdStr)
+                    .reduce((sum, ci) => sum + (Number(ci.quantity) || 0), 0);
 
               return (
                 <div
@@ -746,7 +760,7 @@ export default function RestaurantPage({ restaurantId, setActivePage, onOpenCart
         }}>
           <div>
             <div style={{ fontSize: '0.78rem', color: '#C49A52', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: 'var(--font-serif)' }}>
-              {cartRestaurant?.name || restaurant.name}
+              {cartRestaurant?.name || restaurant?.name || 'Selected Kitchen'}
             </div>
             <div style={{ fontSize: '1rem', fontWeight: 800, fontFamily: 'var(--font-serif)' }}>
               {totalItemCount} {totalItemCount === 1 ? 'item' : 'items'} • ₹{(Number(cartTotal || total) || 0).toFixed(2)}

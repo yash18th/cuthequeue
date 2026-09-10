@@ -175,7 +175,6 @@ function MainApp() {
             path="/restaurants/:brandIdOrSlug/branches/:restaurantId"
             element={
               <RestaurantPage
-                restaurantId={selectedRestaurantId}
                 setActivePage={setActivePage}
                 onOpenCart={() => setIsCartOpen(true)}
               />
@@ -185,7 +184,6 @@ function MainApp() {
             path="/restaurant/:restaurantId"
             element={
               <RestaurantPage
-                restaurantId={selectedRestaurantId}
                 setActivePage={setActivePage}
                 onOpenCart={() => setIsCartOpen(true)}
               />
@@ -195,7 +193,6 @@ function MainApp() {
             path="/restaurant/:restaurantId/menu"
             element={
               <RestaurantPage
-                restaurantId={selectedRestaurantId}
                 setActivePage={setActivePage}
                 onOpenCart={() => setIsCartOpen(true)}
               />
@@ -369,17 +366,17 @@ function MainApp() {
 export default function App() {
   return (
     <BrowserRouter>
-      <AuthProvider>
-        <NotificationProvider>
-          <SocketProvider>
-            <CartProvider>
-              <ErrorBoundary>
+      <ErrorBoundary>
+        <AuthProvider>
+          <NotificationProvider>
+            <SocketProvider>
+              <CartProvider>
                 <MainApp />
-              </ErrorBoundary>
-            </CartProvider>
-          </SocketProvider>
-        </NotificationProvider>
-      </AuthProvider>
+              </CartProvider>
+            </SocketProvider>
+          </NotificationProvider>
+        </AuthProvider>
+      </ErrorBoundary>
     </BrowserRouter>
   );
 }
