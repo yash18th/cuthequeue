@@ -9,6 +9,7 @@ import {
   UtensilsCrossed,
   BarChart3,
   Settings,
+  Sparkles,
   LogOut,
   QrCode,
   Volume2,
@@ -128,6 +129,14 @@ export default function AdminNavbar({ onOpenScanner, activeOrderCount = 0 }) {
           >
             <UtensilsCrossed size={16} />
             <span>Menu</span>
+          </NavLink>
+
+          <NavLink
+            to="/showcase"
+            className={({ isActive }) => `admin-nav-item ${isActive ? 'active' : ''}`}
+          >
+            <Sparkles size={16} />
+            <span>Showcase</span>
           </NavLink>
 
           <NavLink

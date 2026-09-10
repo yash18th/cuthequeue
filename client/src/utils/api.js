@@ -129,3 +129,8 @@ export const superAdminAPI = {
   toggleUserSuspend: (id) => apiRequest(`/superadmin/users/${id}/toggle-suspend`, { method: 'PATCH' }),
   getAllOrders: () => apiRequest('/superadmin/orders')
 };
+
+export const showcaseAPI = {
+  getActive: () => apiRequest('/showcases')
+};
+

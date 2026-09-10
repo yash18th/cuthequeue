@@ -154,6 +154,25 @@ function initDatabase() {
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
       FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE
     );
+
+    CREATE TABLE IF NOT EXISTS restaurant_showcases (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      restaurant_id INTEGER NOT NULL,
+      badge TEXT DEFAULT 'BENGALURU DINING HERITAGE',
+      promo_title TEXT NOT NULL,
+      featured_dish TEXT NOT NULL,
+      description TEXT,
+      hero_image TEXT NOT NULL,
+      custom_queue_text TEXT,
+      custom_prep_minutes INTEGER,
+      pass_code TEXT DEFAULT 'PASS CQ102',
+      cta_text TEXT DEFAULT 'Pre-order Now',
+      is_active INTEGER DEFAULT 1,
+      display_order INTEGER DEFAULT 0,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (restaurant_id) REFERENCES restaurants(id) ON DELETE CASCADE
+    );
   `);
 
   // Run migrations for backwards compatibility with existing SQLite files
@@ -192,6 +211,8 @@ function initDatabase() {
     CREATE INDEX IF NOT EXISTS idx_menu_items_restaurant ON menu_items(restaurant_id);
     CREATE INDEX IF NOT EXISTS idx_orders_customer ON orders(customer_id);
     CREATE INDEX IF NOT EXISTS idx_orders_restaurant ON orders(restaurant_id);
+    CREATE INDEX IF NOT EXISTS idx_showcases_restaurant ON restaurant_showcases(restaurant_id);
+    CREATE INDEX IF NOT EXISTS idx_showcases_active ON restaurant_showcases(is_active);
   `);
 
   return { success: true, dbPath };

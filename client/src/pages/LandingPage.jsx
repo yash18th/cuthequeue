@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import HeritageDivider from '../components/HeritageDivider';
+import ShowcaseCarousel from '../components/ShowcaseCarousel';
 
 export default function LandingPage({ setActivePage, onOpenCart }) {
   const navigate = useNavigate();
@@ -193,118 +194,8 @@ export default function LandingPage({ setActivePage, onOpenCart }) {
               </div>
             </div>
 
-            {/* Right Column: High-End Framed Culinary Heritage Composition */}
-            <div style={{ position: 'relative' }}>
-              <div className="heritage-ornamental-frame">
-                <div
-                  style={{
-                    position: 'relative',
-                    borderRadius: '8px',
-                    overflow: 'hidden',
-                    height: '430px'
-                  }}
-                >
-                  <img
-                    src="https://images.unsplash.com/photo-1668236543090-82eba5ee5976?w=1200"
-                    alt="South Indian ghee roast feast on fresh banana leaf"
-                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                  />
-
-                  {/* Contrast Gradient Overlay */}
-                  <div
-                    style={{
-                      position: 'absolute',
-                      inset: 0,
-                      background: 'linear-gradient(180deg, rgba(11, 53, 45, 0.15) 0%, rgba(11, 53, 45, 0.8) 100%)'
-                    }}
-                  />
-
-                  {/* Top Heritage Badge inside image */}
-                  <div style={{ position: 'absolute', top: '16px', left: '16px', zIndex: 2 }}>
-                    <span
-                      style={{
-                        background: 'rgba(11, 53, 45, 0.92)',
-                        color: '#C49A52',
-                        padding: '6px 14px',
-                        borderRadius: '4px',
-                        border: '1px solid rgba(196, 154, 82, 0.5)',
-                        fontSize: '0.75rem',
-                        fontWeight: 700,
-                        fontFamily: 'var(--font-serif)',
-                        letterSpacing: '0.08em',
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '6px',
-                        boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
-                      }}
-                    >
-                      ✦ BENGALURU DINING HERITAGE
-                    </span>
-                  </div>
-
-                  {/* Upgraded Live Queue Card Preview at Bottom */}
-                  <div
-                    style={{
-                      position: 'absolute',
-                      bottom: '16px',
-                      left: '16px',
-                      right: '16px',
-                      background: '#F7F0E2',
-                      borderRadius: '8px',
-                      padding: '1.1rem 1.25rem',
-                      border: '1.5px solid #C49A52',
-                      boxShadow: '0 12px 28px rgba(0, 0, 0, 0.35)',
-                      zIndex: 3
-                    }}
-                  >
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <span className="queue-pill queue-pill-low" style={{ background: '#EEF6F4', border: '1px solid #A8CFC4' }}>
-                          <span className="dot live-indicator-pulse" style={{ background: '#123F35', width: '7px', height: '7px' }} />
-                          ● LIVE QUEUE
-                        </span>
-                        <span style={{ fontSize: '0.78rem', color: '#8C827A', fontWeight: 600 }}>
-                          THE RAMESHWARAM CAFE • Indiranagar
-                        </span>
-                      </div>
-                      <div style={{ textAlign: 'right' }}>
-                        <div style={{ fontSize: '0.66rem', color: '#A98242', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                          EST. PREPARATION
-                        </div>
-                        <span style={{ fontSize: '0.88rem', fontWeight: 800, color: '#123F35' }}>
-                          ~12 MIN
-                        </span>
-                      </div>
-                    </div>
-
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <div>
-                        <div style={{ fontSize: '0.94rem', fontWeight: 800, color: '#191714', fontFamily: 'var(--font-serif)' }}>
-                          Ghee Podi Masala Dosa + Filter Coffee
-                        </div>
-                        <div style={{ fontSize: '0.76rem', color: '#57534E', marginTop: '2px' }}>
-                          8 orders ahead in kitchen • Prepared fresh as you travel
-                        </div>
-                      </div>
-                      <div
-                        style={{
-                          background: '#0B352D',
-                          border: '1px solid #C49A52',
-                          color: '#C49A52',
-                          padding: '4px 10px',
-                          borderRadius: '4px',
-                          fontSize: '0.75rem',
-                          fontWeight: 800,
-                          letterSpacing: '0.04em'
-                        }}
-                      >
-                        PASS CQ102
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+            {/* Right Column: Dynamic Database-Backed Promotional Showcase Carousel */}
+            <ShowcaseCarousel setActivePage={setActivePage} />
           </div>
 
           {/* 1-Click Fast Sandbox Fill */}

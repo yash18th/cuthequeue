@@ -69,3 +69,12 @@ export const restaurantAPI = {
     }),
   getAnalytics: (id) => apiRequest(`/analytics/restaurant/${id}`)
 };
+
+export const showcaseAPI = {
+  getAdminShowcases: () => apiRequest('/showcases/admin'),
+  createShowcase: (data) => apiRequest('/showcases', { method: 'POST', body: JSON.stringify(data) }),
+  updateShowcase: (id, data) => apiRequest(`/showcases/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  toggleShowcase: (id) => apiRequest(`/showcases/${id}/toggle`, { method: 'PATCH' }),
+  deleteShowcase: (id) => apiRequest(`/showcases/${id}`, { method: 'DELETE' })
+};
+

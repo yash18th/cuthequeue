@@ -14,6 +14,7 @@ const orderRoutes = require('./routes/orders');
 const paymentRoutes = require('./routes/payments');
 const analyticsRoutes = require('./routes/analytics');
 const superadminRoutes = require('./routes/superadmin');
+const showcaseRoutes = require('./routes/showcases');
 
 const app = express();
 const server = http.createServer(app);
@@ -72,6 +73,7 @@ app.use('/api/orders', orderRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/superadmin', superadminRoutes);
+app.use('/api/showcases', showcaseRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

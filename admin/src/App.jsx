@@ -15,6 +15,7 @@ import AdminOrdersPage from './pages/AdminOrdersPage';
 import AdminMenuPage from './pages/AdminMenuPage';
 import AdminAnalyticsPage from './pages/AdminAnalyticsPage';
 import AdminSettingsPage from './pages/AdminSettingsPage';
+import AdminShowcasePage from './pages/AdminShowcasePage';
 
 function AdminLayout() {
   const [isScannerOpen, setIsScannerOpen] = useState(false);
@@ -33,6 +34,7 @@ function AdminLayout() {
           />
           <Route path="/orders" element={<AdminOrdersPage />} />
           <Route path="/menu" element={<AdminMenuPage />} />
+          <Route path="/showcase" element={<AdminShowcasePage />} />
           <Route path="/analytics" element={<AdminAnalyticsPage />} />
           <Route path="/settings" element={<AdminSettingsPage />} />
           <Route path="*" element={<Navigate to="/dashboard" replace />} />

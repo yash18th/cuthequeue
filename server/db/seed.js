@@ -717,6 +717,115 @@ async function seed(options = {}) {
     }
   }
 
+  // 7. Seed Initial Dynamic Restaurant Showcase Promotions
+  const showcaseCountRow = db.prepare('SELECT count(*) as count FROM restaurant_showcases').get();
+  if (!showcaseCountRow || showcaseCountRow.count === 0) {
+    const insertShowcase = db.prepare(`
+      INSERT INTO restaurant_showcases (
+        restaurant_id, badge, promo_title, featured_dish, description,
+        hero_image, custom_queue_text, custom_prep_minutes, pass_code, cta_text,
+        is_active, display_order
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?)
+    `);
+
+    const rameshwaramBranch = db.prepare("SELECT id FROM restaurants WHERE name LIKE '%Rameshwaram%Indiranagar%'").get();
+    const empireBranch = db.prepare("SELECT id FROM restaurants WHERE name LIKE '%Empire%Church%'").get();
+    const meghanaBranch = db.prepare("SELECT id FROM restaurants WHERE name LIKE '%Meghana%Koramangala%'").get();
+
+    let order = 1;
+
+    if (rameshwaramBranch) {
+      insertShowcase.run(
+        rameshwaramBranch.id,
+        '✦ BENGALURU DINING HERITAGE',
+        'Legendary Pure Dairy Ghee Podi Delicacies',
+        'Ghee Podi Masala Dosa + Degree Filter Coffee',
+        'Golden crisp fermented rice crepe bathed in pure clarified butter, smeared with fiery gun-powder chutney and served with traditional brassware decoction coffee.',
+        'https://images.unsplash.com/photo-1668236543090-82eba5ee5976?w=1200',
+        '8 orders ahead in kitchen • Prepared fresh as you travel',
+        12,
+        'PASS CQ102',
+        'Pre-order Now',
+        order++
+      );
+
+      insertShowcase.run(
+        rameshwaramBranch.id,
+        '✦ INSTANT MORNING TIFFIN',
+        'Steaming Hot Thatte Idlis & Crispy Medu Vadas',
+        'Steaming Thatte Idli with Crunchy Vada',
+        'Fluffy Karnataka plate idli crowned with fresh churned country white butter, paired with freshly ground coconut chutney and piping hot drumstick sambar.',
+        'https://images.unsplash.com/photo-1589301760014-d929f3979dbc?w=1200',
+        '4 orders ahead in kitchen • Zero waiting at counter',
+        10,
+        'PASS CQ105',
+        'Pre-order Breakfast',
+        order++
+      );
+    }
+
+    if (empireBranch) {
+      insertShowcase.run(
+        empireBranch.id,
+        '✦ THE TASTE OF BENGALURU SINCE 1966',
+        'Iconic Late-Night Feasts on Church Street',
+        'Empire Special Chicken Kebab & Layered Coin Parotta',
+        'Bengaluru’s legendary deep-marinated crisp fried spiced chicken morsels served alongside flaky multi-layered Malabar coin parottas and mint chutney.',
+        'https://images.unsplash.com/photo-1544025162-d76694265947?w=1200',
+        '6 orders ahead • Fresh tandoor & grill dispatch',
+        15,
+        'PASS CQ201',
+        'Order Feasts Now',
+        order++
+      );
+
+      insertShowcase.run(
+        empireBranch.id,
+        '✦ MIDNIGHT COMFORT CLASSIC',
+        'Fragrant Jeera Samba Ghee Rice & Mutton Sukka',
+        'Empire Ghee Rice Combo with Homestyle Dal',
+        'Short-grain fragrant rice gently roasted with whole aromatics and golden fried shallots, served with slow-simmered yellow toor dal.',
+        'https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=1200',
+        '5 orders ahead • Ready in 12 mins',
+        12,
+        'PASS CQ204',
+        'Pre-order Now',
+        order++
+      );
+    }
+
+    if (meghanaBranch) {
+      insertShowcase.run(
+        meghanaBranch.id,
+        '✦ BENGALURU’S CULT BIRYANI INSTITUTION',
+        'Cult-Favorite Andhra Boneless Chicken Dum Biryani',
+        'Meghana Special Boneless Chicken Biryani',
+        'Aromatic aged basmati layered with intensely marinated fiery Andhra boneless chicken pieces and drizzled with saffron ghee.',
+        'https://images.unsplash.com/photo-1562967914-608f82629710?w=1200',
+        '9 orders ahead • Straight from simmering handi',
+        18,
+        'PASS CQ301',
+        'Pre-order Biryani',
+        order++
+      );
+
+      insertShowcase.run(
+        meghanaBranch.id,
+        '✦ FIERY ANDHRA STARTERS',
+        'Signature Andhra Chilli Chicken & Paneer 65',
+        'Andhra Chilli Chicken with Curry Leaves',
+        'Wok-tossed chicken bites with slivered green chillies, garlic cloves, crushed black pepper, and fragrant fresh curry leaves.',
+        'https://images.unsplash.com/photo-1529006557810-274b9b2fc783?w=1200',
+        '7 orders ahead • Wok tossed live',
+        14,
+        'PASS CQ305',
+        'Pre-order Starters',
+        order++
+      );
+    }
+    console.log(`[Seed] Seeded ${order - 1} dynamic restaurant showcase promotions`);
+  }
+
   return { success: true };
 }
 

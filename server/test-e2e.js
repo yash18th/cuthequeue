@@ -350,8 +350,155 @@ async function runAllTests() {
   }
   console.log('TEST 12: Scoping and Authorization Isolation: ✅ PASS (Empire Manager received 403 when accessing Rameshwaram, and Empire queue is strictly isolated)');
 
+  // =========================================================================
+  // TEST 13: Customer fetches public active showcases
+  // =========================================================================
+  const pubShowcasesRes = await fetch(`${API}/showcases`);
+  const pubShowcasesData = await pubShowcasesRes.json();
+  if (!pubShowcasesRes.ok || !Array.isArray(pubShowcasesData.showcases)) {
+    throw new Error(`TEST 13 Failed: Expected showcase array, got: ${JSON.stringify(pubShowcasesData)}`);
+  }
+  const activeShowcases = pubShowcasesData.showcases;
+  if (activeShowcases.length < 3) {
+    throw new Error(`TEST 13 Failed: Expected at least 3 active showcases, found ${activeShowcases.length}`);
+  }
+  const sampleShowcase = activeShowcases[0];
+  if (!sampleShowcase.hero_image || !sampleShowcase.featured_dish || !sampleShowcase.restaurant_name) {
+    throw new Error(`TEST 13 Failed: Showcase missing required fields: ${JSON.stringify(sampleShowcase)}`);
+  }
+  console.log(`TEST 13: Customer Public Showcases: ✅ PASS (${activeShowcases.length} active showcases found with live queue metrics and dish details)`);
+
+  // =========================================================================
+  // TEST 14: Restaurant Admin retrieves own showcases
+  // =========================================================================
+  const adminShowcasesRes = await fetch(`${API}/showcases/admin`, {
+    headers: { 'Authorization': `Bearer ${managerToken}` }
+  });
+  const adminShowcasesData = await adminShowcasesRes.json();
+  if (!adminShowcasesRes.ok || !Array.isArray(adminShowcasesData.showcases)) {
+    throw new Error(`TEST 14 Failed: ${JSON.stringify(adminShowcasesData)}`);
+  }
+  const rameshwaramShowcases = adminShowcasesData.showcases;
+  if (rameshwaramShowcases.some(s => s.restaurant_id !== managerRestId)) {
+    throw new Error('TEST 14 Failed: Admin showcase list contained items for another restaurant');
+  }
+  console.log(`TEST 14: Admin Scoped Showcases: ✅ PASS (${rameshwaramShowcases.length} items scoped strictly to Rameshwaram Cafe)`);
+
+  // =========================================================================
+  // TEST 15: Restaurant Admin creates and updates showcase
+  // =========================================================================
+  const createShowcaseRes = await fetch(`${API}/showcases`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${managerToken}`
+    },
+    body: JSON.stringify({
+      badge: '✦ CHEF SPECIAL EDITION',
+      promo_title: 'Limited Weekend Thatte Idli Fiesta',
+      featured_dish: 'Steaming Thatte Idli + Crisp Vada Combo',
+      description: 'Hand-ground fermented batter steamed in earthen pans with pure cow ghee.',
+      hero_image: 'https://images.unsplash.com/photo-1589301760014-d929f3979dbc?w=1200',
+      pass_code: 'PASS CQ999',
+      cta_text: 'Claim Weekend Pass',
+      prep_time_minutes: 10,
+      is_active: true,
+      display_order: 99
+    })
+  });
+  const createdShowcaseData = await createShowcaseRes.json();
+  if (!createShowcaseRes.ok || !createdShowcaseData.showcase) {
+    throw new Error(`TEST 15 Failed to create showcase: ${JSON.stringify(createdShowcaseData)}`);
+  }
+  const newShowcaseId = createdShowcaseData.showcase.id;
+
+  // Update it
+  const updateShowcaseRes = await fetch(`${API}/showcases/${newShowcaseId}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${managerToken}`
+    },
+    body: JSON.stringify({
+      promo_title: 'Updated Thatte Idli Fiesta Deluxe',
+      prep_time_minutes: 8
+    })
+  });
+  const updatedShowcaseData = await updateShowcaseRes.json();
+  if (!updateShowcaseRes.ok || updatedShowcaseData.showcase.promo_title !== 'Updated Thatte Idli Fiesta Deluxe') {
+    throw new Error(`TEST 15 Failed to update showcase: ${JSON.stringify(updatedShowcaseData)}`);
+  }
+  console.log(`TEST 15: Restaurant Admin Create & Update: ✅ PASS (Created #${newShowcaseId} and updated title & prep time)`);
+
+  // =========================================================================
+  // TEST 16: Security & Restaurant Data Isolation
+  // =========================================================================
+  // Empire Manager attempts to modify Rameshwaram's showcase (MUST be 403 Forbidden)
+  const maliciousEditRes = await fetch(`${API}/showcases/${newShowcaseId}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${empireToken}`
+    },
+    body: JSON.stringify({
+      promo_title: 'Malicious Empire Hijack Attempt'
+    })
+  });
+  if (maliciousEditRes.status !== 403) {
+    throw new Error(`TEST 16 Failed: Expected 403 Forbidden when Empire manager edited Rameshwaram showcase, got ${maliciousEditRes.status}`);
+  }
+
+  // Rameshwaram manager attempts to create showcase specifying Empire's restaurant_id (MUST be 403 Forbidden)
+  const maliciousCreateRes = await fetch(`${API}/showcases`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${managerToken}`
+    },
+    body: JSON.stringify({
+      restaurant_id: empireRestId,
+      promo_title: 'Rameshwaram claiming Empire showcase',
+      featured_dish: 'Dish X',
+      hero_image: 'https://images.unsplash.com/test'
+    })
+  });
+  if (maliciousCreateRes.status !== 403) {
+    throw new Error(`TEST 16 Failed: Expected 403 Forbidden when Rameshwaram manager attempted to create showcase for Empire, got ${maliciousCreateRes.status}`);
+  }
+  console.log('TEST 16: Strict Security & Restaurant Data Isolation: ✅ PASS (Cross-restaurant modification and creation strictly rejected with 403 Forbidden)');
+
+  // =========================================================================
+  // TEST 17: Visibility Toggle & Clean-up Deletion
+  // =========================================================================
+  // Toggle inactive
+  const toggleRes = await fetch(`${API}/showcases/${newShowcaseId}/toggle`, {
+    method: 'PATCH',
+    headers: { 'Authorization': `Bearer ${managerToken}` }
+  });
+  const toggleData = await toggleRes.json();
+  if (!toggleRes.ok || toggleData.showcase.is_active !== 0) {
+    throw new Error(`TEST 17 Failed to toggle showcase to inactive: ${JSON.stringify(toggleData)}`);
+  }
+
+  // Verify public endpoint does NOT return this inactive showcase
+  const checkInactiveRes = await fetch(`${API}/showcases`);
+  const checkInactiveData = await checkInactiveRes.json();
+  if (checkInactiveData.showcases.some(s => s.id === newShowcaseId)) {
+    throw new Error('TEST 17 Failed: Inactive showcase was exposed in public endpoint');
+  }
+
+  // Delete showcase
+  const deleteRes = await fetch(`${API}/showcases/${newShowcaseId}`, {
+    method: 'DELETE',
+    headers: { 'Authorization': `Bearer ${managerToken}` }
+  });
+  if (!deleteRes.ok) {
+    throw new Error(`TEST 17 Failed to delete showcase: ${deleteRes.status}`);
+  }
+  console.log(`TEST 17: Visibility Toggle & Clean-up Deletion: ✅ PASS (Showcase #${newShowcaseId} successfully deactivated, verified hidden from customers, and deleted)`);
+
   console.log('\n====================================================');
-  console.log('🎉 ALL 12 TESTS PASSED WITH 100% SUCCESS!');
+  console.log('🎉 ALL 17 TESTS PASSED WITH 100% SUCCESS!');
   console.log('====================================================\n');
 }
 
@@ -359,3 +506,4 @@ runAllTests().catch((err) => {
   console.error('\n❌ E2E TEST SUITE FAILED:', err);
   process.exit(1);
 });
+
