@@ -16,3 +16,9 @@ data/*.db
 data/*.db-shm
 data/*.db-wal
 .vercel
+admin/node_modules/
+admin/dist/
+admin/.env
+admin/.env.local
+admin/.env.production
+admin/.vercel/

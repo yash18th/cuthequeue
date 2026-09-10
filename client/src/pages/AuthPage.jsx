@@ -3,14 +3,14 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { UtensilsCrossed, Lock, Mail, User, Phone, ArrowRight, ArrowLeft, Shield, CheckCircle, Eye, EyeOff } from 'lucide-react';
 
-export default function AuthPage({ setActivePage }) {
+export default function AuthPage({ setActivePage, initialMode = 'login' }) {
   const navigate = useNavigate();
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
   const redirectParam = searchParams.get('redirect');
 
   const { login, register } = useAuth();
-  const [isLogin, setIsLogin] = useState(true);
+  const [isLogin, setIsLogin] = useState(initialMode !== 'register');
   const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [resetSent, setResetSent] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -26,21 +26,13 @@ export default function AuthPage({ setActivePage }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const redirectUser = (role) => {
+  const redirectUser = () => {
     if (redirectParam && redirectParam.startsWith('/')) {
       navigate(redirectParam);
       return;
     }
-    if (role === 'restaurant_admin') {
-      setActivePage?.('restaurant-dashboard');
-      navigate('/kitchen');
-    } else if (role === 'super_admin') {
-      setActivePage?.('superadmin');
-      navigate('/admin');
-    } else {
-      setActivePage?.('home');
-      navigate('/browse');
-    }
+    setActivePage?.('home');
+    navigate('/restaurants');
   };
 
   const handleSubmit = async (e) => {
@@ -56,27 +48,14 @@ export default function AuthPage({ setActivePage }) {
       }
 
       if (isLogin) {
-        const res = await login(formData.email, formData.password);
-        redirectUser(res.user?.role);
+        await login(formData.email, formData.password);
+        redirectUser();
       } else {
-        const res = await register(formData);
-        redirectUser(res.user?.role);
+        await register(formData);
+        redirectUser();
       }
     } catch (err) {
       setError(err.message || 'Authentication failed. Please check your credentials.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleDemoSelect = async (email, role) => {
-    setError('');
-    setLoading(true);
-    try {
-      await login(email, 'password123');
-      redirectUser(role);
-    } catch (err) {
-      setError(err.message || 'Demo login failed');
     } finally {
       setLoading(false);
     }
@@ -358,48 +337,6 @@ export default function AuthPage({ setActivePage }) {
               </div>
             </form>
           )}
-
-          {/* 1-Click Fast Sandbox Fill for Reviewers */}
-          <div style={{
-            marginTop: '2rem',
-            paddingTop: '1.5rem',
-            borderTop: '1px dashed rgba(198, 161, 91, 0.4)',
-            textAlign: 'center'
-          }}>
-            <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#A98242', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: '0.75rem', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-              One-Click Demo Access
-            </span>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
-              <button
-                className="btn btn-sm"
-                onClick={() => handleDemoSelect('customer@demo.com', 'customer')}
-                style={{ fontSize: '0.75rem', background: '#F7F1E5', border: '1px solid #C6A15B', color: '#123C32', fontWeight: 600 }}
-              >
-                Alex (Customer)
-              </button>
-              <button
-                className="btn btn-sm"
-                onClick={() => handleDemoSelect('campus@demo.com', 'restaurant_admin')}
-                style={{ fontSize: '0.75rem', background: '#F7F1E5', border: '1px solid #C6A15B', color: '#123C32', fontWeight: 600 }}
-              >
-                Empire (Kitchen)
-              </button>
-              <button
-                className="btn btn-sm"
-                onClick={() => handleDemoSelect('spice@demo.com', 'restaurant_admin')}
-                style={{ fontSize: '0.75rem', background: '#F7F1E5', border: '1px solid #C6A15B', color: '#123C32', fontWeight: 600 }}
-              >
-                Rameshwaram (Kitchen)
-              </button>
-              <button
-                className="btn btn-sm"
-                onClick={() => handleDemoSelect('admin@cutthequeue.com', 'super_admin')}
-                style={{ fontSize: '0.75rem', background: '#F7F1E5', border: '1px solid #C6A15B', color: '#123C32', fontWeight: 600 }}
-              >
-                Super Admin
-              </button>
-            </div>
-          </div>
         </div>
       </div>
     </div>

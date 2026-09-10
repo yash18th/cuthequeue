@@ -39,8 +39,16 @@ function requireRole(...allowedRoles) {
 }
 
 function requireRestaurantOwner(req, res, next) {
+  if (!req.user) {
+    return res.status(401).json({ error: 'Authentication required.' });
+  }
+
   if (req.user.role === 'super_admin') {
     return next();
+  }
+
+  if (req.user.role !== 'restaurant_admin') {
+    return res.status(403).json({ error: 'Access denied: restaurant manager credentials required.' });
   }
 
   const restaurantId = req.params.restaurantId || req.params.id || req.body.restaurant_id;
@@ -48,7 +56,7 @@ function requireRestaurantOwner(req, res, next) {
     return res.status(400).json({ error: 'Restaurant ID is required.' });
   }
 
-  const restaurant = db.prepare('SELECT owner_id FROM restaurants WHERE id = ?').get(restaurantId);
+  const restaurant = db.prepare('SELECT id, owner_id FROM restaurants WHERE id = ?').get(restaurantId);
   if (!restaurant) {
     return res.status(404).json({ error: 'Restaurant not found.' });
   }

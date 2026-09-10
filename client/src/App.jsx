@@ -23,11 +23,6 @@ import OrderConfirmationPage from './pages/OrderConfirmationPage';
 import OrderTrackingPage from './pages/OrderTrackingPage';
 import OrderHistoryPage from './pages/OrderHistoryPage';
 import CustomerProfilePage from './pages/CustomerProfilePage';
-import RestaurantDashboard from './pages/RestaurantDashboard';
-import RestaurantMenuManagement from './pages/RestaurantMenuManagement';
-import RestaurantSettings from './pages/RestaurantSettings';
-import RestaurantAnalytics from './pages/RestaurantAnalytics';
-import SuperAdminDashboard from './pages/SuperAdminDashboard';
 import NotFoundPage from './pages/NotFoundPage';
 
 // Scroll to top automatically on route changes
@@ -84,7 +79,7 @@ function MainApp() {
         navigate('/profile');
         break;
       case 'auth':
-        navigate('/signin');
+        navigate('/login');
         break;
       case 'restaurant-menu-view': {
         const id = meta?.restaurantId || selectedRestaurantId;
@@ -98,24 +93,9 @@ function MainApp() {
       }
       case 'queue': {
         const id = meta?.orderId || trackedOrderId;
-        navigate(`/queue/${id}`);
+        navigate(`/orders/${id}`);
         break;
       }
-      case 'restaurant-dashboard':
-        navigate('/kitchen');
-        break;
-      case 'restaurant-menu':
-        navigate('/kitchen/menu');
-        break;
-      case 'restaurant-analytics':
-        navigate('/kitchen/analytics');
-        break;
-      case 'restaurant-settings':
-        navigate('/kitchen/settings');
-        break;
-      case 'superadmin':
-        navigate('/admin');
-        break;
       default:
         break;
     }
@@ -239,7 +219,15 @@ function MainApp() {
           <Route
             path="/orders/:orderId"
             element={
-              <ProtectedRoute allowedRoles={['customer', 'restaurant_admin', 'super_admin']}>
+              <ProtectedRoute allowedRoles={['customer']}>
+                <OrderTrackingPage setActivePage={setActivePage} />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/order/:orderId"
+            element={
+              <ProtectedRoute allowedRoles={['customer']}>
                 <OrderTrackingPage setActivePage={setActivePage} />
               </ProtectedRoute>
             }
@@ -247,7 +235,7 @@ function MainApp() {
           <Route
             path="/queue/:orderId"
             element={
-              <ProtectedRoute allowedRoles={['customer', 'restaurant_admin', 'super_admin']}>
+              <ProtectedRoute allowedRoles={['customer']}>
                 <OrderTrackingPage setActivePage={setActivePage} />
               </ProtectedRoute>
             }
@@ -255,7 +243,7 @@ function MainApp() {
           <Route
             path="/order-tracking"
             element={
-              <ProtectedRoute allowedRoles={['customer', 'restaurant_admin', 'super_admin']}>
+              <ProtectedRoute allowedRoles={['customer']}>
                 <OrderTrackingPage orderId={trackedOrderId} setActivePage={setActivePage} />
               </ProtectedRoute>
             }
@@ -263,7 +251,7 @@ function MainApp() {
           <Route
             path="/profile"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute allowedRoles={['customer']}>
                 <CustomerProfilePage setActivePage={setActivePage} />
               </ProtectedRoute>
             }
@@ -273,74 +261,7 @@ function MainApp() {
           <Route path="/signin" element={<AuthPage setActivePage={setActivePage} />} />
           <Route path="/auth" element={<AuthPage setActivePage={setActivePage} />} />
           <Route path="/login" element={<AuthPage setActivePage={setActivePage} />} />
-
-          {/* Kitchen / Restaurant Dashboard Flow */}
-          <Route
-            path="/kitchen"
-            element={
-              <ProtectedRoute allowedRoles={['restaurant_admin']}>
-                <RestaurantDashboard setActivePage={setActivePage} />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/kitchen/orders"
-            element={
-              <ProtectedRoute allowedRoles={['restaurant_admin']}>
-                <RestaurantDashboard setActivePage={setActivePage} />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/kitchen/orders/:orderId"
-            element={
-              <ProtectedRoute allowedRoles={['restaurant_admin']}>
-                <OrderTrackingPage setActivePage={setActivePage} />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/kitchen/menu"
-            element={
-              <ProtectedRoute allowedRoles={['restaurant_admin']}>
-                <RestaurantMenuManagement />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/kitchen/analytics"
-            element={
-              <ProtectedRoute allowedRoles={['restaurant_admin']}>
-                <RestaurantAnalytics />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/kitchen/settings"
-            element={
-              <ProtectedRoute allowedRoles={['restaurant_admin']}>
-                <RestaurantSettings />
-              </ProtectedRoute>
-            }
-          />
-
-          {/* Super Admin Management Flow */}
-          <Route
-            path="/admin"
-            element={
-              <ProtectedRoute allowedRoles={['super_admin']}>
-                <SuperAdminDashboard />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/admin/*"
-            element={
-              <ProtectedRoute allowedRoles={['super_admin']}>
-                <SuperAdminDashboard />
-              </ProtectedRoute>
-            }
-          />
+          <Route path="/register" element={<AuthPage setActivePage={setActivePage} initialMode="register" />} />
 
           {/* 404 / Catch-all */}
           <Route path="*" element={<NotFoundPage />} />
