@@ -114,7 +114,7 @@ export default function ShowcaseCarousel({ setActivePage }) {
     window.matchMedia &&
     window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  // Auto-slideshow timer: automatically changes every 5 seconds
+  // Auto-slideshow timer: fast, snappy rotation (2.8 seconds)
   useEffect(() => {
     if (prefersReducedMotion || isPaused || showcases.length <= 1) {
       if (autoPlayRef.current) clearInterval(autoPlayRef.current);
@@ -123,7 +123,7 @@ export default function ShowcaseCarousel({ setActivePage }) {
 
     autoPlayRef.current = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % showcases.length);
-    }, 5000);
+    }, 2800);
 
     return () => {
       if (autoPlayRef.current) clearInterval(autoPlayRef.current);
@@ -212,7 +212,7 @@ export default function ShowcaseCarousel({ setActivePage }) {
             style={{
               position: 'relative',
               width: '100%',
-              height: '330px',
+              height: '380px',
               overflow: 'hidden',
               background: '#0B352D'
             }}
@@ -226,11 +226,11 @@ export default function ShowcaseCarousel({ setActivePage }) {
                     position: 'absolute',
                     inset: 0,
                     opacity: isActive ? 1 : 0,
-                    transform: isActive ? 'translateX(0)' : 'translateX(16px)',
+                    transform: isActive ? 'translateX(0)' : 'translateX(12px)',
                     visibility: isActive ? 'visible' : 'hidden',
                     transition: prefersReducedMotion
                       ? 'none'
-                      : 'opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1), transform 0.7s cubic-bezier(0.16, 1, 0.3, 1)',
+                      : 'opacity 0.45s ease-in-out, transform 0.45s ease-in-out',
                     zIndex: isActive ? 1 : 0
                   }}
                 >
@@ -334,154 +334,77 @@ export default function ShowcaseCarousel({ setActivePage }) {
               Clean stacked composition underneath the hero image.
               NO overlapping on the food photograph.
               ==================================================== */}
+          {/* ====================================================
+              BOTTOM: CLEAN FOOD NAME & VIEW MENU BAR
+              No addresses, no live status, no orders ahead clutter.
+              ==================================================== */}
           <div
             style={{
               background: '#F7F0E2',
               borderTop: '2px solid #C49A52',
-              padding: '1.25rem 1.4rem',
+              padding: '1.1rem 1.4rem',
               cursor: 'pointer',
-              transition: 'background 0.2s ease',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: '16px',
               position: 'relative',
-              zIndex: 3
+              zIndex: 3,
+              transition: 'background 0.2s ease'
             }}
             onClick={handleNavigateToRestaurant}
           >
-            {/* Top Row: Live Queue Indicator, Restaurant • Branch, Preparation Time */}
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                marginBottom: '8px',
-                flexWrap: 'wrap',
-                gap: '8px'
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span
-                  className="queue-pill queue-pill-low"
-                  style={{
-                    background: '#EEF6F4',
-                    border: '1px solid #A8CFC4',
-                    padding: '2px 8px',
-                    fontSize: '0.7rem',
-                    fontWeight: 800,
-                    letterSpacing: '0.04em'
-                  }}
-                >
-                  <span className="dot live-indicator-pulse" style={{ background: '#123F35', width: '6px', height: '6px' }} />
-                  ● LIVE QUEUE
-                </span>
-                <span style={{ fontSize: '0.8rem', color: '#665C54', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                  {current.restaurant_name} {current.branch_name ? `• ${current.branch_name}` : ''}
-                </span>
-              </div>
-
-              <div style={{ textAlign: 'right' }}>
-                <div style={{ fontSize: '0.64rem', color: '#A98242', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                  EST. PREPARATION
-                </div>
-                <span style={{ fontSize: '0.94rem', fontWeight: 800, color: '#123F35' }}>
-                  ~{current.prep_time_minutes || 12} MIN
-                </span>
-              </div>
-            </div>
-
-            {/* Middle Row: Featured Dish & Queue Status */}
-            <div style={{ marginBottom: '12px' }}>
+            <div style={{ minWidth: 0, flex: 1 }}>
               <div
                 style={{
-                  fontSize: '1.15rem',
+                  fontSize: '1.22rem',
                   fontWeight: 800,
                   color: '#191714',
                   fontFamily: 'var(--font-serif, "Playfair Display", Georgia, serif)',
                   lineHeight: 1.25,
                   whiteSpace: 'nowrap',
                   overflow: 'hidden',
-                  textOverflow: 'ellipsis'
+                  textOverflow: 'ellipsis',
+                  letterSpacing: '0.02em'
                 }}
                 title={current.featured_dish || current.promo_title}
               >
                 {current.featured_dish || current.promo_title}
               </div>
-              <div
-                style={{
-                  fontSize: '0.8rem',
-                  color: '#57534E',
-                  marginTop: '3px',
-                  whiteSpace: 'nowrap',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis'
-                }}
-                title={displayQueueText}
-              >
-                {displayQueueText}
-              </div>
             </div>
 
-            {/* Bottom Row: Pass Code & View Menu CTA Button */}
-            <div
+            <button
+              type="button"
+              onClick={handleNavigateToRestaurant}
               style={{
-                display: 'flex',
+                background: 'linear-gradient(135deg, #123F35 0%, #0B352D 100%)',
+                border: '1.5px solid #C49A52',
+                color: '#F8F1DF',
+                padding: '8px 18px',
+                borderRadius: '6px',
+                fontSize: '0.78rem',
+                fontWeight: 800,
+                letterSpacing: '0.06em',
+                cursor: 'pointer',
+                display: 'inline-flex',
                 alignItems: 'center',
-                justifyContent: 'space-between',
-                paddingTop: '10px',
-                borderTop: '1px solid #E9DDC7',
-                gap: '12px'
+                gap: '6px',
+                flexShrink: 0,
+                boxShadow: '0 4px 12px rgba(11, 53, 45, 0.25)',
+                transition: 'all 0.2s ease'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = '#E2B873';
+                e.currentTarget.style.transform = 'translateY(-1px)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = '#C49A52';
+                e.currentTarget.style.transform = 'translateY(0)';
               }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span
-                  style={{
-                    background: '#0B352D',
-                    border: '1px solid #C49A52',
-                    color: '#C49A52',
-                    padding: '3px 9px',
-                    borderRadius: '4px',
-                    fontSize: '0.74rem',
-                    fontWeight: 800,
-                    letterSpacing: '0.04em'
-                  }}
-                >
-                  {current.pass_code || 'PASS CQ102'}
-                </span>
-                <span style={{ fontSize: '0.74rem', color: '#8C827A', fontStyle: 'italic' }}>
-                  Skip counter queue
-                </span>
-              </div>
-
-              <button
-                type="button"
-                onClick={handleNavigateToRestaurant}
-                style={{
-                  background: 'linear-gradient(135deg, #123F35 0%, #0B352D 100%)',
-                  border: '1.5px solid #C49A52',
-                  color: '#F8F1DF',
-                  padding: '7px 16px',
-                  borderRadius: '6px',
-                  fontSize: '0.78rem',
-                  fontWeight: 800,
-                  letterSpacing: '0.06em',
-                  cursor: 'pointer',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  boxShadow: '0 4px 12px rgba(11, 53, 45, 0.25)',
-                  transition: 'all 0.2s ease'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.borderColor = '#E2B873';
-                  e.currentTarget.style.transform = 'translateY(-1px)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.borderColor = '#C49A52';
-                  e.currentTarget.style.transform = 'translateY(0)';
-                }}
-              >
-                <span>VIEW MENU</span>
-                <ArrowRight size={14} style={{ color: '#C49A52' }} />
-              </button>
-            </div>
+              <span>VIEW MENU</span>
+              <ArrowRight size={14} style={{ color: '#C49A52' }} />
+            </button>
           </div>
         </div>
       </div>

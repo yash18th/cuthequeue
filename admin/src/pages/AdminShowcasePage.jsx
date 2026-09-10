@@ -433,66 +433,32 @@ export default function AdminShowcasePage() {
                   style={{
                     background: '#F7F0E2',
                     borderTop: '2px solid #C49A52',
-                    padding: '1.1rem 1.25rem'
+                    padding: '0.9rem 1.25rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: '14px'
                   }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <span className="queue-pill queue-pill-low" style={{ background: '#EEF6F4', border: '1px solid #A8CFC4', fontSize: '0.68rem', padding: '2px 6px' }}>
-                        <span className="dot live-indicator-pulse" style={{ background: '#123F35', width: '6px', height: '6px' }} />
-                        ● LIVE QUEUE
-                      </span>
-                      <span style={{ fontSize: '0.74rem', color: '#665C54', fontWeight: 700 }}>
-                        {restaurant?.name || previewItem.restaurant_name}
-                      </span>
-                    </div>
-                    <div style={{ textAlign: 'right' }}>
-                      <div style={{ fontSize: '0.62rem', color: '#A98242', fontWeight: 700 }}>
-                        EST. PREPARATION
-                      </div>
-                      <span style={{ fontSize: '0.84rem', fontWeight: 800, color: '#123F35' }}>
-                        ~{previewItem.prep_time_minutes || 12} MIN
-                      </span>
-                    </div>
-                  </div>
-
-                  <div style={{ marginBottom: '10px' }}>
-                    <div style={{ fontSize: '1rem', fontWeight: 800, color: '#191714', fontFamily: 'var(--font-serif)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  <div style={{ minWidth: 0, flex: 1 }}>
+                    <div style={{ fontSize: '1.05rem', fontWeight: 800, color: '#191714', fontFamily: 'var(--font-serif)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                       {previewItem.featured_dish}
                     </div>
-                    <div style={{ fontSize: '0.74rem', color: '#57534E', marginTop: '2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                      {previewItem.queue_text || `${previewItem.live_queue_count || 8} orders ahead in kitchen • Prepared fresh`}
-                    </div>
                   </div>
 
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '8px', borderTop: '1px solid #E9DDC7' }}>
-                    <div
-                      style={{
-                        background: '#0B352D',
-                        border: '1px solid #C49A52',
-                        color: '#C49A52',
-                        padding: '3px 8px',
-                        borderRadius: '4px',
-                        fontSize: '0.72rem',
-                        fontWeight: 800
-                      }}
-                    >
-                      {previewItem.pass_code || 'PASS CQ102'}
-                    </div>
-
-                    <div
-                      style={{
-                        background: 'linear-gradient(135deg, #123F35 0%, #0B352D 100%)',
-                        border: '1px solid #C49A52',
-                        color: '#F8F1DF',
-                        padding: '5px 12px',
-                        borderRadius: '4px',
-                        fontSize: '0.72rem',
-                        fontWeight: 700
-                      }}
-                    >
-                      VIEW MENU
-                    </div>
+                  <div
+                    style={{
+                      background: 'linear-gradient(135deg, #123F35 0%, #0B352D 100%)',
+                      border: '1px solid #C49A52',
+                      color: '#F8F1DF',
+                      padding: '6px 14px',
+                      borderRadius: '5px',
+                      fontSize: '0.74rem',
+                      fontWeight: 700,
+                      flexShrink: 0
+                    }}
+                  >
+                    VIEW MENU
                   </div>
                 </div>
               </div>
