@@ -1,118 +1,218 @@
 const bcrypt = require('bcryptjs');
-const { db } = require('./database');
+const { db, initDatabase } = require('./database');
 
-async function seed() {
-  console.log('Seeding database with authentic Bengaluru restaurant brands and branches...');
+async function seed(options = {}) {
+  const { forceClean = false } = options;
 
-  // Clear existing tables safely in correct dependency order
-  db.exec(`
-    DELETE FROM notifications;
-    DELETE FROM payments;
-    DELETE FROM order_items;
-    DELETE FROM orders;
-    DELETE FROM menu_items;
-    DELETE FROM categories;
-    DELETE FROM restaurants;
-    DELETE FROM brands;
-    DELETE FROM users;
-  `);
+  // 1. Ensure database schema and migrations exist
+  initDatabase();
+
+  if (forceClean) {
+    console.log('[Seed] Force clean enabled. Wiping existing data tables...');
+    db.exec(`
+      DELETE FROM notifications;
+      DELETE FROM payments;
+      DELETE FROM order_items;
+      DELETE FROM orders;
+      DELETE FROM menu_items;
+      DELETE FROM categories;
+      DELETE FROM restaurants;
+      DELETE FROM brands;
+      DELETE FROM users;
+    `);
+  }
 
   const passwordHash = await bcrypt.hash('password123', 10);
 
-  // 1. Insert Core Users & Demo Accounts
-  const insertUser = db.prepare(`
-    INSERT INTO users (name, email, phone, password_hash, role, avatar, notification_preferences)
-    VALUES (?, ?, ?, ?, ?, ?, ?)
+  // 2. Idempotent User Upserter
+  const getUserStmt = db.prepare('SELECT id, email, role FROM users WHERE email = ?');
+  const insertUserStmt = db.prepare(`
+    INSERT INTO users (name, email, phone, password_hash, role, avatar, notification_preferences, is_suspended)
+    VALUES (?, ?, ?, ?, ?, ?, ?, 0)
+  `);
+  const updateUserStmt = db.prepare(`
+    UPDATE users SET name = ?, phone = ?, password_hash = ?, role = ?, is_suspended = 0 WHERE id = ?
   `);
 
-  const superAdmin = insertUser.run(
+  function upsertUser(name, email, phone, role, avatar) {
+    const cleanEmail = email.toLowerCase().trim();
+    const existing = getUserStmt.get(cleanEmail);
+    if (existing) {
+      updateUserStmt.run(name, phone, passwordHash, role, existing.id);
+      return existing.id;
+    } else {
+      const res = insertUserStmt.run(
+        name,
+        cleanEmail,
+        phone,
+        passwordHash,
+        role,
+        avatar,
+        JSON.stringify({ push: true, sound: true, vibration: true })
+      );
+      return res.lastInsertRowid;
+    }
+  }
+
+  const superAdminId = upsertUser(
     'System Administrator',
     'admin@cutthequeue.com',
     '+91 99999 00000',
-    passwordHash,
     'super_admin',
-    'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
-    JSON.stringify({ push: true, sound: true, vibration: true })
+    'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150'
   );
 
-  const rameshwaramAdmin = insertUser.run(
+  const rameshwaramAdminId = upsertUser(
     'Rohan Sharma (The Rameshwaram Cafe)',
     'campus@demo.com',
     '+91 98765 11111',
-    passwordHash,
     'restaurant_admin',
-    'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
-    JSON.stringify({ push: true, sound: true, vibration: true })
+    'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150'
   );
 
-  const empireAdmin = insertUser.run(
+  const empireAdminId = upsertUser(
     'Farhan Khan (Empire Restaurant)',
     'spice@demo.com',
     '+91 98765 22222',
-    passwordHash,
     'restaurant_admin',
-    'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150',
-    JSON.stringify({ push: true, sound: true, vibration: true })
+    'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150'
   );
 
-  const meghanaAdmin = insertUser.run(
+  const meghanaAdminId = upsertUser(
     'Arjun Rao (Meghana Foods)',
     'meghana@demo.com',
     '+91 98765 33333',
-    passwordHash,
     'restaurant_admin',
-    'https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=150',
-    JSON.stringify({ push: true, sound: true, vibration: true })
+    'https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=150'
   );
 
-  const customerUser = insertUser.run(
+  const customerUserId = upsertUser(
     'Alex Morgan',
     'customer@demo.com',
     '+91 98765 43210',
-    passwordHash,
     'customer',
-    'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150',
-    JSON.stringify({ push: true, sound: true, vibration: true })
+    'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150'
   );
 
-  const yashvanthUser = insertUser.run(
+  upsertUser(
     'Yashvanth Nayak',
     'yashvanthnayak1104@gmail.com',
     '+91 98765 00001',
-    passwordHash,
     'customer',
-    'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150',
-    JSON.stringify({ push: true, sound: true, vibration: true })
+    'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150'
   );
 
-  // 2. Prepare Inserters
-  const insertBrand = db.prepare(`
+  // 3. Idempotent Brand Upserter
+  const getBrandStmt = db.prepare('SELECT id FROM brands WHERE slug = ?');
+  const insertBrandStmt = db.prepare(`
     INSERT INTO brands (name, slug, tagline, description, cuisine, heritage_since, logo, cover_image, rating)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
   `);
 
-  const insertRestaurant = db.prepare(`
+  function upsertBrand(name, slug, tagline, description, cuisine, heritage_since, logo, cover_image, rating) {
+    const existing = getBrandStmt.get(slug);
+    if (existing) {
+      return existing.id;
+    }
+    const res = insertBrandStmt.run(name, slug, tagline, description, cuisine, heritage_since, logo, cover_image, rating);
+    return res.lastInsertRowid;
+  }
+
+  // 4. Idempotent Restaurant Upserter
+  const getRestStmt = db.prepare('SELECT id, owner_id FROM restaurants WHERE brand_id = ? AND branch_name = ?');
+  const insertRestStmt = db.prepare(`
     INSERT INTO restaurants (
       brand_id, name, branch_name, area, description, cuisine, rating, logo, cover_image, address, location,
       latitude, longitude, contact_phone, opening_time, closing_time, is_open, is_approved,
       prep_time_minutes, min_order_amount, tax_rate, distance_km, queue_status, queue_count, owner_id
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `);
+  const updateRestOwnerStmt = db.prepare('UPDATE restaurants SET owner_id = ? WHERE id = ?');
 
-  const insertCategory = db.prepare(`
-    INSERT INTO categories (restaurant_id, name, sort_order) VALUES (?, ?, ?)
-  `);
+  function upsertRestaurant(brandId, name, branch, ownerId) {
+    const existing = getRestStmt.get(brandId, branch.branch_name);
+    if (existing) {
+      if (ownerId && existing.owner_id !== ownerId) {
+        updateRestOwnerStmt.run(ownerId, existing.id);
+      }
+      return existing.id;
+    }
+    const res = insertRestStmt.run(
+      brandId,
+      name,
+      branch.branch_name,
+      branch.area,
+      branch.description || '',
+      branch.cuisine || '',
+      branch.rating || 4.7,
+      branch.logo || '',
+      branch.cover_image || '',
+      branch.address,
+      branch.location,
+      branch.latitude,
+      branch.longitude,
+      branch.contact_phone,
+      branch.opening_time,
+      branch.closing_time,
+      1,
+      1,
+      branch.prep_time_minutes,
+      0,
+      0.05,
+      branch.distance_km,
+      branch.queue_status,
+      branch.queue_count,
+      ownerId
+    );
+    return res.lastInsertRowid;
+  }
 
-  const insertMenuItem = db.prepare(`
+  // 5. Idempotent Categories & Menu Items
+  const getCatStmt = db.prepare('SELECT id FROM categories WHERE restaurant_id = ? AND name = ?');
+  const insertCatStmt = db.prepare('INSERT INTO categories (restaurant_id, name, sort_order) VALUES (?, ?, ?)');
+
+  const getItemStmt = db.prepare('SELECT id FROM menu_items WHERE restaurant_id = ? AND name = ?');
+  const insertItemStmt = db.prepare(`
     INSERT INTO menu_items (
       restaurant_id, category_id, name, description, price, is_veg, image, is_available, customizations_json
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
   `);
 
+  function upsertDishes(restId, dishGroups) {
+    let sortOrder = 1;
+    for (const group of dishGroups) {
+      let catId;
+      const existingCat = getCatStmt.get(restId, group.cat);
+      if (existingCat) {
+        catId = existingCat.id;
+      } else {
+        const catRes = insertCatStmt.run(restId, group.cat, sortOrder++);
+        catId = catRes.lastInsertRowid;
+      }
+
+      for (const item of group.items) {
+        const existingItem = getItemStmt.get(restId, item.name);
+        if (!existingItem) {
+          insertItemStmt.run(
+            restId,
+            catId,
+            item.name,
+            item.desc,
+            item.price,
+            item.is_veg,
+            item.img,
+            1,
+            '[]'
+          );
+        }
+      }
+    }
+  }
+
   // =========================================================================
   // BRAND 1: THE RAMESHWARAM CAFE
   // =========================================================================
-  const b1 = insertBrand.run(
+  const b1Id = upsertBrand(
     'The Rameshwaram Cafe',
     'the-rameshwaram-cafe',
     'Authentic South Indian Heritage • Pure Dairy Ghee Goodness',
@@ -123,7 +223,6 @@ async function seed() {
     'https://images.unsplash.com/photo-1668236543090-82eba5ee5976?w=1200',
     4.8
   );
-  const b1Id = b1.lastInsertRowid;
 
   const rameshwaramBranches = [
     {
@@ -140,7 +239,12 @@ async function seed() {
       queue_count: 14,
       prep_time_minutes: 15,
       distance_km: 1.8,
-      owner_id: rameshwaramAdmin.lastInsertRowid
+      owner_id: rameshwaramAdminId,
+      description: 'Bengaluru’s legendary premium South Indian breakfast and tiffin destination. Famous for fragrant pure dairy ghee delicacies, crispy Podi dosas, and filter coffee.',
+      cuisine: 'Pure Veg • South Indian • Tiffin',
+      rating: 4.8,
+      logo: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=180',
+      cover_image: 'https://images.unsplash.com/photo-1668236543090-82eba5ee5976?w=1200'
     },
     {
       branch_name: 'JP Nagar',
@@ -156,7 +260,12 @@ async function seed() {
       queue_count: 8,
       prep_time_minutes: 12,
       distance_km: 5.4,
-      owner_id: null
+      owner_id: null,
+      description: 'The Rameshwaram Cafe JP Nagar branch offering warm South Indian breakfast and fresh ghee roasted dosas.',
+      cuisine: 'Pure Veg • South Indian • Tiffin',
+      rating: 4.7,
+      logo: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=180',
+      cover_image: 'https://images.unsplash.com/photo-1668236543090-82eba5ee5976?w=1200'
     },
     {
       branch_name: 'Brookfield / Whitefield',
@@ -172,7 +281,12 @@ async function seed() {
       queue_count: 7,
       prep_time_minutes: 12,
       distance_km: 9.8,
-      owner_id: null
+      owner_id: null,
+      description: 'Whitefield flagship outpost of The Rameshwaram Cafe.',
+      cuisine: 'Pure Veg • South Indian • Tiffin',
+      rating: 4.8,
+      logo: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=180',
+      cover_image: 'https://images.unsplash.com/photo-1668236543090-82eba5ee5976?w=1200'
     },
     {
       branch_name: 'Rajajinagar',
@@ -188,7 +302,12 @@ async function seed() {
       queue_count: 4,
       prep_time_minutes: 10,
       distance_km: 7.2,
-      owner_id: null
+      owner_id: null,
+      description: 'Rajajinagar branch serving pure ghee dosas and traditional degree filter coffee.',
+      cuisine: 'Pure Veg • South Indian • Tiffin',
+      rating: 4.7,
+      logo: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=180',
+      cover_image: 'https://images.unsplash.com/photo-1668236543090-82eba5ee5976?w=1200'
     }
   ];
 
@@ -220,59 +339,14 @@ async function seed() {
   ];
 
   for (const branch of rameshwaramBranches) {
-    const rRes = insertRestaurant.run(
-      b1Id,
-      `The Rameshwaram Cafe - ${branch.branch_name}`,
-      branch.branch_name,
-      branch.area,
-      'Bengaluru’s legendary premium South Indian breakfast and tiffin destination. Famous for fragrant pure dairy ghee delicacies, crispy Podi dosas, and filter coffee.',
-      'Pure Veg • South Indian • Tiffin',
-      4.8,
-      'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=180',
-      'https://images.unsplash.com/photo-1668236543090-82eba5ee5976?w=1200',
-      branch.address,
-      branch.location,
-      branch.latitude,
-      branch.longitude,
-      branch.contact_phone,
-      branch.opening_time,
-      branch.closing_time,
-      1,
-      1,
-      branch.prep_time_minutes,
-      0,
-      0.05,
-      branch.distance_km,
-      branch.queue_status,
-      branch.queue_count,
-      branch.owner_id
-    );
-    const restId = rRes.lastInsertRowid;
-
-    let sortOrder = 1;
-    for (const group of rameshwaramDishes) {
-      const catRes = insertCategory.run(restId, group.cat, sortOrder++);
-      const catId = catRes.lastInsertRowid;
-      for (const item of group.items) {
-        insertMenuItem.run(
-          restId,
-          catId,
-          item.name,
-          item.desc,
-          item.price,
-          item.is_veg,
-          item.img,
-          1,
-          '[]'
-        );
-      }
-    }
+    const restId = upsertRestaurant(b1Id, `The Rameshwaram Cafe - ${branch.branch_name}`, branch, branch.owner_id);
+    upsertDishes(restId, rameshwaramDishes);
   }
 
   // =========================================================================
   // BRAND 2: EMPIRE RESTAURANT
   // =========================================================================
-  const b2 = insertBrand.run(
+  const b2Id = upsertBrand(
     'Empire Restaurant',
     'empire-restaurant',
     'The Taste of Bengaluru Since 1966 • Iconic Late-Night Dining',
@@ -283,7 +357,6 @@ async function seed() {
     'https://images.unsplash.com/photo-1544025162-d76694265947?w=1200',
     4.6
   );
-  const b2Id = b2.lastInsertRowid;
 
   const empireBranches = [
     {
@@ -300,7 +373,12 @@ async function seed() {
       queue_count: 12,
       prep_time_minutes: 18,
       distance_km: 2.1,
-      owner_id: empireAdmin.lastInsertRowid
+      owner_id: empireAdminId,
+      description: 'Iconic institution of Bengaluru nightlife and comforting Mughlai feasts since 1966. Famous for Empire Special Chicken Kebab, Coin Parottas, and Biryani.',
+      cuisine: 'North Indian • Mughlai • Arabian • Biryani',
+      rating: 4.6,
+      logo: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=180',
+      cover_image: 'https://images.unsplash.com/photo-1544025162-d76694265947?w=1200'
     },
     {
       branch_name: 'Koramangala',
@@ -316,7 +394,12 @@ async function seed() {
       queue_count: 8,
       prep_time_minutes: 15,
       distance_km: 4.2,
-      owner_id: null
+      owner_id: null,
+      description: 'Late night food lovers landmark in 5th Block Koramangala.',
+      cuisine: 'North Indian • Mughlai • Arabian • Biryani',
+      rating: 4.5,
+      logo: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=180',
+      cover_image: 'https://images.unsplash.com/photo-1544025162-d76694265947?w=1200'
     },
     {
       branch_name: 'Indiranagar',
@@ -332,7 +415,12 @@ async function seed() {
       queue_count: 9,
       prep_time_minutes: 15,
       distance_km: 1.6,
-      owner_id: null
+      owner_id: null,
+      description: '80 Feet Road Indiranagar hub for delicious kebab platters and biryani.',
+      cuisine: 'North Indian • Mughlai • Arabian • Biryani',
+      rating: 4.6,
+      logo: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=180',
+      cover_image: 'https://images.unsplash.com/photo-1544025162-d76694265947?w=1200'
     },
     {
       branch_name: 'Jayanagar',
@@ -348,7 +436,12 @@ async function seed() {
       queue_count: 5,
       prep_time_minutes: 12,
       distance_km: 6.8,
-      owner_id: null
+      owner_id: null,
+      description: 'Family dining favorite in Jayanagar 9th Block.',
+      cuisine: 'North Indian • Mughlai • Arabian • Biryani',
+      rating: 4.5,
+      logo: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=180',
+      cover_image: 'https://images.unsplash.com/photo-1544025162-d76694265947?w=1200'
     },
     {
       branch_name: 'Kammanahalli',
@@ -364,7 +457,12 @@ async function seed() {
       queue_count: 3,
       prep_time_minutes: 12,
       distance_km: 8.5,
-      owner_id: null
+      owner_id: null,
+      description: 'CMR Road Kammanahalli outlet for late evening rolls and meals.',
+      cuisine: 'North Indian • Mughlai • Arabian • Biryani',
+      rating: 4.5,
+      logo: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=180',
+      cover_image: 'https://images.unsplash.com/photo-1544025162-d76694265947?w=1200'
     }
   ];
 
@@ -389,59 +487,14 @@ async function seed() {
   ];
 
   for (const branch of empireBranches) {
-    const rRes = insertRestaurant.run(
-      b2Id,
-      `Empire Restaurant - ${branch.branch_name}`,
-      branch.branch_name,
-      branch.area,
-      'Iconic institution of Bengaluru nightlife and comforting Mughlai feasts since 1966. Famous for Empire Special Chicken Kebab, Coin Parottas, and Biryani.',
-      'North Indian • Mughlai • Arabian • Biryani',
-      4.6,
-      'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=180',
-      'https://images.unsplash.com/photo-1544025162-d76694265947?w=1200',
-      branch.address,
-      branch.location,
-      branch.latitude,
-      branch.longitude,
-      branch.contact_phone,
-      branch.opening_time,
-      branch.closing_time,
-      1,
-      1,
-      branch.prep_time_minutes,
-      0,
-      0.05,
-      branch.distance_km,
-      branch.queue_status,
-      branch.queue_count,
-      branch.owner_id
-    );
-    const restId = rRes.lastInsertRowid;
-
-    let sortOrder = 1;
-    for (const group of empireDishes) {
-      const catRes = insertCategory.run(restId, group.cat, sortOrder++);
-      const catId = catRes.lastInsertRowid;
-      for (const item of group.items) {
-        insertMenuItem.run(
-          restId,
-          catId,
-          item.name,
-          item.desc,
-          item.price,
-          item.is_veg,
-          item.img,
-          1,
-          '[]'
-        );
-      }
-    }
+    const restId = upsertRestaurant(b2Id, `Empire Restaurant - ${branch.branch_name}`, branch, branch.owner_id);
+    upsertDishes(restId, empireDishes);
   }
 
   // =========================================================================
   // BRAND 3: MEGHANA FOODS
   // =========================================================================
-  const b3 = insertBrand.run(
+  const b3Id = upsertBrand(
     'Meghana Foods',
     'meghana-foods',
     'Bengaluru’s Iconic Andhra Biryani & Spice Master',
@@ -452,7 +505,6 @@ async function seed() {
     'https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=1200',
     4.7
   );
-  const b3Id = b3.lastInsertRowid;
 
   const meghanaBranches = [
     {
@@ -469,7 +521,12 @@ async function seed() {
       queue_count: 18,
       prep_time_minutes: 20,
       distance_km: 3.8,
-      owner_id: meghanaAdmin.lastInsertRowid
+      owner_id: meghanaAdminId,
+      description: 'Synonymous with fiery Andhra cuisine and legendary long-grain Biryanis across Bengaluru since 2006. Cooked with authentic Guntur spices and basmati.',
+      cuisine: 'Andhra • Biryani Specialist • Spicy South Indian',
+      rating: 4.7,
+      logo: 'https://images.unsplash.com/photo-1589301760014-d929f3979dbc?w=180',
+      cover_image: 'https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=1200'
     },
     {
       branch_name: 'Indiranagar',
@@ -485,7 +542,12 @@ async function seed() {
       queue_count: 14,
       prep_time_minutes: 18,
       distance_km: 1.5,
-      owner_id: null
+      owner_id: null,
+      description: 'CMH Road Indiranagar branch of Meghana Foods serving spicy boneless biryani.',
+      cuisine: 'Andhra • Biryani Specialist • Spicy South Indian',
+      rating: 4.7,
+      logo: 'https://images.unsplash.com/photo-1589301760014-d929f3979dbc?w=180',
+      cover_image: 'https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=1200'
     },
     {
       branch_name: 'Jayanagar',
@@ -501,7 +563,12 @@ async function seed() {
       queue_count: 9,
       prep_time_minutes: 15,
       distance_km: 6.2,
-      owner_id: null
+      owner_id: null,
+      description: 'Jayanagar 4th block hotspot for hot chilli chicken and paneer biryani.',
+      cuisine: 'Andhra • Biryani Specialist • Spicy South Indian',
+      rating: 4.6,
+      logo: 'https://images.unsplash.com/photo-1589301760014-d929f3979dbc?w=180',
+      cover_image: 'https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=1200'
     },
     {
       branch_name: 'Residency Road',
@@ -517,7 +584,12 @@ async function seed() {
       queue_count: 8,
       prep_time_minutes: 15,
       distance_km: 2.8,
-      owner_id: null
+      owner_id: null,
+      description: 'Residency Road CBD outlet serving busy business lunch crowds.',
+      cuisine: 'Andhra • Biryani Specialist • Spicy South Indian',
+      rating: 4.7,
+      logo: 'https://images.unsplash.com/photo-1589301760014-d929f3979dbc?w=180',
+      cover_image: 'https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=1200'
     },
     {
       branch_name: 'Marathahalli',
@@ -533,7 +605,12 @@ async function seed() {
       queue_count: 5,
       prep_time_minutes: 12,
       distance_km: 8.9,
-      owner_id: null
+      owner_id: null,
+      description: 'Marathahalli bridge outlet catering to eastern IT corridor.',
+      cuisine: 'Andhra • Biryani Specialist • Spicy South Indian',
+      rating: 4.6,
+      logo: 'https://images.unsplash.com/photo-1589301760014-d929f3979dbc?w=180',
+      cover_image: 'https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=1200'
     }
   ];
 
@@ -558,109 +635,69 @@ async function seed() {
   ];
 
   for (const branch of meghanaBranches) {
-    const rRes = insertRestaurant.run(
-      b3Id,
-      `Meghana Foods - ${branch.branch_name}`,
-      branch.branch_name,
-      branch.area,
-      'Synonymous with fiery Andhra cuisine and legendary long-grain Biryanis across Bengaluru since 2006. Cooked with authentic Guntur spices and basmati.',
-      'Andhra • Biryani Specialist • Spicy South Indian',
-      4.7,
-      'https://images.unsplash.com/photo-1589301760014-d929f3979dbc?w=180',
-      'https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=1200',
-      branch.address,
-      branch.location,
-      branch.latitude,
-      branch.longitude,
-      branch.contact_phone,
-      branch.opening_time,
-      branch.closing_time,
-      1,
-      1,
-      branch.prep_time_minutes,
-      0,
-      0.05,
-      branch.distance_km,
-      branch.queue_status,
-      branch.queue_count,
-      branch.owner_id
-    );
-    const restId = rRes.lastInsertRowid;
+    const restId = upsertRestaurant(b3Id, `Meghana Foods - ${branch.branch_name}`, branch, branch.owner_id);
+    upsertDishes(restId, meghanaDishes);
+  }
 
-    let sortOrder = 1;
-    for (const group of meghanaDishes) {
-      const catRes = insertCategory.run(restId, group.cat, sortOrder++);
-      const catId = catRes.lastInsertRowid;
-      for (const item of group.items) {
-        insertMenuItem.run(
-          restId,
-          catId,
-          item.name,
-          item.desc,
-          item.price,
-          item.is_veg,
-          item.img,
-          1,
-          '[]'
+  // 6. Safe Initial Demo Orders (Only created if zero orders exist)
+  const orderCountRow = db.prepare('SELECT count(*) as count FROM orders').get();
+  if (!orderCountRow || orderCountRow.count === 0) {
+    const firstBranch = db.prepare('SELECT id FROM restaurants WHERE name LIKE ?').get('%Rameshwaram%Indiranagar%');
+    if (firstBranch) {
+      const firstMenuItem = db.prepare('SELECT id, name, price FROM menu_items WHERE restaurant_id = ? LIMIT 1').get(firstBranch.id);
+      if (firstMenuItem) {
+        const insertOrder = db.prepare(`
+          INSERT INTO orders (
+            order_number, customer_id, restaurant_id, status, pickup_type,
+            subtotal, tax, fee, total, qr_code_token, notes
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `);
+
+        const insertOrderItem = db.prepare(`
+          INSERT INTO order_items (order_id, menu_item_id, item_name, quantity, unit_price, total_price)
+          VALUES (?, ?, ?, ?, ?, ?)
+        `);
+
+        const order1 = insertOrder.run(
+          'CQ1042',
+          customerUserId,
+          firstBranch.id,
+          'preparing',
+          'asap',
+          255,
+          12.75,
+          0,
+          267.75,
+          'CQ_DEMO_QR_1042_TOKEN',
+          'Extra podi on the side please'
         );
+        insertOrderItem.run(order1.lastInsertRowid, firstMenuItem.id, firstMenuItem.name, 2, firstMenuItem.price, firstMenuItem.price * 2);
+
+        const order2 = insertOrder.run(
+          'CQ1038',
+          customerUserId,
+          firstBranch.id,
+          'completed',
+          'asap',
+          145,
+          7.25,
+          0,
+          152.25,
+          'CQ_DEMO_QR_1038_TOKEN',
+          'Dine-in pickup'
+        );
+        insertOrderItem.run(order2.lastInsertRowid, firstMenuItem.id, firstMenuItem.name, 1, firstMenuItem.price, firstMenuItem.price);
       }
     }
   }
 
-  // 3. Insert Initial Demo Orders (For live queue testing & order history)
-  const firstBranch = db.prepare('SELECT id FROM restaurants WHERE name LIKE ?').get('%Rameshwaram%Indiranagar%');
-  const firstMenuItem = db.prepare('SELECT id, name, price FROM menu_items WHERE restaurant_id = ? LIMIT 1').get(firstBranch.id);
-
-  const insertOrder = db.prepare(`
-    INSERT INTO orders (
-      order_number, customer_id, restaurant_id, status, pickup_type,
-      subtotal, tax, fee, total, qr_code_token, notes
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `);
-
-  const insertOrderItem = db.prepare(`
-    INSERT INTO order_items (order_id, menu_item_id, item_name, quantity, unit_price, total_price)
-    VALUES (?, ?, ?, ?, ?, ?)
-  `);
-
-  const order1 = insertOrder.run(
-    'CQ1042',
-    customerUser.lastInsertRowid,
-    firstBranch.id,
-    'preparing',
-    'asap',
-    255,
-    12.75,
-    0,
-    267.75,
-    'CQ_DEMO_QR_1042_TOKEN',
-    'Extra podi on the side please'
-  );
-  insertOrderItem.run(order1.lastInsertRowid, firstMenuItem.id, firstMenuItem.name, 2, firstMenuItem.price, firstMenuItem.price * 2);
-
-  const order2 = insertOrder.run(
-    'CQ1038',
-    customerUser.lastInsertRowid,
-    firstBranch.id,
-    'completed',
-    'asap',
-    145,
-    7.25,
-    0,
-    152.25,
-    'CQ_DEMO_QR_1038_TOKEN',
-    'Dine-in pickup'
-  );
-  insertOrderItem.run(order2.lastInsertRowid, firstMenuItem.id, firstMenuItem.name, 1, firstMenuItem.price, firstMenuItem.price);
-
-  console.log('✅ Seeding completed:');
-  console.log('- 3 Iconic Brands (The Rameshwaram Cafe, Empire Restaurant, Meghana Foods)');
-  console.log(`- ${rameshwaramBranches.length + empireBranches.length + meghanaBranches.length} Bengaluru Branches with real GPS & queue data`);
-  console.log('- Authentic signature menus and demo accounts ready.');
+  return { success: true };
 }
 
 if (require.main === module) {
-  seed().catch(console.error);
+  seed().then(() => {
+    console.log('Database seed completed');
+  }).catch(console.error);
 }
 
 module.exports = { seed };

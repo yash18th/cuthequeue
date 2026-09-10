@@ -2,12 +2,14 @@ const Database = require('better-sqlite3');
 const path = require('path');
 const fs = require('fs');
 
-const dbDir = path.join(__dirname, '../../data');
+const defaultDbPath = path.join(__dirname, '../../data/cutthequeue.db');
+const dbPath = process.env.DB_PATH ? path.resolve(process.env.DB_PATH) : defaultDbPath;
+const dbDir = path.dirname(dbPath);
+
 if (!fs.existsSync(dbDir)) {
   fs.mkdirSync(dbDir, { recursive: true });
 }
 
-const dbPath = path.join(dbDir, 'cutthequeue.db');
 const db = new Database(dbPath);
 
 // Enable WAL mode and foreign key constraints for high concurrency and relational safety
@@ -180,8 +182,19 @@ function initDatabase() {
   if (!restaurantCols.includes('queue_count')) {
     db.exec('ALTER TABLE restaurants ADD COLUMN queue_count INTEGER DEFAULT 6;');
   }
+
+  // Create performance indexes if not exists
+  db.exec(`
+    CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+    CREATE INDEX IF NOT EXISTS idx_restaurants_brand_id ON restaurants(brand_id);
+    CREATE INDEX IF NOT EXISTS idx_restaurants_owner_id ON restaurants(owner_id);
+    CREATE INDEX IF NOT EXISTS idx_categories_restaurant ON categories(restaurant_id);
+    CREATE INDEX IF NOT EXISTS idx_menu_items_restaurant ON menu_items(restaurant_id);
+    CREATE INDEX IF NOT EXISTS idx_orders_customer ON orders(customer_id);
+    CREATE INDEX IF NOT EXISTS idx_orders_restaurant ON orders(restaurant_id);
+  `);
+
+  return { success: true, dbPath };
 }
 
-initDatabase();
-
-module.exports = { db, initDatabase };
+module.exports = { db, initDatabase, dbPath };

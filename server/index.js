@@ -15,9 +15,6 @@ const paymentRoutes = require('./routes/payments');
 const analyticsRoutes = require('./routes/analytics');
 const superadminRoutes = require('./routes/superadmin');
 
-// Ensure database is initialized
-initDatabase();
-
 const app = express();
 const server = http.createServer(app);
 
@@ -103,23 +100,25 @@ io.on('connection', (socket) => {
 const PORT = process.env.PORT || 5001;
 
 async function startServer() {
-  // Auto-seed initial kitchens and demo accounts if database is empty (e.g. fresh Render container deployment)
   try {
-    const row = db.prepare('SELECT count(*) as count FROM restaurants').get();
-    if (!row || row.count === 0) {
-      console.log('⚡ Empty database detected on startup. Auto-seeding initial restaurants and demo accounts...');
-      await seed();
-      console.log('✅ Database successfully initialized and seeded with demo data.');
-    }
-  } catch (err) {
-    console.error('Auto-seed check failed:', err);
-  }
+    // 1. Initialize database schema, tables, and migrations
+    initDatabase();
+    console.log('Database initialized');
 
-  // Bind to 0.0.0.0 so Render can route incoming requests
-  server.listen(PORT, '0.0.0.0', () => {
-    console.log(`🚀 Cut the Queue Server running on http://0.0.0.0:${PORT}`);
-    console.log(`⚡ Real-Time WebSockets active on port ${PORT}`);
-  });
+    // 2. Safely and idempotently seed required initial accounts, brands, restaurants, and menu
+    await seed();
+    console.log('Database seed completed');
+
+    // 3. Start Express HTTP & WebSocket server on 0.0.0.0
+    server.listen(PORT, '0.0.0.0', () => {
+      console.log(`Server listening on port ${PORT}`);
+      console.log(`🚀 Cut the Queue Server running on http://0.0.0.0:${PORT}`);
+      console.log(`⚡ Real-Time WebSockets active on port ${PORT}`);
+    });
+  } catch (err) {
+    console.error('Fatal error during server startup:', err);
+    process.exit(1);
+  }
 }
 
 startServer();
