@@ -52,28 +52,53 @@ export default function AdminDashboardPage({ onOpenScanner }) {
   useEffect(() => {
     if (!socket) return;
 
-    const handleNewOrder = (newOrder) => {
+    const handleNewOrder = (payload) => {
+      const newOrder = payload?.order || payload;
+      if (!newOrder || (!newOrder.id && !newOrder.order_number)) return;
+
+      const normalized = {
+        ...newOrder,
+        total_amount: newOrder.total_amount !== undefined ? newOrder.total_amount : newOrder.total
+      };
+
       setOrders((prev) => {
-        const exists = prev.some((o) => o.id === newOrder.id);
-        if (exists) return prev;
-        return [newOrder, ...prev];
+        const exists = prev.some((o) => (o.id && normalized.id && o.id === normalized.id) || (o.order_number && normalized.order_number && o.order_number === normalized.order_number));
+        if (exists) {
+          return prev.map((o) => ((o.id && normalized.id && o.id === normalized.id) || (o.order_number && normalized.order_number && o.order_number === normalized.order_number)) ? { ...o, ...normalized } : o);
+        }
+        return [normalized, ...prev];
       });
+
+      // Background reconciliation with database
+      fetchOrders();
     };
 
     const handleStatusChanged = (updated) => {
+      if (!updated) return;
+      const targetId = updated.orderId || updated.id || updated.order_id;
+      const newStatus = updated.status;
+      if (!newStatus) return;
+
       setOrders((prev) =>
-        prev.map((o) => (o.id === updated.orderId || o.id === updated.id ? { ...o, status: updated.status } : o))
+        prev.map((o) => (o.id === targetId || (updated.order_number && o.order_number === updated.order_number) ? { ...o, status: newStatus } : o))
       );
+
+      // Background reconciliation with database
+      fetchOrders();
     };
 
     socket.on('order:created', handleNewOrder);
     socket.on('order:status_changed', handleStatusChanged);
+    socket.on('order:restaurant_status_updated', handleStatusChanged);
+    socket.on('order:status_updated', handleStatusChanged);
 
     return () => {
       socket.off('order:created', handleNewOrder);
       socket.off('order:status_changed', handleStatusChanged);
+      socket.off('order:restaurant_status_updated', handleStatusChanged);
+      socket.off('order:status_updated', handleStatusChanged);
     };
-  }, [socket]);
+  }, [socket, fetchOrders]);
 
   // Update order status action
   const handleUpdateStatus = async (orderId, newStatus, prepMinutes) => {
@@ -130,7 +155,7 @@ export default function AdminDashboardPage({ onOpenScanner }) {
 
   const totalRevenue = orders
     .filter((o) => o.status !== 'cancelled')
-    .reduce((sum, o) => sum + Number(o.total_amount || 0), 0);
+    .reduce((sum, o) => sum + Number(o.total_amount || o.total || 0), 0);
 
   return (
     <div style={{ padding: '2rem 0 4rem' }}>
@@ -472,7 +497,7 @@ export default function AdminDashboardPage({ onOpenScanner }) {
                         ))
                       ) : (
                         <div style={{ fontSize: '0.82rem', color: '#5C6E6A' }}>
-                          Pre-ordered items ({order.total_amount ? `Total: ₹${order.total_amount}` : 'Custom items'})
+                          Pre-ordered items ({order.total_amount || order.total ? `Total: ₹${order.total_amount || order.total}` : 'Custom items'})
                         </div>
                       )}
                     </div>
@@ -495,7 +520,7 @@ export default function AdminDashboardPage({ onOpenScanner }) {
                     {/* Order Total */}
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem', fontWeight: 700, color: '#0B352D' }}>
                       <span>Amount Payable</span>
-                      <span style={{ color: '#C49A52', fontSize: '1rem' }}>₹{Number(order.total_amount || 0)}</span>
+                      <span style={{ color: '#C49A52', fontSize: '1rem' }}>₹{Number(order.total_amount || order.total || 0)}</span>
                     </div>
                   </div>
 

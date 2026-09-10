@@ -93,7 +93,21 @@ router.get('/brands/:brandIdOrSlug', (req, res) => {
 
     const brand = isNumeric
       ? db.prepare('SELECT * FROM brands WHERE id = ?').get(param)
-      : db.prepare('SELECT * FROM brands WHERE slug = ?').get(param);
+      : db.prepare(`
+          SELECT * FROM brands 
+          WHERE slug = ? 
+             OR slug = ? 
+             OR slug = ?
+             OR LOWER(name) = ?
+             OR LOWER(name) LIKE ?
+          LIMIT 1
+        `).get(
+          param,
+          `the-${param}`,
+          param.replace(/^the-/, ''),
+          param.toLowerCase().replace(/-/g, ' '),
+          `%${param.toLowerCase().replace(/-/g, ' ')}%`
+        );
 
     if (!brand) {
       return res.status(404).json({ error: 'Restaurant brand not found.' });
@@ -311,19 +325,35 @@ router.get('/', (req, res) => {
 // Get single restaurant details + categories + menu items
 router.get('/:id', (req, res) => {
   try {
-    const restaurant = db.prepare(`
-      SELECT r.*,
-             b.name as brand_name,
-             b.slug as brand_slug,
-             b.tagline as brand_tagline,
-             b.description as brand_description,
-             b.cuisine as brand_cuisine,
-             b.heritage_since as brand_heritage_since,
-             b.logo as brand_logo
-      FROM restaurants r
-      LEFT JOIN brands b ON r.brand_id = b.id
-      WHERE r.id = ?
-    `).get(req.params.id);
+    const isNumeric = /^\d+$/.test(req.params.id);
+    let restaurant = isNumeric
+      ? db.prepare(`
+          SELECT r.*,
+                 b.name as brand_name,
+                 b.slug as brand_slug,
+                 b.tagline as brand_tagline,
+                 b.description as brand_description,
+                 b.cuisine as brand_cuisine,
+                 b.heritage_since as brand_heritage_since,
+                 b.logo as brand_logo
+          FROM restaurants r
+          LEFT JOIN brands b ON r.brand_id = b.id
+          WHERE r.id = ?
+        `).get(req.params.id)
+      : db.prepare(`
+          SELECT r.*,
+                 b.name as brand_name,
+                 b.slug as brand_slug,
+                 b.tagline as brand_tagline,
+                 b.description as brand_description,
+                 b.cuisine as brand_cuisine,
+                 b.heritage_since as brand_heritage_since,
+                 b.logo as brand_logo
+          FROM restaurants r
+          LEFT JOIN brands b ON r.brand_id = b.id
+          WHERE b.slug = ? OR b.slug = ? OR b.slug = ? OR LOWER(r.name) LIKE ?
+          ORDER BY r.id ASC LIMIT 1
+        `).get(req.params.id, `the-${req.params.id}`, req.params.id.replace(/^the-/, ''), `%${req.params.id.replace(/-/g, ' ')}%`);
 
     if (!restaurant) {
       return res.status(404).json({ error: 'Restaurant not found.' });

@@ -56,16 +56,25 @@ function requireRestaurantOwner(req, res, next) {
     return res.status(400).json({ error: 'Restaurant ID is required.' });
   }
 
-  const restaurant = db.prepare('SELECT id, owner_id FROM restaurants WHERE id = ?').get(restaurantId);
+  const restaurant = db.prepare('SELECT id, owner_id, brand_id FROM restaurants WHERE id = ?').get(restaurantId);
   if (!restaurant) {
     return res.status(404).json({ error: 'Restaurant not found.' });
   }
 
-  if (restaurant.owner_id !== req.user.id) {
-    return res.status(403).json({ error: 'Access denied: you do not manage this restaurant.' });
+  // 1. Direct branch owner check
+  if (restaurant.owner_id === req.user.id) {
+    return next();
   }
 
-  next();
+  // 2. Brand-level manager check (authorized for any branch belonging to their brand)
+  if (restaurant.brand_id) {
+    const brandMatch = db.prepare('SELECT id FROM restaurants WHERE brand_id = ? AND owner_id = ?').get(restaurant.brand_id, req.user.id);
+    if (brandMatch) {
+      return next();
+    }
+  }
+
+  return res.status(403).json({ error: 'Access denied: you do not manage this restaurant.' });
 }
 
 module.exports = {

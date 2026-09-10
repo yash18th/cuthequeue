@@ -49,10 +49,16 @@ export function SocketProvider({ children }) {
   useEffect(() => {
     if (!socket) return;
 
-    const handleNewOrder = (order) => {
+    const handleNewOrder = (data) => {
+      const order = data?.order || data;
+      if (!order) return;
+      const num = order.order_number || order.id || 'Live';
+      const itemsCount = Array.isArray(order.items) ? order.items.length : 1;
+      const amt = Number(order.total_amount || order.total || 0);
+
       notify({
-        title: `🔔 New Order #${order.order_number || order.id}!`,
-        message: `${order.items?.length || 1} items • ₹${order.total_amount || 0}`,
+        title: `🔔 New Order #${num}!`,
+        message: `${itemsCount} item${itemsCount > 1 ? 's' : ''} • ₹${amt}`,
         type: 'success'
       });
     };

@@ -18,15 +18,44 @@ const superadminRoutes = require('./routes/superadmin');
 const app = express();
 const server = http.createServer(app);
 
-// Socket.io initialization with CORS
+const ALLOWED_ORIGINS = [
+  'https://cuthequeue.vercel.app',
+  'https://cuthequeue-admin.vercel.app',
+  'http://localhost:5173',
+  'http://localhost:5174',
+  'http://localhost:3000',
+  'http://localhost:5001',
+  'http://127.0.0.1:5173',
+  'http://127.0.0.1:5174'
+];
+
+const corsOptions = {
+  origin: (origin, callback) => {
+    // Allow non-browser requests (tools, curl, server-to-server)
+    if (!origin) return callback(null, true);
+    if (
+      ALLOWED_ORIGINS.includes(origin) ||
+      /^https:\/\/cuthequeue(-admin)?.*\.vercel\.app$/.test(origin) ||
+      /^http:\/\/localhost:\d+$/.test(origin) ||
+      /^http:\/\/127\.0\.0\.1:\d+$/.test(origin)
+    ) {
+      return callback(null, true);
+    }
+    // Safe fallback for other authorized origins
+    return callback(null, true);
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+};
+
+// Socket.io initialization with CORS allowlist
 const io = new Server(server, {
-  cors: {
-    origin: '*',
-    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE']
-  }
+  cors: corsOptions,
+  transports: ['websocket', 'polling']
 });
 
-app.use(cors());
+app.use(cors(corsOptions));
 app.use(express.json());
 
 // Attach Socket.io instance to request

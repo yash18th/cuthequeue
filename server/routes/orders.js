@@ -180,13 +180,19 @@ router.post('/', authenticate, requireRole('customer'), (req, res) => {
       ...i,
       customizations: JSON.parse(i.customizations_selected_json || '{}')
     }));
+    fullOrder.total_amount = fullOrder.total;
+
+    console.log(`[ORDER CREATE] order ID: ${fullOrder.id} (${fullOrder.order_number}) | restaurant ID: ${restaurant_id} | status: ${fullOrder.status} | total: ₹${fullOrder.total}`);
 
     // Emit live Socket.IO events to Restaurant Admin
     if (req.io) {
-      req.io.to(`restaurant_${restaurant_id}`).emit('order:created', {
+      const socketPayload = {
+        ...fullOrder,
         order: fullOrder,
         soundAlert: true
-      });
+      };
+      req.io.to(`restaurant_${restaurant_id}`).emit('order:created', socketPayload);
+      console.log(`[SOCKET] Emitted order:created for order #${fullOrder.id} to room restaurant_${restaurant_id}`);
     }
 
     res.status(201).json({
@@ -299,11 +305,14 @@ router.get('/restaurant/:restaurantId', authenticate, requireRestaurantOwner, (r
 
     const formatted = orders.map(order => ({
       ...order,
+      total_amount: order.total,
       items: getItems.all(order.id).map(i => ({
         ...i,
         customizations: JSON.parse(i.customizations_selected_json || '{}')
       }))
     }));
+
+    console.log(`[ADMIN ORDER FETCH] manager user ID: ${req.user.id} | restaurant ID: ${req.params.restaurantId} | returned orders: ${formatted.length}`);
 
     res.json(formatted);
   } catch (err) {
@@ -375,6 +384,8 @@ router.patch('/:id/status', authenticate, (req, res) => {
     // Real-Time Socket Broadcast
     if (req.io) {
       const payload = {
+        id: order.id,
+        orderId: order.id,
         order_id: order.id,
         order_number: order.order_number,
         restaurant_id: order.restaurant_id,
@@ -397,8 +408,11 @@ router.patch('/:id/status', authenticate, (req, res) => {
         req.io.to(`customer_${order.customer_id}`).emit('order:ready', payload);
       }
 
-      // Also notify restaurant channel for synchronized dashboard
+      // Notify restaurant channel for synchronized admin dashboard
+      req.io.to(`restaurant_${order.restaurant_id}`).emit('order:status_changed', payload);
       req.io.to(`restaurant_${order.restaurant_id}`).emit('order:restaurant_status_updated', payload);
+      req.io.to(`restaurant_${order.restaurant_id}`).emit('order:status_updated', payload);
+      console.log(`[SOCKET] Emitted order:status_changed (${status}) for order #${order.id} to room restaurant_${order.restaurant_id}`);
     }
 
     res.json({

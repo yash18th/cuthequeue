@@ -545,8 +545,8 @@ export default function LandingPage({ setActivePage, onOpenCart }) {
               className="heritage-card"
               style={{ padding: '0', cursor: 'pointer' }}
               onClick={() => {
-                setActivePage?.('brand-detail', { brandSlug: 'rameshwaram-cafe' });
-                navigate('/restaurants/rameshwaram-cafe');
+                setActivePage?.('brand-detail', { brandSlug: 'the-rameshwaram-cafe' });
+                navigate('/restaurants/the-rameshwaram-cafe');
               }}
             >
               <div style={{ height: '200px', overflow: 'hidden', position: 'relative' }}>
