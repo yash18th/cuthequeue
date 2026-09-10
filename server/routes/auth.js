@@ -1,7 +1,7 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { db } = require('../db/database');
+const { db, dbPath } = require('../db/database');
 const { JWT_SECRET, authenticate } = require('../middleware/auth');
 
 const router = express.Router();
@@ -12,23 +12,29 @@ router.post('/register', async (req, res) => {
     const { name, email, phone, password, role = 'customer' } = req.body;
 
     const cleanName = typeof name === 'string' ? name.trim() : '';
-    const cleanEmail = typeof email === 'string' ? email.toLowerCase().trim() : '';
+    const cleanEmail = typeof email === 'string' ? email.trim().toLowerCase() : '';
     const cleanPhone = typeof phone === 'string' ? phone.trim() : '';
     const cleanPassword = typeof password === 'string' ? password.trim() : '';
 
     if (!cleanName || !cleanEmail || !cleanPassword) {
-      return res.status(400).json({ error: 'Name, email, and password are required.' });
+      return res.status(400).json({
+        error: 'Name, email, and password are required.',
+        message: 'Name, email, and password are required.',
+        code: 'VALIDATION_ERROR'
+      });
     }
 
     const validRoles = ['customer', 'restaurant_admin'];
     const assignedRole = validRoles.includes(role) ? role : 'customer';
 
-    console.log(`[Auth] Registration attempt for email: "${cleanEmail}" | Role: "${assignedRole}"`);
-
-    const existing = db.prepare('SELECT id FROM users WHERE email = ?').get(cleanEmail);
+    const existing = db.prepare('SELECT id FROM users WHERE LOWER(TRIM(email)) = ?').get(cleanEmail);
     if (existing) {
-      console.warn(`[Auth] Registration rejected: user already exists with email "${cleanEmail}"`);
-      return res.status(400).json({ error: 'An account with this email already exists.' });
+      console.log(`[AUTH REGISTER] email=${cleanEmail} database=${dbPath} existingUser=true`);
+      return res.status(409).json({
+        error: 'An account with this email already exists.',
+        message: 'An account with this email already exists.',
+        code: 'ACCOUNT_EXISTS'
+      });
     }
 
     const passwordHash = await bcrypt.hash(cleanPassword, 10);
@@ -56,24 +62,29 @@ router.post('/register', async (req, res) => {
       restaurant = db.prepare('SELECT * FROM restaurants WHERE id = ?').get(restResult.lastInsertRowid);
     }
 
-    const token = jwt.sign({ id: userId, role: assignedRole }, JWT_SECRET, { expiresIn: '7d' });
+    const token = jwt.sign({ id: userId, role: assignedRole, email: cleanEmail }, JWT_SECRET, { expiresIn: '7d' });
 
     const newUser = db.prepare('SELECT id, name, email, phone, role, avatar, notification_preferences FROM users WHERE id = ?').get(userId);
 
-    console.log(`[Auth] User registered successfully: ID ${userId} | Email: "${cleanEmail}" | Role: "${assignedRole}"`);
+    console.log(`[AUTH REGISTER] email=${cleanEmail} database=${dbPath} existingUser=false userId=${userId} role=${assignedRole}`);
 
     res.status(201).json({
       message: 'Account created successfully',
       token,
       user: {
         ...newUser,
+        email: cleanEmail,
         notification_preferences: JSON.parse(newUser.notification_preferences || '{"push":true,"sound":true,"vibration":true}')
       },
       restaurant
     });
   } catch (err) {
     console.error('Register error:', err);
-    res.status(500).json({ error: 'Failed to create account. Please try again.' });
+    res.status(500).json({
+      error: 'Failed to create account. Please try again.',
+      message: 'Failed to create account. Please try again.',
+      code: 'SERVER_ERROR'
+    });
   }
 });
 
@@ -82,27 +93,35 @@ router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    const cleanEmail = typeof email === 'string' ? email.toLowerCase().trim() : '';
+    const cleanEmail = typeof email === 'string' ? email.trim().toLowerCase() : '';
     const cleanPassword = typeof password === 'string' ? password.trim() : '';
 
     if (!cleanEmail || !cleanPassword) {
-      console.warn('[Auth] Login attempt rejected: missing email or password');
-      return res.status(400).json({ error: 'Email and password are required.' });
+      return res.status(400).json({
+        error: 'Email and password are required.',
+        message: 'Email and password are required.',
+        code: 'VALIDATION_ERROR'
+      });
     }
 
-    console.log(`[Auth] Login attempt for email: "${cleanEmail}"`);
+    const user = db.prepare('SELECT * FROM users WHERE LOWER(TRIM(email)) = ?').get(cleanEmail);
+    console.log(`[AUTH LOGIN] email=${cleanEmail} database=${dbPath} userFound=${!!user}`);
 
-    const user = db.prepare('SELECT * FROM users WHERE email = ?').get(cleanEmail);
     if (!user) {
-      console.warn(`[Auth] Login rejected: user not found for normalized email "${cleanEmail}"`);
-      return res.status(401).json({ error: 'No account found with this email. Please click "Sign Up" below to create one.' });
+      return res.status(401).json({
+        error: 'No account exists with this email. You can create an account below.',
+        message: 'No account exists with this email. You can create an account below.',
+        code: 'ACCOUNT_NOT_FOUND'
+      });
     }
-
-    console.log(`[Auth] User located: ID ${user.id} | Role: "${user.role}" | Active: ${!user.is_suspended}`);
 
     if (user.is_suspended) {
       console.warn(`[Auth] Login rejected: account suspended for user "${cleanEmail}" (ID: ${user.id})`);
-      return res.status(403).json({ error: 'Your account has been suspended. Please contact support.' });
+      return res.status(403).json({
+        error: 'Your account has been suspended. Please contact support.',
+        message: 'Your account has been suspended. Please contact support.',
+        code: 'ACCOUNT_SUSPENDED'
+      });
     }
 
     // Step 1: Direct comparison with normalized cleanPassword
@@ -157,12 +176,15 @@ router.post('/login', async (req, res) => {
     }
 
     if (!isMatch) {
-      console.warn(`[Auth] Login rejected: invalid password for user "${cleanEmail}" (ID: ${user.id})`);
-      return res.status(401).json({ error: 'Incorrect password. Please verify your password or use demo accounts.' });
+      return res.status(401).json({
+        error: 'Incorrect password. Please try again.',
+        message: 'Incorrect password. Please try again.',
+        code: 'INVALID_PASSWORD'
+      });
     }
 
     console.log(`[Auth] Login successful: "${cleanEmail}" (Role: ${user.role}, ID: ${user.id})`);
-    const token = jwt.sign({ id: user.id, role: user.role }, JWT_SECRET, { expiresIn: '7d' });
+    const token = jwt.sign({ id: user.id, role: user.role, email: cleanEmail }, JWT_SECRET, { expiresIn: '7d' });
 
     let restaurant = null;
     if (user.role === 'restaurant_admin') {
@@ -244,9 +266,14 @@ router.post('/reset-password', async (req, res) => {
     if (!email || !new_password) {
       return res.status(400).json({ error: 'Email and new password are required.' });
     }
-    const user = db.prepare('SELECT id FROM users WHERE email = ?').get(email.toLowerCase().trim());
+    const cleanEmail = typeof email === 'string' ? email.trim().toLowerCase() : '';
+    const user = db.prepare('SELECT id FROM users WHERE LOWER(TRIM(email)) = ?').get(cleanEmail);
     if (!user) {
-      return res.status(404).json({ error: 'No account found with this email.' });
+      return res.status(404).json({
+        error: 'No account exists with this email.',
+        message: 'No account exists with this email.',
+        code: 'ACCOUNT_NOT_FOUND'
+      });
     }
     const passwordHash = await bcrypt.hash(new_password, 10);
     db.prepare('UPDATE users SET password_hash = ? WHERE id = ?').run(passwordHash, user.id);

@@ -2,13 +2,14 @@
 
 export const getBaseUrl = () => {
   let url = import.meta.env.VITE_API_URL;
-  if (!url) {
+  if (!url || !url.trim()) {
     url = import.meta.env.PROD ? 'https://cuthequeue-api.onrender.com' : 'http://localhost:5001';
   }
-  return url.replace(/\/+$/, '').replace(/\/api$/, '');
+  return url.trim().replace(/\/+$/, '').replace(/\/api$/, '');
 };
 
 export const API_BASE = `${getBaseUrl()}/api`;
+
 export async function apiRequest(endpoint, options = {}) {
   const token = localStorage.getItem('cq_token');
   const headers = {
@@ -26,17 +27,21 @@ export async function apiRequest(endpoint, options = {}) {
     const data = await response.json().catch(() => ({}));
 
     if (!response.ok) {
-      const errorMsg = data.error || data.message || `Request failed with status ${response.status}`;
+      const errorMsg = data.message || data.error || `Request failed with status ${response.status}`;
       const err = new Error(errorMsg);
       err.status = response.status;
+      err.code = data.code || (response.status === 409 ? 'ACCOUNT_EXISTS' : response.status === 401 ? 'UNAUTHORIZED' : response.status >= 500 ? 'SERVER_ERROR' : 'REQUEST_ERROR');
       err.data = data;
       throw err;
     }
 
     return data;
   } catch (err) {
-    if (err.name === 'TypeError' && err.message.includes('fetch')) {
-      throw new Error('Unable to connect to Cut the Queue server. Please check your network connection.');
+    if (err.name === 'TypeError' && err.message && err.message.includes('fetch')) {
+      const netErr = new Error('Unable to connect to the server. Please try again.');
+      netErr.code = 'NETWORK_ERROR';
+      netErr.status = 0;
+      throw netErr;
     }
     throw err;
   }

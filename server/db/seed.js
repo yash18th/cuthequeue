@@ -25,7 +25,7 @@ async function seed(options = {}) {
   const passwordHash = await bcrypt.hash('password123', 10);
 
   // 2. Idempotent User Upserter
-  const getUserStmt = db.prepare('SELECT id, email, role, password_hash FROM users WHERE email = ?');
+  const getUserStmt = db.prepare('SELECT id, email, role, password_hash FROM users WHERE LOWER(TRIM(email)) = ?');
   const updatePasswordOnlyStmt = db.prepare('UPDATE users SET password_hash = ?, is_suspended = 0 WHERE id = ?');
   const insertUserStmt = db.prepare(`
     INSERT INTO users (name, email, phone, password_hash, role, avatar, notification_preferences, is_suspended)

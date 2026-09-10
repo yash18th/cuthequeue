@@ -25,6 +25,7 @@ export default function AuthPage({ setActivePage, initialMode = 'login' }) {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [errorCode, setErrorCode] = useState('');
 
   const redirectUser = () => {
     if (redirectParam && redirectParam.startsWith('/')) {
@@ -38,6 +39,7 @@ export default function AuthPage({ setActivePage, initialMode = 'login' }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setErrorCode('');
     setLoading(true);
 
     const emailToSubmit = typeof formData.email === 'string' ? formData.email.trim().toLowerCase() : '';
@@ -45,6 +47,7 @@ export default function AuthPage({ setActivePage, initialMode = 'login' }) {
 
     if (!emailToSubmit || !passwordToSubmit) {
       setError('Please provide both email address and password.');
+      setErrorCode('VALIDATION_ERROR');
       setLoading(false);
       return;
     }
@@ -70,7 +73,22 @@ export default function AuthPage({ setActivePage, initialMode = 'login' }) {
         redirectUser();
       }
     } catch (err) {
-      setError(err.message || 'Authentication failed. Please check your credentials.');
+      const code = err.code || err.data?.code || (err.status === 409 ? 'ACCOUNT_EXISTS' : err.status >= 500 ? 'SERVER_ERROR' : '');
+      setErrorCode(code);
+
+      if (code === 'INVALID_PASSWORD') {
+        setError('Incorrect password. Please try again.');
+      } else if (code === 'ACCOUNT_NOT_FOUND') {
+        setError('No account exists with this email. You can create an account below.');
+      } else if (code === 'NETWORK_ERROR') {
+        setError('Unable to connect to the server. Please check your internet connection.');
+      } else if (code === 'SERVER_ERROR') {
+        setError('Something went wrong on the server. Please try again.');
+      } else if (code === 'ACCOUNT_EXISTS') {
+        setError('An account with this email already exists. Please sign in.');
+      } else {
+        setError(err.message || 'Authentication failed. Please check your credentials.');
+      }
     } finally {
       setLoading(false);
     }
@@ -150,11 +168,12 @@ export default function AuthPage({ setActivePage, initialMode = 'login' }) {
               gap: '6px'
             }}>
               <div>{error}</div>
-              {isLogin && (
+              {isLogin && errorCode === 'ACCOUNT_NOT_FOUND' && (
                 <button
                   type="button"
                   onClick={() => {
                     setError('');
+                    setErrorCode('');
                     setIsLogin(false);
                   }}
                   style={{
@@ -270,7 +289,7 @@ export default function AuthPage({ setActivePage, initialMode = 'login' }) {
                     {isLogin && (
                       <button
                         type="button"
-                        onClick={() => { setIsForgotPassword(true); setError(''); }}
+                        onClick={() => { setIsForgotPassword(true); setError(''); setErrorCode(''); }}
                         style={{ fontSize: '0.78rem', color: 'var(--primary)', fontWeight: 600 }}
                       >
                         Forgot password?
@@ -333,7 +352,7 @@ export default function AuthPage({ setActivePage, initialMode = 'login' }) {
                   <button
                     type="button"
                     style={{ color: '#123C32', fontWeight: 600, background: 'none', border: 'none', cursor: 'pointer' }}
-                    onClick={() => { setIsForgotPassword(false); setIsLogin(true); }}
+                    onClick={() => { setIsForgotPassword(false); setIsLogin(true); setError(''); setErrorCode(''); }}
                   >
                     Back to Sign In
                   </button>
@@ -343,7 +362,7 @@ export default function AuthPage({ setActivePage, initialMode = 'login' }) {
                     <button
                       type="button"
                       style={{ color: '#641F27', fontWeight: 700, background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}
-                      onClick={() => { setIsLogin(!isLogin); setError(''); }}
+                      onClick={() => { setIsLogin(!isLogin); setError(''); setErrorCode(''); }}
                     >
                       {isLogin ? 'Sign Up' : 'Sign In'}
                     </button>

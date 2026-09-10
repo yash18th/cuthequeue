@@ -202,9 +202,17 @@ function initDatabase() {
     db.exec('ALTER TABLE restaurants ADD COLUMN queue_count INTEGER DEFAULT 6;');
   }
 
+  // Normalize any existing emails in the database for case-insensitive consistency
+  try {
+    db.exec(`UPDATE users SET email = LOWER(TRIM(email)) WHERE email != LOWER(TRIM(email)) OR email LIKE ' %' OR email LIKE '% ';`);
+  } catch (normErr) {
+    console.warn('[Database] Email normalization note:', normErr.message);
+  }
+
   // Create performance indexes if not exists
   db.exec(`
     CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+    CREATE INDEX IF NOT EXISTS idx_users_email_lower ON users(LOWER(TRIM(email)));
     CREATE INDEX IF NOT EXISTS idx_restaurants_brand_id ON restaurants(brand_id);
     CREATE INDEX IF NOT EXISTS idx_restaurants_owner_id ON restaurants(owner_id);
     CREATE INDEX IF NOT EXISTS idx_categories_restaurant ON categories(restaurant_id);
@@ -215,6 +223,7 @@ function initDatabase() {
     CREATE INDEX IF NOT EXISTS idx_showcases_active ON restaurant_showcases(is_active);
   `);
 
+  console.log(`[Database] Connected to SQLite database: ${dbPath}`);
   return { success: true, dbPath };
 }
 

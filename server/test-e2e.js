@@ -19,16 +19,19 @@ async function runAllTests() {
   console.log('0. Pre-Flight Health Check: ✅ PASS');
 
   // =========================================================================
-  // TEST 1: Customer registers
+  // TEST 1: Customer registers (with whitespace and mixed-casing email)
   // =========================================================================
-  const testEmail = `customer_${Date.now()}@bengaluru-test.com`;
+  const timestamp = Date.now();
+  const rawTestEmail = `  Customer_${timestamp}@Bengaluru-Heritage.COM  `;
+  const normalizedTestEmail = `customer_${timestamp}@bengaluru-heritage.com`;
   const testPassword = 'Password@123';
+
   const registerRes = await fetch(`${API}/auth/register`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       name: 'Aditi Rao',
-      email: testEmail,
+      email: rawTestEmail,
       phone: '+91 98765 88990',
       password: testPassword,
       role: 'customer'
@@ -38,25 +41,128 @@ async function runAllTests() {
   if (!registerRes.ok || !regData.token) {
     throw new Error(`TEST 1 Failed: ${JSON.stringify(regData)}`);
   }
-  console.log(`TEST 1: Customer registers: ✅ PASS (Created user #${regData.user.id}: ${regData.user.email})`);
+  if (regData.user.email !== normalizedTestEmail) {
+    throw new Error(`TEST 1 Failed: Email was not normalized. Expected "${normalizedTestEmail}", got "${regData.user.email}"`);
+  }
+  console.log(`TEST 1: Customer registers: ✅ PASS (User #${regData.user.id} normalized as: ${regData.user.email})`);
 
   // =========================================================================
-  // TEST 2: Customer logs in
+  // TEST 2A: Customer logs in immediately with exact registered string
   // =========================================================================
   const loginRes = await fetch(`${API}/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      email: testEmail,
+      email: rawTestEmail,
       password: testPassword
     })
   });
   const loginData = await loginRes.json();
   if (!loginRes.ok || !loginData.token) {
-    throw new Error(`TEST 2 Failed: ${JSON.stringify(loginData)}`);
+    throw new Error(`TEST 2A Failed: ${JSON.stringify(loginData)}`);
   }
   const customerToken = loginData.token;
-  console.log(`TEST 2: Customer logs in: ✅ PASS (JWT generated for ${loginData.user.name})`);
+  console.log(`TEST 2A: Customer logs in immediately: ✅ PASS (JWT generated for ${loginData.user.name})`);
+
+  // =========================================================================
+  // TEST 2B: Customer logs in with lowercase normalized email
+  // =========================================================================
+  const loginLowerRes = await fetch(`${API}/auth/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      email: normalizedTestEmail,
+      password: testPassword
+    })
+  });
+  const loginLowerData = await loginLowerRes.json();
+  if (!loginLowerRes.ok || !loginLowerData.token) {
+    throw new Error(`TEST 2B Failed (Lowercase login): ${JSON.stringify(loginLowerData)}`);
+  }
+  console.log(`TEST 2B: Case-insensitive login (lowercase): ✅ PASS (Resolved user #${loginLowerData.user.id})`);
+
+  // =========================================================================
+  // TEST 2C: Customer logs in with all-caps email
+  // =========================================================================
+  const loginUpperRes = await fetch(`${API}/auth/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      email: normalizedTestEmail.toUpperCase(),
+      password: testPassword
+    })
+  });
+  const loginUpperData = await loginUpperRes.json();
+  if (!loginUpperRes.ok || !loginUpperData.token) {
+    throw new Error(`TEST 2C Failed (Uppercase login): ${JSON.stringify(loginUpperData)}`);
+  }
+  console.log(`TEST 2C: Case-insensitive login (all-caps): ✅ PASS (Resolved user #${loginUpperData.user.id})`);
+
+  // =========================================================================
+  // TEST 2D: Customer enters wrong password -> 401 INVALID_PASSWORD (NOT account not found!)
+  // =========================================================================
+  const wrongPassRes = await fetch(`${API}/auth/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      email: normalizedTestEmail,
+      password: 'DefinitivelyWrongPassword123!'
+    })
+  });
+  const wrongPassData = await wrongPassRes.json();
+  if (wrongPassRes.status !== 401 || wrongPassData.code !== 'INVALID_PASSWORD') {
+    throw new Error(`TEST 2D Failed: Expected status 401 with code INVALID_PASSWORD, got ${wrongPassRes.status}: ${JSON.stringify(wrongPassData)}`);
+  }
+  console.log(`TEST 2D: Wrong password rejected: ✅ PASS (Returned 401 with code INVALID_PASSWORD, did NOT report account missing)`);
+
+  // =========================================================================
+  // TEST 2E: Duplicate registration attempt -> 409 ACCOUNT_EXISTS
+  // =========================================================================
+  const dupRes = await fetch(`${API}/auth/register`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      name: 'Aditi Rao Imposter',
+      email: normalizedTestEmail.toUpperCase(), // Test case insensitivity on duplicate check
+      phone: '+91 99999 11111',
+      password: 'AnotherPassword@123',
+      role: 'customer'
+    })
+  });
+  const dupData = await dupRes.json();
+  if (dupRes.status !== 409 || dupData.code !== 'ACCOUNT_EXISTS') {
+    throw new Error(`TEST 2E Failed: Expected status 409 with code ACCOUNT_EXISTS, got ${dupRes.status}: ${JSON.stringify(dupData)}`);
+  }
+  console.log(`TEST 2E: Duplicate account registration rejected: ✅ PASS (Returned 409 with code ACCOUNT_EXISTS)`);
+
+  // =========================================================================
+  // TEST 2F: Unknown email login attempt -> 401 ACCOUNT_NOT_FOUND
+  // =========================================================================
+  const unknownEmailRes = await fetch(`${API}/auth/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      email: `non_existent_${timestamp}@unknown-domain.org`,
+      password: 'SomePassword123'
+    })
+  });
+  const unknownEmailData = await unknownEmailRes.json();
+  if (unknownEmailRes.status !== 401 || unknownEmailData.code !== 'ACCOUNT_NOT_FOUND') {
+    throw new Error(`TEST 2F Failed: Expected status 401 with code ACCOUNT_NOT_FOUND, got ${unknownEmailRes.status}: ${JSON.stringify(unknownEmailData)}`);
+  }
+  console.log(`TEST 2F: Unknown email returns ACCOUNT_NOT_FOUND: ✅ PASS (Returned 401 with code ACCOUNT_NOT_FOUND)`);
+
+  // =========================================================================
+  // TEST 2G: Token restoration via /api/auth/me
+  // =========================================================================
+  const meRes = await fetch(`${API}/auth/me`, {
+    headers: { 'Authorization': `Bearer ${customerToken}` }
+  });
+  const meData = await meRes.json();
+  if (!meRes.ok || !meData.user || meData.user.email !== normalizedTestEmail) {
+    throw new Error(`TEST 2G Failed (Session restore): ${JSON.stringify(meData)}`);
+  }
+  console.log(`TEST 2G: Token restoration via /api/auth/me: ✅ PASS (Retrieved profile for ${meData.user.name})`);
 
   // =========================================================================
   // TEST 3: Customer selects restaurant
