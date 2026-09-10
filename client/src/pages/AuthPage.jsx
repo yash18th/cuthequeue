@@ -40,6 +40,15 @@ export default function AuthPage({ setActivePage, initialMode = 'login' }) {
     setError('');
     setLoading(true);
 
+    const emailToSubmit = typeof formData.email === 'string' ? formData.email.trim().toLowerCase() : '';
+    const passwordToSubmit = typeof formData.password === 'string' ? formData.password.trim() : '';
+
+    if (!emailToSubmit || !passwordToSubmit) {
+      setError('Please provide both email address and password.');
+      setLoading(false);
+      return;
+    }
+
     try {
       if (isForgotPassword) {
         setResetSent(true);
@@ -48,10 +57,16 @@ export default function AuthPage({ setActivePage, initialMode = 'login' }) {
       }
 
       if (isLogin) {
-        await login(formData.email, formData.password);
+        await login(emailToSubmit, passwordToSubmit);
         redirectUser();
       } else {
-        await register(formData);
+        await register({
+          ...formData,
+          name: typeof formData.name === 'string' ? formData.name.trim() : '',
+          email: emailToSubmit,
+          password: passwordToSubmit,
+          phone: typeof formData.phone === 'string' ? formData.phone.trim() : ''
+        });
         redirectUser();
       }
     } catch (err) {

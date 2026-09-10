@@ -1,13 +1,11 @@
 // Centralized API client with JWT authentication and friendly error messaging
 
 export const getBaseUrl = () => {
-  if (import.meta.env.VITE_API_URL) {
-    return import.meta.env.VITE_API_URL.replace(/\/+$/, '');
+  let url = import.meta.env.VITE_API_URL;
+  if (!url) {
+    url = import.meta.env.PROD ? 'https://cuthequeue-api.onrender.com' : 'http://localhost:5001';
   }
-  if (import.meta.env.PROD) {
-    return 'https://cuthequeue-api.onrender.com';
-  }
-  return 'http://localhost:5001';
+  return url.replace(/\/+$/, '').replace(/\/api$/, '');
 };
 
 export const API_BASE = `${getBaseUrl()}/api`;
