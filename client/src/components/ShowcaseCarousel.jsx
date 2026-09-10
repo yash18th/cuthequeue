@@ -206,13 +206,13 @@ export default function ShowcaseCarousel({ setActivePage }) {
         >
           {/* ====================================================
               TOP: HERO FOOD PHOTOGRAPHY (UNOBSTRUCTED)
-              Occupies 65% of showcase height. The food is the HERO.
+              Responsive height ensures the entire card fits cleanly.
               ==================================================== */}
           <div
             style={{
               position: 'relative',
               width: '100%',
-              height: '380px',
+              height: 'clamp(230px, 34vw, 310px)',
               overflow: 'hidden',
               background: '#0B352D'
             }}
@@ -254,7 +254,7 @@ export default function ShowcaseCarousel({ setActivePage }) {
               );
             })}
 
-            {/* Subtle Vignette Overlay for Depth (Does not obscure food) */}
+            {/* Subtle Vignette Overlay */}
             <div
               style={{
                 position: 'absolute',
@@ -266,21 +266,21 @@ export default function ShowcaseCarousel({ setActivePage }) {
             />
 
             {/* Refined Heritage Badge in Upper-Left */}
-            <div style={{ position: 'absolute', top: '14px', left: '14px', zIndex: 3 }}>
+            <div style={{ position: 'absolute', top: '12px', left: '12px', zIndex: 3 }}>
               <span
                 style={{
                   background: 'rgba(11, 53, 45, 0.92)',
                   color: '#C49A52',
-                  padding: '5px 12px',
+                  padding: '4px 10px',
                   borderRadius: '4px',
                   border: '1px solid rgba(196, 154, 82, 0.55)',
-                  fontSize: '0.7rem',
+                  fontSize: '0.68rem',
                   fontWeight: 700,
                   fontFamily: 'var(--font-serif, "Playfair Display", Georgia, serif)',
                   letterSpacing: '0.08em',
                   display: 'inline-flex',
                   alignItems: 'center',
-                  gap: '5px',
+                  gap: '4px',
                   boxShadow: '0 4px 12px rgba(0, 0, 0, 0.4)',
                   backdropFilter: 'blur(4px)'
                 }}
@@ -294,14 +294,14 @@ export default function ShowcaseCarousel({ setActivePage }) {
               <div
                 style={{
                   position: 'absolute',
-                  bottom: '12px',
-                  right: '14px',
+                  bottom: '10px',
+                  right: '12px',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '6px',
+                  gap: '5px',
                   zIndex: 3,
-                  background: 'rgba(11, 53, 45, 0.7)',
-                  padding: '4px 8px',
+                  background: 'rgba(11, 53, 45, 0.75)',
+                  padding: '3px 8px',
                   borderRadius: '12px',
                   backdropFilter: 'blur(4px)',
                   border: '1px solid rgba(196, 154, 82, 0.3)'
@@ -314,14 +314,14 @@ export default function ShowcaseCarousel({ setActivePage }) {
                     onClick={(e) => { e.stopPropagation(); goToSlide(idx); }}
                     aria-label={`Go to slide ${idx + 1}`}
                     style={{
-                      width: idx === currentIndex ? '20px' : '6px',
+                      width: idx === currentIndex ? '18px' : '5px',
                       height: '5px',
                       borderRadius: '3px',
                       background: idx === currentIndex ? '#C49A52' : 'rgba(247, 240, 226, 0.4)',
                       border: 'none',
                       cursor: 'pointer',
                       padding: 0,
-                      transition: 'all 0.4s ease'
+                      transition: 'all 0.3s ease'
                     }}
                   />
                 ))}
@@ -330,81 +330,128 @@ export default function ShowcaseCarousel({ setActivePage }) {
           </div>
 
           {/* ====================================================
-              BOTTOM: DEDICATED RESTAURANT INFORMATION PANEL
-              Clean stacked composition underneath the hero image.
-              NO overlapping on the food photograph.
-              ==================================================== */}
-          {/* ====================================================
-              BOTTOM: CLEAN FOOD NAME & VIEW MENU BAR
-              No addresses, no live status, no orders ahead clutter.
+              BOTTOM: DEDICATED RESTAURANT & FOOD DETAILS PANEL
+              Fully visible, beautiful hierarchy, zero truncation.
               ==================================================== */}
           <div
             style={{
               background: '#F7F0E2',
               borderTop: '2px solid #C49A52',
-              padding: '1.1rem 1.4rem',
+              padding: '1.15rem 1.4rem',
               cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              gap: '16px',
               position: 'relative',
               zIndex: 3,
               transition: 'background 0.2s ease'
             }}
             onClick={handleNavigateToRestaurant}
           >
-            <div style={{ minWidth: 0, flex: 1 }}>
-              <div
-                style={{
-                  fontSize: '1.22rem',
-                  fontWeight: 800,
-                  color: '#191714',
-                  fontFamily: 'var(--font-serif, "Playfair Display", Georgia, serif)',
-                  lineHeight: 1.25,
-                  whiteSpace: 'nowrap',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  letterSpacing: '0.02em'
-                }}
-                title={current.featured_dish || current.promo_title}
-              >
-                {current.featured_dish || current.promo_title}
-              </div>
-            </div>
-
-            <button
-              type="button"
-              onClick={handleNavigateToRestaurant}
+            {/* Restaurant Brand Eyebrow */}
+            <div
               style={{
-                background: 'linear-gradient(135deg, #123F35 0%, #0B352D 100%)',
-                border: '1.5px solid #C49A52',
-                color: '#F8F1DF',
-                padding: '8px 18px',
-                borderRadius: '6px',
-                fontSize: '0.78rem',
-                fontWeight: 800,
-                letterSpacing: '0.06em',
-                cursor: 'pointer',
-                display: 'inline-flex',
+                display: 'flex',
                 alignItems: 'center',
-                gap: '6px',
-                flexShrink: 0,
-                boxShadow: '0 4px 12px rgba(11, 53, 45, 0.25)',
-                transition: 'all 0.2s ease'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.borderColor = '#E2B873';
-                e.currentTarget.style.transform = 'translateY(-1px)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = '#C49A52';
-                e.currentTarget.style.transform = 'translateY(0)';
+                justifyContent: 'space-between',
+                marginBottom: '4px'
               }}
             >
-              <span>VIEW MENU</span>
-              <ArrowRight size={14} style={{ color: '#C49A52' }} />
-            </button>
+              <span
+                style={{
+                  fontSize: '0.75rem',
+                  fontWeight: 800,
+                  color: '#A98242',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.08em'
+                }}
+              >
+                {current.restaurant_name}
+              </span>
+              {current.prep_time_minutes && (
+                <span style={{ fontSize: '0.74rem', fontWeight: 700, color: '#123F35' }}>
+                  ~{current.prep_time_minutes} MINS
+                </span>
+              )}
+            </div>
+
+            {/* Food Dish Name - Fully Visible, Wraps Gracefully (Never Truncated) */}
+            <div
+              style={{
+                fontSize: 'clamp(1.15rem, 2.2vw, 1.35rem)',
+                fontWeight: 800,
+                color: '#191714',
+                fontFamily: 'var(--font-serif, "Playfair Display", Georgia, serif)',
+                lineHeight: 1.28,
+                marginBottom: current.description ? '5px' : '10px',
+                whiteSpace: 'normal',
+                wordBreak: 'break-word'
+              }}
+            >
+              {current.featured_dish || current.promo_title}
+            </div>
+
+            {/* Editorial Description / Flavor Notes */}
+            {current.description && (
+              <div
+                style={{
+                  fontSize: '0.82rem',
+                  color: '#57534E',
+                  lineHeight: 1.45,
+                  marginBottom: '10px',
+                  whiteSpace: 'normal',
+                  wordBreak: 'break-word'
+                }}
+              >
+                {current.description}
+              </div>
+            )}
+
+            {/* Bottom Action Row */}
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                paddingTop: '8px',
+                borderTop: '1px solid #E9DDC7',
+                gap: '12px'
+              }}
+            >
+              <span style={{ fontSize: '0.74rem', color: '#8C827A', fontStyle: 'italic' }}>
+                Prepared fresh for your pickup
+              </span>
+
+              <button
+                type="button"
+                onClick={handleNavigateToRestaurant}
+                style={{
+                  background: 'linear-gradient(135deg, #123F35 0%, #0B352D 100%)',
+                  border: '1.5px solid #C49A52',
+                  color: '#F8F1DF',
+                  padding: '7px 16px',
+                  borderRadius: '6px',
+                  fontSize: '0.78rem',
+                  fontWeight: 800,
+                  letterSpacing: '0.06em',
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  flexShrink: 0,
+                  boxShadow: '0 4px 12px rgba(11, 53, 45, 0.25)',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = '#E2B873';
+                  e.currentTarget.style.transform = 'translateY(-1px)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = '#C49A52';
+                  e.currentTarget.style.transform = 'translateY(0)';
+                }}
+              >
+                <span>VIEW MENU</span>
+                <ArrowRight size={14} style={{ color: '#C49A52' }} />
+              </button>
+            </div>
           </div>
         </div>
       </div>
