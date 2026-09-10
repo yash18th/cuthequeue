@@ -114,7 +114,7 @@ export default function ShowcaseCarousel({ setActivePage }) {
     window.matchMedia &&
     window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  // Auto-slideshow timer: fast, snappy rotation (2.8 seconds)
+  // Auto-slideshow timer: fast, lively rotation (1.6 seconds)
   useEffect(() => {
     if (prefersReducedMotion || isPaused || showcases.length <= 1) {
       if (autoPlayRef.current) clearInterval(autoPlayRef.current);
@@ -123,7 +123,7 @@ export default function ShowcaseCarousel({ setActivePage }) {
 
     autoPlayRef.current = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % showcases.length);
-    }, 2800);
+    }, 1600);
 
     return () => {
       if (autoPlayRef.current) clearInterval(autoPlayRef.current);
@@ -187,8 +187,6 @@ export default function ShowcaseCarousel({ setActivePage }) {
   return (
     <div
       style={{ position: 'relative', userSelect: 'none', width: '100%' }}
-      onMouseEnter={() => setIsPaused(true)}
-      onMouseLeave={() => setIsPaused(false)}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
@@ -226,11 +224,11 @@ export default function ShowcaseCarousel({ setActivePage }) {
                     position: 'absolute',
                     inset: 0,
                     opacity: isActive ? 1 : 0,
-                    transform: isActive ? 'translateX(0)' : 'translateX(12px)',
+                    transform: isActive ? 'translateX(0)' : 'translateX(10px)',
                     visibility: isActive ? 'visible' : 'hidden',
                     transition: prefersReducedMotion
                       ? 'none'
-                      : 'opacity 0.45s ease-in-out, transform 0.45s ease-in-out',
+                      : 'opacity 0.3s ease-in-out, transform 0.3s ease-in-out',
                     zIndex: isActive ? 1 : 0
                   }}
                 >
