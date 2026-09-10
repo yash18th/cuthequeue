@@ -369,66 +369,71 @@ export default function AdminShowcasePage() {
           </p>
 
           {previewItem ? (
-            <div className="heritage-ornamental-frame" style={{ maxWidth: '480px', margin: '0 auto' }}>
+            <div className="heritage-ornamental-frame" style={{ maxWidth: '480px', margin: '0 auto', padding: 0, borderRadius: '10px', overflow: 'hidden' }}>
               <div
                 style={{
-                  position: 'relative',
+                  display: 'flex',
+                  flexDirection: 'column',
                   borderRadius: '8px',
                   overflow: 'hidden',
-                  height: '380px',
-                  background: '#0B352D'
+                  background: '#0B352D',
+                  boxShadow: '0 12px 28px rgba(11, 53, 45, 0.2)'
                 }}
               >
-                <img
-                  src={previewItem.hero_image}
-                  alt={previewItem.featured_dish}
-                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                />
-
-                {/* Dark Gradient Overlay */}
+                {/* Hero Food Photography (Unobstructed) */}
                 <div
                   style={{
-                    position: 'absolute',
-                    inset: 0,
-                    background: 'linear-gradient(180deg, rgba(11, 53, 45, 0.2) 0%, rgba(11, 53, 45, 0.4) 40%, rgba(11, 53, 45, 0.92) 100%)'
+                    position: 'relative',
+                    width: '100%',
+                    height: '240px',
+                    overflow: 'hidden',
+                    background: '#0B352D'
                   }}
-                />
+                >
+                  <img
+                    src={previewItem.hero_image}
+                    alt={previewItem.featured_dish}
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                  />
 
-                {/* Badge */}
-                <div style={{ position: 'absolute', top: '14px', left: '14px', zIndex: 2 }}>
-                  <span
+                  {/* Dark Vignette Overlay */}
+                  <div
                     style={{
-                      background: 'rgba(11, 53, 45, 0.92)',
-                      color: '#C49A52',
-                      padding: '5px 12px',
-                      borderRadius: '4px',
-                      border: '1px solid rgba(196, 154, 82, 0.5)',
-                      fontSize: '0.72rem',
-                      fontWeight: 700,
-                      letterSpacing: '0.08em',
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '4px',
-                      boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
+                      position: 'absolute',
+                      inset: 0,
+                      background: 'linear-gradient(180deg, rgba(11, 53, 45, 0.25) 0%, rgba(11, 53, 45, 0.04) 50%, rgba(11, 53, 45, 0.3) 100%)'
                     }}
-                  >
-                    {previewItem.badge || '✦ BENGALURU DINING HERITAGE'}
-                  </span>
+                  />
+
+                  {/* Refined Heritage Badge */}
+                  <div style={{ position: 'absolute', top: '12px', left: '12px', zIndex: 2 }}>
+                    <span
+                      style={{
+                        background: 'rgba(11, 53, 45, 0.92)',
+                        color: '#C49A52',
+                        padding: '4px 10px',
+                        borderRadius: '4px',
+                        border: '1px solid rgba(196, 154, 82, 0.55)',
+                        fontSize: '0.68rem',
+                        fontWeight: 700,
+                        letterSpacing: '0.08em',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
+                      }}
+                    >
+                      {previewItem.badge || '✦ BENGALURU DINING HERITAGE'}
+                    </span>
+                  </div>
                 </div>
 
-                {/* Bottom Card */}
+                {/* Dedicated Information Panel Underneath */}
                 <div
                   style={{
-                    position: 'absolute',
-                    bottom: '12px',
-                    left: '12px',
-                    right: '12px',
                     background: '#F7F0E2',
-                    borderRadius: '8px',
-                    padding: '1rem',
-                    border: '1.5px solid #C49A52',
-                    boxShadow: '0 10px 24px rgba(0, 0, 0, 0.35)',
-                    zIndex: 3
+                    borderTop: '2px solid #C49A52',
+                    padding: '1.1rem 1.25rem'
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
@@ -445,33 +450,48 @@ export default function AdminShowcasePage() {
                       <div style={{ fontSize: '0.62rem', color: '#A98242', fontWeight: 700 }}>
                         EST. PREPARATION
                       </div>
-                      <span style={{ fontSize: '0.82rem', fontWeight: 800, color: '#123F35' }}>
+                      <span style={{ fontSize: '0.84rem', fontWeight: 800, color: '#123F35' }}>
                         ~{previewItem.prep_time_minutes || 12} MIN
                       </span>
                     </div>
                   </div>
 
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}>
-                    <div style={{ minWidth: 0, flex: 1 }}>
-                      <div style={{ fontSize: '0.92rem', fontWeight: 800, color: '#191714', fontFamily: 'var(--font-serif)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                        {previewItem.featured_dish}
-                      </div>
-                      <div style={{ fontSize: '0.72rem', color: '#57534E', marginTop: '1px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                        {previewItem.queue_text || `${previewItem.live_queue_count || 8} orders ahead in kitchen • Prepared fresh`}
-                      </div>
+                  <div style={{ marginBottom: '10px' }}>
+                    <div style={{ fontSize: '1rem', fontWeight: 800, color: '#191714', fontFamily: 'var(--font-serif)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {previewItem.featured_dish}
                     </div>
+                    <div style={{ fontSize: '0.74rem', color: '#57534E', marginTop: '2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {previewItem.queue_text || `${previewItem.live_queue_count || 8} orders ahead in kitchen • Prepared fresh`}
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '8px', borderTop: '1px solid #E9DDC7' }}>
                     <div
                       style={{
                         background: '#0B352D',
                         border: '1px solid #C49A52',
                         color: '#C49A52',
-                        padding: '4px 8px',
+                        padding: '3px 8px',
                         borderRadius: '4px',
                         fontSize: '0.72rem',
                         fontWeight: 800
                       }}
                     >
                       {previewItem.pass_code || 'PASS CQ102'}
+                    </div>
+
+                    <div
+                      style={{
+                        background: 'linear-gradient(135deg, #123F35 0%, #0B352D 100%)',
+                        border: '1px solid #C49A52',
+                        color: '#F8F1DF',
+                        padding: '5px 12px',
+                        borderRadius: '4px',
+                        fontSize: '0.72rem',
+                        fontWeight: 700
+                      }}
+                    >
+                      VIEW MENU
                     </div>
                   </div>
                 </div>
