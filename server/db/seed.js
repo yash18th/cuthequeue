@@ -25,27 +25,47 @@ async function seed(options = {}) {
   const passwordHash = await bcrypt.hash('password123', 10);
 
   // 2. Idempotent User Upserter
-  const getUserStmt = db.prepare('SELECT id, email, role FROM users WHERE email = ?');
+  const getUserStmt = db.prepare('SELECT id, email, role, password_hash FROM users WHERE email = ?');
+  const updatePasswordOnlyStmt = db.prepare('UPDATE users SET password_hash = ?, is_suspended = 0 WHERE id = ?');
   const insertUserStmt = db.prepare(`
     INSERT INTO users (name, email, phone, password_hash, role, avatar, notification_preferences, is_suspended)
     VALUES (?, ?, ?, ?, ?, ?, ?, 0)
   `);
   const updateUserStmt = db.prepare(`
-    UPDATE users SET name = ?, phone = ?, password_hash = ?, role = ?, is_suspended = 0 WHERE id = ?
+    UPDATE users SET name = ?, phone = ?, role = ?, is_suspended = 0 WHERE id = ?
   `);
 
-  function upsertUser(name, email, phone, role, avatar) {
+  async function upsertUser(name, email, phone, role, avatar, expectedPassword = 'password123') {
     const cleanEmail = email.toLowerCase().trim();
     const existing = getUserStmt.get(cleanEmail);
     if (existing) {
-      updateUserStmt.run(name, phone, passwordHash, role, existing.id);
+      // Safely verify if existing password hash already matches expectedPassword
+      let isValidPassword = false;
+      try {
+        if (existing.password_hash) {
+          isValidPassword = await bcrypt.compare(expectedPassword, existing.password_hash);
+        }
+      } catch (err) {
+        isValidPassword = false;
+      }
+
+      // If existing demo account has a mismatched or invalid hash, update ONLY the password hash
+      if (!isValidPassword) {
+        const freshHash = await bcrypt.hash(expectedPassword, 10);
+        updatePasswordOnlyStmt.run(freshHash, existing.id);
+        console.log(`[Seed] Safely updated password hash for demo account: ${cleanEmail}`);
+      }
+
+      // Keep user profile up to date without modifying other tables or deleting user
+      updateUserStmt.run(name, phone, role, existing.id);
       return existing.id;
     } else {
+      const freshHash = await bcrypt.hash(expectedPassword, 10);
       const res = insertUserStmt.run(
         name,
         cleanEmail,
         phone,
-        passwordHash,
+        freshHash,
         role,
         avatar,
         JSON.stringify({ push: true, sound: true, vibration: true })
@@ -54,52 +74,58 @@ async function seed(options = {}) {
     }
   }
 
-  const superAdminId = upsertUser(
+  const superAdminId = await upsertUser(
     'System Administrator',
     'admin@cutthequeue.com',
     '+91 99999 00000',
     'super_admin',
-    'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150'
+    'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
+    'password123'
   );
 
-  const rameshwaramAdminId = upsertUser(
+  const rameshwaramAdminId = await upsertUser(
     'Rohan Sharma (The Rameshwaram Cafe)',
     'campus@demo.com',
     '+91 98765 11111',
     'restaurant_admin',
-    'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150'
+    'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
+    'password123'
   );
 
-  const empireAdminId = upsertUser(
+  const empireAdminId = await upsertUser(
     'Farhan Khan (Empire Restaurant)',
     'spice@demo.com',
     '+91 98765 22222',
     'restaurant_admin',
-    'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150'
+    'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150',
+    'password123'
   );
 
-  const meghanaAdminId = upsertUser(
+  const meghanaAdminId = await upsertUser(
     'Arjun Rao (Meghana Foods)',
     'meghana@demo.com',
     '+91 98765 33333',
     'restaurant_admin',
-    'https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=150'
+    'https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=150',
+    'password123'
   );
 
-  const customerUserId = upsertUser(
+  const customerUserId = await upsertUser(
     'Alex Morgan',
     'customer@demo.com',
     '+91 98765 43210',
     'customer',
-    'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150'
+    'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150',
+    'password123'
   );
 
-  upsertUser(
+  await upsertUser(
     'Yashvanth Nayak',
     'yashvanthnayak1104@gmail.com',
     '+91 98765 00001',
     'customer',
-    'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150'
+    'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150',
+    'password123'
   );
 
   // 3. Idempotent Brand Upserter
