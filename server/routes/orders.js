@@ -18,9 +18,17 @@ function generateQRToken(orderNumber) {
   return `CQ_QR_${cleanNum}_${randomSuffix}`;
 }
 
-// Create new order (Customer)
-router.post('/', authenticate, requireRole('customer'), (req, res) => {
+// Create new order (Authenticated Customer or User)
+router.post('/', authenticate, (req, res) => {
   try {
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({
+        error: 'Please sign in to place your order.',
+        message: 'Please sign in to place your order.',
+        code: 'UNAUTHORIZED'
+      });
+    }
+
     const {
       restaurant_id,
       items,
@@ -30,11 +38,7 @@ router.post('/', authenticate, requireRole('customer'), (req, res) => {
       notes = ''
     } = req.body;
 
-    if (!restaurant_id || !items || !Array.isArray(items) || items.length === 0) {
-      return res.status(400).json({ error: 'Restaurant and items are required.' });
-    }
-
-    const targetBranchId = req.body.branch_id || req.body.restaurant_id;
+    const targetBranchId = req.body.branch_id || restaurant_id;
     if (!targetBranchId || !items || !Array.isArray(items) || items.length === 0) {
       return res.status(400).json({ error: 'Restaurant/branch and items are required.' });
     }
@@ -42,6 +46,10 @@ router.post('/', authenticate, requireRole('customer'), (req, res) => {
     const restaurant = db.prepare('SELECT * FROM restaurants WHERE id = ?').get(targetBranchId);
     if (!restaurant) {
       return res.status(404).json({ error: 'Restaurant branch not found.' });
+    }
+
+    if (restaurant.is_suspended) {
+      return res.status(400).json({ error: 'Sorry, this restaurant branch is currently suspended.' });
     }
 
     if (!restaurant.is_open && pickup_type === 'asap') {

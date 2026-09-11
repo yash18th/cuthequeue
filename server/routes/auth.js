@@ -31,9 +31,9 @@ router.post('/register', async (req, res) => {
     if (existing) {
       console.log(`[AUTH REGISTER] email=${cleanEmail} database=${dbPath} existingUser=true`);
       return res.status(409).json({
-        error: 'An account with this email already exists.',
-        message: 'An account with this email already exists.',
-        code: 'ACCOUNT_EXISTS'
+        error: 'This email is already registered. Please sign in.',
+        message: 'This email is already registered. Please sign in.',
+        code: 'EMAIL_ALREADY_REGISTERED'
       });
     }
 
@@ -109,8 +109,8 @@ router.post('/login', async (req, res) => {
 
     if (!user) {
       return res.status(401).json({
-        error: 'No account exists with this email. You can create an account below.',
-        message: 'No account exists with this email. You can create an account below.',
+        error: 'No account found with this email.',
+        message: 'No account found with this email.',
         code: 'ACCOUNT_NOT_FOUND'
       });
     }
@@ -234,7 +234,11 @@ router.post('/login', async (req, res) => {
     });
   } catch (err) {
     console.error('Login error:', err);
-    res.status(500).json({ error: 'Login failed. Please try again.' });
+    res.status(500).json({
+      error: 'Unable to sign in right now. Please try again.',
+      message: 'Unable to sign in right now. Please try again.',
+      code: 'SERVER_ERROR'
+    });
   }
 });
 

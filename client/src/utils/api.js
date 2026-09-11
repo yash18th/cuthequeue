@@ -30,7 +30,7 @@ export async function apiRequest(endpoint, options = {}) {
       const errorMsg = data.message || data.error || `Request failed with status ${response.status}`;
       const err = new Error(errorMsg);
       err.status = response.status;
-      err.code = data.code || (response.status === 409 ? 'ACCOUNT_EXISTS' : response.status === 401 ? 'UNAUTHORIZED' : response.status >= 500 ? 'SERVER_ERROR' : 'REQUEST_ERROR');
+      err.code = data.code || (response.status === 409 ? 'EMAIL_ALREADY_REGISTERED' : response.status === 401 ? 'UNAUTHORIZED' : response.status >= 500 ? 'SERVER_ERROR' : 'REQUEST_ERROR');
       err.data = data;
       throw err;
     }

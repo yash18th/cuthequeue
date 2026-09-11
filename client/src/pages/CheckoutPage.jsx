@@ -107,7 +107,19 @@ export default function CheckoutPage({ setActivePage, setTrackedOrderId }) {
       if (setActivePage) setActivePage('order-confirmation');
     } catch (err) {
       console.error('Place order error:', err);
-      setError(err.message || 'We couldn’t place your order. Please try again.');
+      if (err.status === 401 || err.code === 'UNAUTHORIZED') {
+        setError('Please sign in to place your order.');
+      } else if (err.status === 403) {
+        setError("You don't have permission to perform this action.");
+      } else if (err.status === 409) {
+        setError('An account with this email already exists.');
+      } else if (err.code === 'NETWORK_ERROR' || err.status === 0) {
+        setError('Unable to connect to the server. Please check your connection.');
+      } else if (err.status >= 500) {
+        setError('Something went wrong on the server. Please try again.');
+      } else {
+        setError(err.message || 'We couldn’t place your order. Please try again.');
+      }
     } finally {
       setSubmitting(false);
     }

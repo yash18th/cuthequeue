@@ -116,7 +116,7 @@ async function runAllTests() {
   console.log(`TEST 2D: Wrong password rejected: ✅ PASS (Returned 401 with code INVALID_PASSWORD, did NOT report account missing)`);
 
   // =========================================================================
-  // TEST 2E: Duplicate registration attempt -> 409 ACCOUNT_EXISTS
+  // TEST 2E: Duplicate registration attempt -> 409 EMAIL_ALREADY_REGISTERED
   // =========================================================================
   const dupRes = await fetch(`${API}/auth/register`, {
     method: 'POST',
@@ -130,10 +130,13 @@ async function runAllTests() {
     })
   });
   const dupData = await dupRes.json();
-  if (dupRes.status !== 409 || dupData.code !== 'ACCOUNT_EXISTS') {
-    throw new Error(`TEST 2E Failed: Expected status 409 with code ACCOUNT_EXISTS, got ${dupRes.status}: ${JSON.stringify(dupData)}`);
+  if (dupRes.status !== 409 || dupData.code !== 'EMAIL_ALREADY_REGISTERED') {
+    throw new Error(`TEST 2E Failed: Expected status 409 with code EMAIL_ALREADY_REGISTERED, got ${dupRes.status}: ${JSON.stringify(dupData)}`);
   }
-  console.log(`TEST 2E: Duplicate account registration rejected: ✅ PASS (Returned 409 with code ACCOUNT_EXISTS)`);
+  if (!dupData.message.includes('already registered')) {
+    throw new Error(`TEST 2E Failed: Expected friendly registered message, got: ${dupData.message}`);
+  }
+  console.log(`TEST 2E: Duplicate account registration rejected: ✅ PASS (Returned 409 with code EMAIL_ALREADY_REGISTERED: "${dupData.message}")`);
 
   // =========================================================================
   // TEST 2F: Unknown email login attempt -> 401 ACCOUNT_NOT_FOUND
@@ -233,6 +236,20 @@ async function runAllTests() {
     throw new Error(`TEST 5 Validation Failed: order_id: ${placedOrder.id}, status: ${placedOrder.status}`);
   }
   console.log(`TEST 5: Customer places order: ✅ PASS (Inserted into SQLite as Order #${placedOrder.id}, Number: ${placedOrder.order_number}, Status: ${placedOrder.status}, Total: ₹${placedOrder.total})`);
+
+  // Verify unauthenticated user CANNOT create order
+  const unauthOrderRes = await fetch(`${API}/orders`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      restaurant_id: targetRestaurantId,
+      items: cartPayloadItems
+    })
+  });
+  if (unauthOrderRes.status !== 401) {
+    throw new Error(`TEST 5B Failed: Unauthenticated order creation should be rejected with 401, got ${unauthOrderRes.status}`);
+  }
+  console.log(`TEST 5B: Unauthenticated order placement rejected: ✅ PASS (Returned 401 Unauthorized)`);
 
   // =========================================================================
   // TEST 6: Manager logs in -> GET orders returns newly created order

@@ -73,19 +73,19 @@ export default function AuthPage({ setActivePage, initialMode = 'login' }) {
         redirectUser();
       }
     } catch (err) {
-      const code = err.code || err.data?.code || (err.status === 409 ? 'ACCOUNT_EXISTS' : err.status >= 500 ? 'SERVER_ERROR' : '');
+      const code = err.code || err.data?.code || (err.status === 409 ? 'EMAIL_ALREADY_REGISTERED' : err.status >= 500 ? 'SERVER_ERROR' : '');
       setErrorCode(code);
 
-      if (code === 'INVALID_PASSWORD') {
+      if (code === 'EMAIL_ALREADY_REGISTERED' || code === 'ACCOUNT_EXISTS') {
+        setError('This email is already registered. Please sign in.');
+      } else if (code === 'INVALID_PASSWORD') {
         setError('Incorrect password. Please try again.');
       } else if (code === 'ACCOUNT_NOT_FOUND') {
-        setError('No account exists with this email. You can create an account below.');
+        setError('No account found with this email.');
       } else if (code === 'NETWORK_ERROR') {
         setError('Unable to connect to the server. Please check your internet connection.');
       } else if (code === 'SERVER_ERROR') {
         setError('Something went wrong on the server. Please try again.');
-      } else if (code === 'ACCOUNT_EXISTS') {
-        setError('An account with this email already exists. Please sign in.');
       } else {
         setError(err.message || 'Authentication failed. Please check your credentials.');
       }
@@ -167,7 +167,35 @@ export default function AuthPage({ setActivePage, initialMode = 'login' }) {
               flexDirection: 'column',
               gap: '6px'
             }}>
-              <div>{error}</div>
+              <div style={{ fontWeight: 600 }}>{error}</div>
+              {!isLogin && (errorCode === 'EMAIL_ALREADY_REGISTERED' || errorCode === 'ACCOUNT_EXISTS') && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setError('');
+                    setErrorCode('');
+                    setIsLogin(true);
+                  }}
+                  style={{
+                    background: '#0B352D',
+                    color: '#F8F1DF',
+                    border: '1.5px solid #C49A52',
+                    borderRadius: '6px',
+                    padding: '7px 14px',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    fontSize: '0.82rem',
+                    alignSelf: 'flex-start',
+                    marginTop: '6px',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    boxShadow: '0 2px 8px rgba(11, 53, 45, 0.2)'
+                  }}
+                >
+                  <span>Sign in instead &rarr;</span>
+                </button>
+              )}
               {isLogin && errorCode === 'ACCOUNT_NOT_FOUND' && (
                 <button
                   type="button"
