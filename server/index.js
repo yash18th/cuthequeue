@@ -105,6 +105,27 @@ io.on('connection', (socket) => {
     }
   });
 
+  socket.on('leave:branch', (branchId) => {
+    if (branchId) {
+      socket.leave(`branch:${branchId}`);
+      socket.leave(`restaurant_${branchId}`);
+      console.log(`[Socket] ${socket.id} left branch:${branchId}`);
+    }
+  });
+
+  socket.on('leave:restaurant', (restaurantId) => {
+    if (restaurantId) {
+      socket.leave(`restaurant_${restaurantId}`);
+      socket.leave(`branch:${restaurantId}`);
+      console.log(`[Socket] ${socket.id} left restaurant_${restaurantId}`);
+    }
+  });
+
+  socket.on('join:super', () => {
+    socket.join('admin:super');
+    console.log(`[Socket] ${socket.id} joined admin:super`);
+  });
+
   // Join customer room for personal notifications
   socket.on('join:customer', (customerId) => {
     if (customerId) {

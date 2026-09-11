@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useSocket } from '../context/SocketContext';
+import { useBranch } from '../context/BranchContext';
 import { restaurantAPI } from '../utils/api';
 import StatusBadge from '../components/StatusBadge';
 import {
@@ -15,12 +16,28 @@ import {
   QrCode,
   DollarSign,
   TrendingUp,
-  ShoppingBag
+  ShoppingBag,
+  Store,
+  MapPin,
+  ShieldCheck
 } from 'lucide-react';
 
 export default function AdminDashboardPage({ onOpenScanner }) {
-  const { restaurant } = useAuth();
+  const { restaurant: authRestaurant } = useAuth();
   const { socket } = useSocket();
+  const {
+    brands,
+    availableBranches,
+    selectedBrandId,
+    selectedBranchId,
+    selectedBrand,
+    selectedBranch,
+    selectBrand,
+    selectBranch,
+    canSwitchBranch,
+    isSuperAdmin,
+    loading: branchLoading
+  } = useBranch();
 
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -29,12 +46,19 @@ export default function AdminDashboardPage({ onOpenScanner }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [updatingId, setUpdatingId] = useState(null);
 
+  const activeBranchId = selectedBranch?.id || authRestaurant?.id;
+
   const fetchOrders = useCallback(async () => {
-    if (!restaurant?.id) return;
+    if (!activeBranchId) return;
     try {
-      const res = await restaurantAPI.getOrders(restaurant.id);
+      const res = await restaurantAPI.getOrders(activeBranchId);
       const list = res.orders || res || [];
-      setOrders(list);
+      // Safety filter on the client as well: only orders belonging to this branch
+      const branchOrders = list.filter((o) => {
+        const oBranchId = o.branch_id || o.restaurant_id;
+        return !oBranchId || Number(oBranchId) === Number(activeBranchId);
+      });
+      setOrders(branchOrders);
       setError('');
     } catch (err) {
       console.error('Error fetching orders:', err);
@@ -42,19 +66,32 @@ export default function AdminDashboardPage({ onOpenScanner }) {
     } finally {
       setLoading(false);
     }
-  }, [restaurant?.id]);
+  }, [activeBranchId]);
 
+  // Initial load and auto-reconciliation polling fallback every 12 seconds
   useEffect(() => {
     fetchOrders();
+
+    const intervalId = setInterval(() => {
+      fetchOrders();
+    }, 12000);
+
+    return () => clearInterval(intervalId);
   }, [fetchOrders]);
 
-  // Real-time socket event listeners
+  // Real-time socket event listeners scoped to active branch
   useEffect(() => {
     if (!socket) return;
 
     const handleNewOrder = (payload) => {
       const newOrder = payload?.order || payload;
       if (!newOrder || (!newOrder.id && !newOrder.order_number)) return;
+
+      // Scoped: only process order if it matches the current branch
+      const orderBranchId = newOrder.branch_id || newOrder.restaurant_id;
+      if (activeBranchId && orderBranchId && Number(orderBranchId) !== Number(activeBranchId)) {
+        return;
+      }
 
       const normalized = {
         ...newOrder,
@@ -79,6 +116,12 @@ export default function AdminDashboardPage({ onOpenScanner }) {
       const newStatus = updated.status;
       if (!newStatus) return;
 
+      // Filter if branch specified
+      const orderBranchId = updated.branch_id || updated.restaurant_id;
+      if (activeBranchId && orderBranchId && Number(orderBranchId) !== Number(activeBranchId)) {
+        return;
+      }
+
       setOrders((prev) =>
         prev.map((o) => (o.id === targetId || (updated.order_number && o.order_number === updated.order_number) ? { ...o, status: newStatus } : o))
       );
@@ -98,7 +141,7 @@ export default function AdminDashboardPage({ onOpenScanner }) {
       socket.off('order:restaurant_status_updated', handleStatusChanged);
       socket.off('order:status_updated', handleStatusChanged);
     };
-  }, [socket, fetchOrders]);
+  }, [socket, activeBranchId, fetchOrders]);
 
   // Update order status action
   const handleUpdateStatus = async (orderId, newStatus, prepMinutes) => {
@@ -160,6 +203,143 @@ export default function AdminDashboardPage({ onOpenScanner }) {
   return (
     <div style={{ padding: '2rem 0 4rem' }}>
       <div className="container">
+        {/* Branch & Restaurant Selector Control Panel */}
+        <div style={{
+          background: 'linear-gradient(135deg, #0B352D 0%, #123F35 100%)',
+          border: '1.5px solid #C49A52',
+          borderRadius: '12px',
+          padding: '1.25rem 1.5rem',
+          marginBottom: '1.5rem',
+          display: 'flex',
+          flexWrap: 'wrap',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          gap: '1.25rem',
+          boxShadow: '0 8px 24px rgba(11, 53, 45, 0.2)'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', flexWrap: 'wrap' }}>
+            {/* Restaurant Selector */}
+            <div>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '0.72rem', fontWeight: 800, color: '#C49A52', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '6px' }}>
+                <Store size={13} />
+                <span>Restaurant Brand</span>
+              </label>
+              {canSwitchBranch ? (
+                <select
+                  value={selectedBrandId || ''}
+                  onChange={(e) => selectBrand(e.target.value)}
+                  style={{
+                    background: '#FFFFFF',
+                    border: '1.5px solid #C49A52',
+                    color: '#0B352D',
+                    padding: '8px 14px',
+                    borderRadius: '8px',
+                    fontWeight: 700,
+                    fontSize: '0.9rem',
+                    cursor: 'pointer',
+                    minWidth: '220px',
+                    outline: 'none',
+                    boxShadow: '0 2px 6px rgba(0,0,0,0.15)'
+                  }}
+                >
+                  {brands.map((brand) => (
+                    <option key={brand.id} value={brand.id}>
+                      {brand.name}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <div style={{
+                  background: 'rgba(248, 241, 223, 0.12)',
+                  border: '1px solid rgba(196, 154, 82, 0.4)',
+                  color: '#F8F1DF',
+                  padding: '8px 14px',
+                  borderRadius: '8px',
+                  fontWeight: 700,
+                  fontSize: '0.9rem',
+                  minWidth: '200px'
+                }}>
+                  {selectedBrand?.name || authRestaurant?.name || 'Restaurant'}
+                </div>
+              )}
+            </div>
+
+            {/* Branch Selector */}
+            <div>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '0.72rem', fontWeight: 800, color: '#C49A52', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '6px' }}>
+                <MapPin size={13} />
+                <span>Branch Location</span>
+              </label>
+              {canSwitchBranch ? (
+                <select
+                  value={selectedBranchId || ''}
+                  onChange={(e) => selectBranch(e.target.value)}
+                  style={{
+                    background: '#FFFFFF',
+                    border: '1.5px solid #C49A52',
+                    color: '#0B352D',
+                    padding: '8px 14px',
+                    borderRadius: '8px',
+                    fontWeight: 700,
+                    fontSize: '0.9rem',
+                    cursor: 'pointer',
+                    minWidth: '220px',
+                    outline: 'none',
+                    boxShadow: '0 2px 6px rgba(0,0,0,0.15)'
+                  }}
+                >
+                  {availableBranches.map((branch) => (
+                    <option key={branch.id} value={branch.id}>
+                      {branch.branch_name || branch.area || branch.name}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <div style={{
+                  background: 'rgba(248, 241, 223, 0.12)',
+                  border: '1px solid rgba(196, 154, 82, 0.4)',
+                  color: '#F8F1DF',
+                  padding: '8px 14px',
+                  borderRadius: '8px',
+                  fontWeight: 700,
+                  fontSize: '0.9rem',
+                  minWidth: '200px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px'
+                }}>
+                  <span>📍 {selectedBranch?.branch_name || selectedBranch?.area || authRestaurant?.branch_name || 'Assigned Branch'}</span>
+                  <span style={{ fontSize: '0.62rem', background: '#C49A52', color: '#0B352D', padding: '1px 6px', borderRadius: '4px', fontWeight: 900 }}>
+                    ASSIGNED
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Access Mode Badge & Auto Sync Info */}
+          <div style={{ textAlign: 'right' }}>
+            <div style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '4px 10px',
+              borderRadius: '20px',
+              background: isSuperAdmin ? 'rgba(196, 154, 82, 0.25)' : 'rgba(34, 197, 94, 0.2)',
+              border: `1px solid ${isSuperAdmin ? '#C49A52' : '#22C55E'}`,
+              color: isSuperAdmin ? '#F8F1DF' : '#86EFAC',
+              fontSize: '0.75rem',
+              fontWeight: 700
+            }}>
+              <ShieldCheck size={14} />
+              <span>{isSuperAdmin ? 'Super Admin (All Brands)' : 'Branch Operator'}</span>
+            </div>
+            <div style={{ color: '#C49A52', fontSize: '0.74rem', marginTop: '4px', opacity: 0.9 }}>
+              Auto-sync active • Refreshing every 12s
+            </div>
+          </div>
+        </div>
+
         {/* Restaurant Header Banner */}
         <div style={{
           background: 'linear-gradient(135deg, #FFFFFF 0%, #FCFAF6 100%)',
@@ -180,16 +360,16 @@ export default function AdminDashboardPage({ onOpenScanner }) {
               <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#22C55E' }} />
             </div>
             <h1 className="font-royal" style={{ fontSize: '1.8rem', color: '#0B352D', marginTop: '2px' }}>
-              {restaurant?.brand_name || restaurant?.name || 'Restaurant Kitchen'}
+              {selectedBrand?.name || authRestaurant?.brand_name || authRestaurant?.name || 'The Rameshwaram Cafe'}
             </h1>
             <p style={{ fontSize: '0.85rem', color: '#5C6E6A', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
               <span style={{ fontWeight: 700, color: '#0B352D' }}>
-                📍 {restaurant?.branch_name || restaurant?.area || 'Bengaluru'} Branch
+                {selectedBranch?.branch_name || selectedBranch?.area || authRestaurant?.branch_name || 'Indiranagar'}
               </span>
               <span>•</span>
-              <span>{restaurant?.address || 'Bengaluru'}</span>
+              <span>Bengaluru Heritage Dining</span>
               <span>•</span>
-              <span style={{ color: '#22C55E', fontWeight: 700 }}>● Live Dispatch Active</span>
+              <span style={{ color: '#22C55E', fontWeight: 700 }}>● Live Ticket Dispatch</span>
             </p>
           </div>
 

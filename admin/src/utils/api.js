@@ -49,6 +49,8 @@ export const authAPI = {
 };
 
 export const restaurantAPI = {
+  getBrands: () => apiRequest('/restaurants/brands'),
+  getBranches: () => apiRequest('/restaurants/branches'),
   getById: (id) => apiRequest(`/restaurants/${id}`),
   update: (id, data) => apiRequest(`/restaurants/${id}/settings`, { method: 'PUT', body: JSON.stringify(data) }),
   getMenu: (id) => apiRequest(`/menu/${id}`),

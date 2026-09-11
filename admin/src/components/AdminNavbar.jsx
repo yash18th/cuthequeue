@@ -3,6 +3,7 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useSocket } from '../context/SocketContext';
 import { useNotification } from '../context/NotificationContext';
+import { useBranch } from '../context/BranchContext';
 import {
   LayoutDashboard,
   ClipboardList,
@@ -21,6 +22,7 @@ export default function AdminNavbar({ onOpenScanner, activeOrderCount = 0 }) {
   const { user, restaurant, logout } = useAuth();
   const { connected } = useSocket();
   const { soundEnabled, setSoundEnabled } = useNotification();
+  const { selectedBrand, selectedBranch } = useBranch();
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -70,7 +72,7 @@ export default function AdminNavbar({ onOpenScanner, activeOrderCount = 0 }) {
           </div>
 
           {/* Restaurant identity pill */}
-          {restaurant && (
+          {(selectedBrand || restaurant) && (
             <div
               style={{
                 display: 'flex',
@@ -86,10 +88,12 @@ export default function AdminNavbar({ onOpenScanner, activeOrderCount = 0 }) {
               }}
               className="restaurant-pill"
             >
-              <strong style={{ color: '#C49A52' }}>{restaurant.name}</strong>
-              {restaurant.branch_name && (
+              <strong style={{ color: '#C49A52' }}>
+                {selectedBrand?.name || restaurant?.brand_name || restaurant?.name}
+              </strong>
+              {(selectedBranch?.branch_name || selectedBranch?.area || restaurant?.branch_name) && (
                 <span style={{ color: '#F8F1DF', fontWeight: 600 }}>
-                  • 📍 {restaurant.branch_name} Branch
+                  • 📍 {selectedBranch?.branch_name || selectedBranch?.area || restaurant?.branch_name} Branch
                 </span>
               )}
               <span style={{ fontSize: '0.65rem', background: '#10B981', color: 'white', padding: '1px 6px', borderRadius: '4px', fontWeight: 800, textTransform: 'uppercase' }}>

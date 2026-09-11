@@ -603,8 +603,168 @@ async function runAllTests() {
   }
   console.log(`TEST 17: Visibility Toggle & Clean-up Deletion: ✅ PASS (Showcase #${newShowcaseId} successfully deactivated, verified hidden from customers, and deleted)`);
 
+  // =========================================================================
+  // TEST 18: Multi-Branch Sockets - The Rameshwaram Cafe -> Indiranagar Order
+  // =========================================================================
+  console.log('\n--- VERIFYING MULTI-BRANCH REAL-TIME ROUTING ---');
+  // Fetch branches metadata
+  const branchesRes = await fetch(`${API}/restaurants/branches`);
+  const branchesData = await branchesRes.json();
+  const branchList = branchesData.branches || [];
+
+  const rameshwaramIndiranagar = branchList.find(b => b.branch_name === 'Indiranagar' && (b.brand_id === 1 || b.name.includes('Rameshwaram'))) || branchList[0];
+  const empireChurchStreet = branchList.find(b => b.branch_name === 'Church Street' || b.name.includes('Empire')) || branchList[4] || branchList[1];
+  const meghanaKoramangala = branchList.find(b => b.name.includes('Meghana') || b.brand_id === 3) || branchList[branchList.length - 1];
+
+  // Set up 2 socket clients: Indiranagar Admin and Church Street Admin
+  const indiranagarSocket = io(SOCKET_URL, { transports: ['websocket', 'polling'], reconnection: false });
+  const churchStreetSocket = io(SOCKET_URL, { transports: ['websocket', 'polling'], reconnection: false });
+
+  await Promise.all([
+    new Promise(res => indiranagarSocket.on('connect', res)),
+    new Promise(res => churchStreetSocket.on('connect', res))
+  ]);
+
+  indiranagarSocket.emit('join:branch', rameshwaramIndiranagar.id);
+  churchStreetSocket.emit('join:branch', empireChurchStreet.id);
+
+  let indiranagarReceived = null;
+  let churchStreetReceived = null;
+
+  indiranagarSocket.on('order:created', (payload) => {
+    indiranagarReceived = payload?.order || payload;
+  });
+  churchStreetSocket.on('order:created', (payload) => {
+    churchStreetReceived = payload?.order || payload;
+  });
+
+  await new Promise(r => setTimeout(r, 200));
+
+  // Customer places order at The Rameshwaram Cafe - Indiranagar
+  const orderIndiranagarRes = await fetch(`${API}/orders`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${customerToken}` },
+    body: JSON.stringify({
+      restaurant_id: rameshwaramIndiranagar.id,
+      branch_id: rameshwaramIndiranagar.id,
+      items: [{ menu_item_id: selectedItem1.id, name: selectedItem1.name, quantity: 1, customizations_selected: {} }],
+      pickup_type: 'asap',
+      payment_method: 'upi'
+    })
+  });
+  const orderIndiranagarData = await orderIndiranagarRes.json();
+  const placedIndiranagarOrder = orderIndiranagarData.order;
+
+  await new Promise(r => setTimeout(r, 800));
+
+  if (!indiranagarReceived || indiranagarReceived.id !== placedIndiranagarOrder.id) {
+    throw new Error(`TEST 18 Failed: Indiranagar admin did NOT receive order #${placedIndiranagarOrder.id}`);
+  }
+  if (churchStreetReceived && churchStreetReceived.id === placedIndiranagarOrder.id) {
+    throw new Error(`TEST 18 Failed: Church Street admin mistakenly received Indiranagar order #${placedIndiranagarOrder.id}`);
+  }
+  console.log(`TEST 18: Multi-Branch Socket (The Rameshwaram Cafe → Indiranagar): ✅ PASS (Indiranagar Admin received order #${placedIndiranagarOrder.id}, Church Street Admin was NOT notified)`);
+
+  // =========================================================================
+  // TEST 19: Multi-Branch Sockets - Empire Restaurant -> Church Street Order
+  // =========================================================================
+  indiranagarReceived = null;
+  churchStreetReceived = null;
+
+  // Get a menu item for Empire
+  const empireRestRes = await fetch(`${API}/restaurants/${empireChurchStreet.id}`);
+  const empireRestData = await empireRestRes.json();
+  const empireItems = empireRestData.allItems || empireRestData.menu || [];
+  const empireItem = empireItems[0] || selectedItem1;
+
+  const orderEmpireRes = await fetch(`${API}/orders`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${customerToken}` },
+    body: JSON.stringify({
+      restaurant_id: empireChurchStreet.id,
+      branch_id: empireChurchStreet.id,
+      items: [{ menu_item_id: empireItem.id, name: empireItem.name, quantity: 1, customizations_selected: {} }],
+      pickup_type: 'asap',
+      payment_method: 'upi'
+    })
+  });
+  const orderEmpireData = await orderEmpireRes.json();
+  const placedEmpireOrder = orderEmpireData.order;
+
+  await new Promise(r => setTimeout(r, 800));
+
+  if (!churchStreetReceived || churchStreetReceived.id !== placedEmpireOrder.id) {
+    throw new Error(`TEST 19 Failed: Church Street admin did NOT receive order #${placedEmpireOrder.id}`);
+  }
+  if (indiranagarReceived && indiranagarReceived.id === placedEmpireOrder.id) {
+    throw new Error(`TEST 19 Failed: Indiranagar admin mistakenly received Church Street order #${placedEmpireOrder.id}`);
+  }
+  console.log(`TEST 19: Multi-Branch Socket (Empire Restaurant → Church Street): ✅ PASS (Church Street Admin received order #${placedEmpireOrder.id}, Indiranagar Admin was NOT notified)`);
+
+  indiranagarSocket.disconnect();
+  churchStreetSocket.disconnect();
+
+  // =========================================================================
+  // TEST 20: Security & Cross-Branch Authorization
+  // =========================================================================
+  console.log('\n--- VERIFYING STRICT CROSS-BRANCH AUTHORIZATION (403 FORBIDDEN) ---');
+  // Indiranagar manager (campus@demo.com) attempts to fetch Church Street orders via GET /api/orders?branchId=<empireChurchStreet.id>
+  const crossBranchGetRes = await fetch(`${API}/orders?branchId=${empireChurchStreet.id}`, {
+    headers: { 'Authorization': `Bearer ${managerToken}` }
+  });
+  if (crossBranchGetRes.status !== 403) {
+    throw new Error(`TEST 20 Failed: Expected 403 Forbidden when Indiranagar admin accessed Church Street orders via branchId, got ${crossBranchGetRes.status}`);
+  }
+  console.log('TEST 20A: Branch Admin cross-branch GET restricted: ✅ PASS (Returned 403 Forbidden for unauthorized branchId parameter)');
+
+  // Indiranagar manager attempts to update Church Street order status via PATCH /api/orders/:id/status
+  const crossBranchPatchRes = await fetch(`${API}/orders/${placedEmpireOrder.id}/status`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${managerToken}` },
+    body: JSON.stringify({ status: 'preparing' })
+  });
+  if (crossBranchPatchRes.status !== 403) {
+    throw new Error(`TEST 20 Failed: Expected 403 Forbidden when Indiranagar admin attempted to update Church Street order status, got ${crossBranchPatchRes.status}`);
+  }
+  console.log('TEST 20B: Branch Admin cross-branch PATCH restricted: ✅ PASS (Returned 403 Forbidden for unauthorized branch order modification)');
+
+  // =========================================================================
+  // TEST 21: Super Admin Access
+  // =========================================================================
+  console.log('\n--- VERIFYING SUPER ADMIN MULTI-BRANCH CAPABILITY ---');
+  const superLoginRes = await fetch(`${API}/auth/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: 'admin@cutthequeue.com', password: 'password123' })
+  });
+  const superData = await superLoginRes.json();
+  if (!superLoginRes.ok || superData.user.role !== 'super_admin') {
+    throw new Error(`TEST 21 Failed Super Admin Login: ${JSON.stringify(superData)}`);
+  }
+  const superToken = superData.token;
+
+  // Super Admin can query Indiranagar
+  const superIndiraRes = await fetch(`${API}/orders?branchId=${rameshwaramIndiranagar.id}`, {
+    headers: { 'Authorization': `Bearer ${superToken}` }
+  });
+  const superIndiraOrders = await superIndiraRes.json();
+  if (!superIndiraRes.ok || !Array.isArray(superIndiraOrders)) {
+    throw new Error(`TEST 21 Failed: Super admin could not query Indiranagar orders: ${JSON.stringify(superIndiraOrders)}`);
+  }
+
+  // Super Admin can query Church Street
+  const superChurchRes = await fetch(`${API}/orders?branchId=${empireChurchStreet.id}`, {
+    headers: { 'Authorization': `Bearer ${superToken}` }
+  });
+  const superChurchOrders = await superChurchRes.json();
+  if (!superChurchRes.ok || !Array.isArray(superChurchOrders)) {
+    throw new Error(`TEST 21 Failed: Super admin could not query Church Street orders: ${JSON.stringify(superChurchOrders)}`);
+  }
+
+  console.log(`TEST 21: Super Admin Multi-Branch Access: ✅ PASS (Super Admin seamlessly retrieved Indiranagar [${superIndiraOrders.length} orders] and Church Street [${superChurchOrders.length} orders])`);
+
   console.log('\n====================================================');
-  console.log('🎉 ALL 17 TESTS PASSED WITH 100% SUCCESS!');
+  console.log('🎉 ALL 21 TESTS PASSED WITH 100% SUCCESS!');
   console.log('====================================================\n');
 }
 

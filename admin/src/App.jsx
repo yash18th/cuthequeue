@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { BranchProvider } from './context/BranchContext';
 import { NotificationProvider } from './context/NotificationContext';
 import { SocketProvider } from './context/SocketContext';
 
@@ -54,24 +55,26 @@ export default function App() {
     <BrowserRouter>
       <ErrorBoundary>
         <AuthProvider>
-          <NotificationProvider>
-            <SocketProvider>
-              <Routes>
-                {/* Public Login Route */}
-                <Route path="/login" element={<AdminLoginPage />} />
+          <BranchProvider>
+            <NotificationProvider>
+              <SocketProvider>
+                <Routes>
+                  {/* Public Login Route */}
+                  <Route path="/login" element={<AdminLoginPage />} />
 
-                {/* Protected Restaurant Admin Console Routes */}
-                <Route
-                  path="/*"
-                  element={
-                    <ProtectedRoute>
-                      <AdminLayout />
-                    </ProtectedRoute>
-                  }
-                />
-              </Routes>
-            </SocketProvider>
-          </NotificationProvider>
+                  {/* Protected Restaurant Admin Console Routes */}
+                  <Route
+                    path="/*"
+                    element={
+                      <ProtectedRoute>
+                        <AdminLayout />
+                      </ProtectedRoute>
+                    }
+                  />
+                </Routes>
+              </SocketProvider>
+            </NotificationProvider>
+          </BranchProvider>
         </AuthProvider>
       </ErrorBoundary>
     </BrowserRouter>

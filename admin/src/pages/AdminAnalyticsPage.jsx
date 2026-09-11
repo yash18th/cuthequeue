@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useBranch } from '../context/BranchContext';
 import { restaurantAPI } from '../utils/api';
 import {
   BarChart3,
@@ -9,21 +10,42 @@ import {
   Calendar,
   Award,
   Zap,
-  DollarSign
+  DollarSign,
+  Store,
+  MapPin
 } from 'lucide-react';
 
 export default function AdminAnalyticsPage() {
-  const { restaurant } = useAuth();
+  const { restaurant: authRestaurant } = useAuth();
+  const {
+    brands,
+    availableBranches,
+    selectedBrandId,
+    selectedBranchId,
+    selectedBrand,
+    selectedBranch,
+    selectBrand,
+    selectBranch,
+    canSwitchBranch
+  } = useBranch();
+
   const [range, setRange] = useState('7d');
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const activeBranchId = selectedBranch?.id || authRestaurant?.id;
+
   useEffect(() => {
     async function loadData() {
-      if (!restaurant?.id) return;
+      if (!activeBranchId) return;
       try {
-        const res = await restaurantAPI.getOrders(restaurant.id);
-        setOrders(res.orders || res || []);
+        const res = await restaurantAPI.getOrders(activeBranchId);
+        const list = res.orders || res || [];
+        const branchOrders = list.filter((o) => {
+          const oBranchId = o.branch_id || o.restaurant_id;
+          return !oBranchId || Number(oBranchId) === Number(activeBranchId);
+        });
+        setOrders(branchOrders);
       } catch (e) {
         console.error('Failed to load orders for analytics:', e);
       } finally {
@@ -31,7 +53,7 @@ export default function AdminAnalyticsPage() {
       }
     }
     loadData();
-  }, [restaurant?.id, range]);
+  }, [activeBranchId, range]);
 
   // Aggregate metrics
   const completedOrders = orders.filter((o) => o.status === 'completed');
@@ -54,6 +76,69 @@ export default function AdminAnalyticsPage() {
   return (
     <div style={{ padding: '2rem 0 4rem' }}>
       <div className="container">
+        {/* Branch Selector if Super Admin */}
+        {canSwitchBranch && (
+          <div style={{
+            background: 'linear-gradient(135deg, #0B352D 0%, #123F35 100%)',
+            border: '1.5px solid #C49A52',
+            borderRadius: '12px',
+            padding: '1rem 1.25rem',
+            marginBottom: '1.5rem',
+            display: 'flex',
+            flexWrap: 'wrap',
+            alignItems: 'center',
+            gap: '1rem',
+            boxShadow: '0 4px 14px rgba(11, 53, 45, 0.18)'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Store size={15} style={{ color: '#C49A52' }} />
+              <select
+                value={selectedBrandId || ''}
+                onChange={(e) => selectBrand(e.target.value)}
+                style={{
+                  background: '#FFFFFF',
+                  border: '1px solid #C49A52',
+                  color: '#0B352D',
+                  padding: '6px 12px',
+                  borderRadius: '6px',
+                  fontWeight: 700,
+                  fontSize: '0.85rem'
+                }}
+              >
+                {brands.map((b) => (
+                  <option key={b.id} value={b.id}>{b.name}</option>
+                ))}
+              </select>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <MapPin size={15} style={{ color: '#C49A52' }} />
+              <select
+                value={selectedBranchId || ''}
+                onChange={(e) => selectBranch(e.target.value)}
+                style={{
+                  background: '#FFFFFF',
+                  border: '1px solid #C49A52',
+                  color: '#0B352D',
+                  padding: '6px 12px',
+                  borderRadius: '6px',
+                  fontWeight: 700,
+                  fontSize: '0.85rem'
+                }}
+              >
+                {availableBranches.map((br) => (
+                  <option key={br.id} value={br.id}>
+                    📍 {br.branch_name || br.area || br.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div style={{ color: '#C49A52', fontSize: '0.75rem', fontWeight: 600, marginLeft: 'auto' }}>
+              Analytics for {orders.length} tickets
+            </div>
+          </div>
+        )}
+
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
           <div>
@@ -61,7 +146,7 @@ export default function AdminAnalyticsPage() {
               Kitchen Velocity & Analytics
             </h1>
             <p style={{ fontSize: '0.85rem', color: '#5C6E6A' }}>
-              Throughput, queue waiting reduction, and dish sales performance for {restaurant?.name}
+              Throughput, queue waiting reduction, and dish sales performance for <strong style={{ color: '#0B352D' }}>{selectedBrand?.name || authRestaurant?.name}</strong> • 📍 {selectedBranch?.branch_name || selectedBranch?.area || authRestaurant?.branch_name} Branch
             </p>
           </div>
 

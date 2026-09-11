@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useBranch } from '../context/BranchContext';
 import { restaurantAPI } from '../utils/api';
 import StatusBadge from '../components/StatusBadge';
 import {
@@ -10,11 +11,25 @@ import {
   Calendar,
   Eye,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Store,
+  MapPin
 } from 'lucide-react';
 
 export default function AdminOrdersPage() {
-  const { restaurant } = useAuth();
+  const { restaurant: authRestaurant } = useAuth();
+  const {
+    brands,
+    availableBranches,
+    selectedBrandId,
+    selectedBranchId,
+    selectedBrand,
+    selectedBranch,
+    selectBrand,
+    selectBranch,
+    canSwitchBranch
+  } = useBranch();
+
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -22,18 +37,24 @@ export default function AdminOrdersPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedOrderId, setExpandedOrderId] = useState(null);
 
+  const activeBranchId = selectedBranch?.id || authRestaurant?.id;
+
   const fetchOrders = useCallback(async () => {
-    if (!restaurant?.id) return;
+    if (!activeBranchId) return;
     try {
-      const res = await restaurantAPI.getOrders(restaurant.id);
+      const res = await restaurantAPI.getOrders(activeBranchId);
       const list = res.orders || res || [];
-      setOrders(list);
+      const branchOrders = list.filter((o) => {
+        const oBranchId = o.branch_id || o.restaurant_id;
+        return !oBranchId || Number(oBranchId) === Number(activeBranchId);
+      });
+      setOrders(branchOrders);
     } catch (err) {
       setError(err.message || 'Failed to load order history');
     } finally {
       setLoading(false);
     }
-  }, [restaurant?.id]);
+  }, [activeBranchId]);
 
   useEffect(() => {
     fetchOrders();
@@ -56,6 +77,69 @@ export default function AdminOrdersPage() {
   return (
     <div style={{ padding: '2rem 0 4rem' }}>
       <div className="container">
+        {/* Branch Selector if Super Admin */}
+        {canSwitchBranch && (
+          <div style={{
+            background: 'linear-gradient(135deg, #0B352D 0%, #123F35 100%)',
+            border: '1.5px solid #C49A52',
+            borderRadius: '12px',
+            padding: '1rem 1.25rem',
+            marginBottom: '1.5rem',
+            display: 'flex',
+            flexWrap: 'wrap',
+            alignItems: 'center',
+            gap: '1rem',
+            boxShadow: '0 4px 14px rgba(11, 53, 45, 0.18)'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Store size={15} style={{ color: '#C49A52' }} />
+              <select
+                value={selectedBrandId || ''}
+                onChange={(e) => selectBrand(e.target.value)}
+                style={{
+                  background: '#FFFFFF',
+                  border: '1px solid #C49A52',
+                  color: '#0B352D',
+                  padding: '6px 12px',
+                  borderRadius: '6px',
+                  fontWeight: 700,
+                  fontSize: '0.85rem'
+                }}
+              >
+                {brands.map((b) => (
+                  <option key={b.id} value={b.id}>{b.name}</option>
+                ))}
+              </select>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <MapPin size={15} style={{ color: '#C49A52' }} />
+              <select
+                value={selectedBranchId || ''}
+                onChange={(e) => selectBranch(e.target.value)}
+                style={{
+                  background: '#FFFFFF',
+                  border: '1px solid #C49A52',
+                  color: '#0B352D',
+                  padding: '6px 12px',
+                  borderRadius: '6px',
+                  fontWeight: 700,
+                  fontSize: '0.85rem'
+                }}
+              >
+                {availableBranches.map((br) => (
+                  <option key={br.id} value={br.id}>
+                    📍 {br.branch_name || br.area || br.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div style={{ color: '#C49A52', fontSize: '0.75rem', fontWeight: 600, marginLeft: 'auto' }}>
+              Viewing {filteredOrders.length} orders
+            </div>
+          </div>
+        )}
+
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
           <div>
@@ -63,7 +147,7 @@ export default function AdminOrdersPage() {
               Order Records & Archival
             </h1>
             <p style={{ fontSize: '0.85rem', color: '#5C6E6A' }}>
-              Complete chronological audit trail for {restaurant?.name || 'Restaurant'}
+              Complete chronological audit trail for <strong style={{ color: '#0B352D' }}>{selectedBrand?.name || authRestaurant?.name}</strong> • 📍 {selectedBranch?.branch_name || selectedBranch?.area || authRestaurant?.branch_name} Branch
             </p>
           </div>
           <button
