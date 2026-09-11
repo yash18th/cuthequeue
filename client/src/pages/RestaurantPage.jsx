@@ -94,7 +94,7 @@ export default function RestaurantPage({ restaurantId, setActivePage, onOpenCart
     );
   }
 
-  const { restaurant, categories, allItems } = data;
+  const { restaurant, categories, allItems, branches = [] } = data;
 
   const brandSlug = restaurant.brand_slug || restaurant.brand_id;
   const brandName = restaurant.brand_name || restaurant.name.split(' - ')[0];
@@ -321,6 +321,64 @@ export default function RestaurantPage({ restaurantId, setActivePage, onOpenCart
 
       {/* Main Content Area */}
       <div className="container" style={{ marginTop: '1.75rem' }}>
+        {/* Sibling Branches Quick Switcher */}
+        {branches && branches.length > 1 && (
+          <div style={{
+            background: '#FFFFFF',
+            borderRadius: 'var(--radius-lg)',
+            padding: '0.85rem 1.25rem',
+            boxShadow: 'var(--shadow-sm)',
+            border: '1px solid #E8DDC8',
+            marginBottom: '1.25rem',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: '0.75rem'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <MapPin size={16} style={{ color: 'var(--accent-gold)' }} />
+              <span style={{ fontSize: '0.85rem', fontWeight: 800, color: 'var(--text-charcoal)', fontFamily: 'var(--font-serif)' }}>
+                {brandName} Branches:
+              </span>
+            </div>
+            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', alignItems: 'center' }}>
+              {branches.map((b) => {
+                const isCurrent = Number(b.id) === Number(restaurant.id);
+                return (
+                  <button
+                    key={b.id}
+                    type="button"
+                    onClick={() => {
+                      if (!isCurrent) {
+                        navigate(`/restaurant/${b.id}`);
+                      }
+                    }}
+                    style={{
+                      padding: '0.35rem 0.8rem',
+                      borderRadius: 'var(--radius-md)',
+                      fontSize: '0.8rem',
+                      fontWeight: 700,
+                      border: '1px solid',
+                      borderColor: isCurrent ? 'var(--accent-gold)' : '#E8DDC8',
+                      background: isCurrent ? 'var(--bg-deep-green)' : '#FDFBF7',
+                      color: isCurrent ? '#F7F1E5' : 'var(--text-charcoal)',
+                      cursor: isCurrent ? 'default' : 'pointer',
+                      transition: 'all 0.15s ease',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '5px'
+                    }}
+                  >
+                    <span>{b.branch_name || b.area}</span>
+                    {isCurrent && <span style={{ fontSize: '0.7rem', color: '#C49A52', fontWeight: 800 }}>● Active</span>}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         {/* Live Queue & Preparation Indicator Box */}
         <div style={{
           background: 'white',

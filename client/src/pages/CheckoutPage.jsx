@@ -61,9 +61,10 @@ export default function CheckoutPage({ setActivePage, setTrackedOrderId }) {
     setError('');
 
     try {
-      // 1. Prepare server payload with selected customizations
+      // 1. Prepare server payload with selected customizations and branch_id
       const orderPayload = {
         restaurant_id: restaurant.id,
+        branch_id: restaurant.branch_id || restaurant.id,
         items: cartItems.map((item) => ({
           menu_item_id: item.menu_item_id,
           name: item.name,
@@ -352,9 +353,23 @@ export default function CheckoutPage({ setActivePage, setTrackedOrderId }) {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
               <div>
                 <span style={{ fontSize: '0.75rem', textTransform: 'uppercase', fontWeight: 800, color: 'var(--accent-gold-muted)', letterSpacing: '0.05em', fontFamily: 'var(--font-serif)' }}>
-                  Selected Restaurant
+                  Selected Restaurant & Branch
                 </span>
-                <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-charcoal)', fontFamily: 'var(--font-serif)' }}>{restaurant.name}</h3>
+                <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-charcoal)', fontFamily: 'var(--font-serif)', marginTop: '2px' }}>
+                  {restaurant.name}
+                </h3>
+                {(restaurant.branch_name || restaurant.area) && (
+                  <div style={{ marginTop: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span style={{ fontSize: '0.78rem', background: '#F7F1E5', color: '#0B352D', fontWeight: 700, padding: '2px 8px', borderRadius: '4px', border: '1px solid #E8DDC8' }}>
+                      📍 {restaurant.branch_name || restaurant.area} Branch
+                    </span>
+                    {restaurant.address && (
+                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                        ({restaurant.address.split(',')[0]})
+                      </span>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
 

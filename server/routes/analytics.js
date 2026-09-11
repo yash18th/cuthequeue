@@ -4,10 +4,10 @@ const { authenticate, requireRestaurantOwner } = require('../middleware/auth');
 
 const router = express.Router();
 
-// Restaurant analytics
-router.get('/restaurant/:restaurantId', authenticate, requireRestaurantOwner, (req, res) => {
+// Restaurant / Branch analytics
+const getAnalyticsHandler = (req, res) => {
   try {
-    const restaurantId = req.params.restaurantId;
+    const restaurantId = req.params.branchId || req.params.restaurantId;
 
     // 1. Order counts by status
     const counts = db.prepare(`
@@ -20,39 +20,39 @@ router.get('/restaurant/:restaurantId', authenticate, requireRestaurantOwner, (r
         SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed_count,
         SUM(CASE WHEN status = 'cancelled' OR status = 'rejected' THEN 1 ELSE 0 END) as cancelled_count
       FROM orders
-      WHERE restaurant_id = ?
-    `).get(restaurantId);
+      WHERE (branch_id = ? OR restaurant_id = ?)
+    `).get(restaurantId, restaurantId);
 
     // 2. Revenue calculations
     const todayRevenue = db.prepare(`
       SELECT COALESCE(SUM(total), 0) as revenue
       FROM orders
-      WHERE restaurant_id = ? 
+      WHERE (branch_id = ? OR restaurant_id = ?) 
         AND status = 'completed'
         AND date(created_at) = date('now')
-    `).get(restaurantId).revenue;
+    `).get(restaurantId, restaurantId).revenue;
 
     const weekRevenue = db.prepare(`
       SELECT COALESCE(SUM(total), 0) as revenue
       FROM orders
-      WHERE restaurant_id = ? 
+      WHERE (branch_id = ? OR restaurant_id = ?) 
         AND status = 'completed'
         AND created_at >= datetime('now', '-7 days')
-    `).get(restaurantId).revenue;
+    `).get(restaurantId, restaurantId).revenue;
 
     const monthRevenue = db.prepare(`
       SELECT COALESCE(SUM(total), 0) as revenue
       FROM orders
-      WHERE restaurant_id = ? 
+      WHERE (branch_id = ? OR restaurant_id = ?) 
         AND status = 'completed'
         AND created_at >= datetime('now', '-30 days')
-    `).get(restaurantId).revenue;
+    `).get(restaurantId, restaurantId).revenue;
 
     const totalRevenue = db.prepare(`
       SELECT COALESCE(SUM(total), 0) as revenue
       FROM orders
-      WHERE restaurant_id = ? AND status = 'completed'
-    `).get(restaurantId).revenue;
+      WHERE (branch_id = ? OR restaurant_id = ?) AND status = 'completed'
+    `).get(restaurantId, restaurantId).revenue;
 
     // 3. Popular menu items
     const popularItems = db.prepare(`
@@ -62,11 +62,11 @@ router.get('/restaurant/:restaurantId', authenticate, requireRestaurantOwner, (r
         SUM(oi.total_price) as total_revenue
       FROM order_items oi
       JOIN orders o ON oi.order_id = o.id
-      WHERE o.restaurant_id = ? AND o.status = 'completed'
+      WHERE (o.branch_id = ? OR o.restaurant_id = ?) AND o.status = 'completed'
       GROUP BY oi.item_name
       ORDER BY total_sold DESC
       LIMIT 8
-    `).all(restaurantId);
+    `).all(restaurantId, restaurantId);
 
     // 4. Daily revenue chart (last 7 days)
     const dailyTrend = db.prepare(`
@@ -75,10 +75,10 @@ router.get('/restaurant/:restaurantId', authenticate, requireRestaurantOwner, (r
         COUNT(id) as order_count,
         COALESCE(SUM(total), 0) as revenue
       FROM orders
-      WHERE restaurant_id = ? AND status = 'completed' AND created_at >= datetime('now', '-7 days')
+      WHERE (branch_id = ? OR restaurant_id = ?) AND status = 'completed' AND created_at >= datetime('now', '-7 days')
       GROUP BY day_label
       ORDER BY day_label ASC
-    `).all(restaurantId);
+    `).all(restaurantId, restaurantId);
 
     // 5. Peak ordering hours
     const peakHours = db.prepare(`
@@ -86,10 +86,10 @@ router.get('/restaurant/:restaurantId', authenticate, requireRestaurantOwner, (r
         strftime('%H:00', created_at) as hour_slot,
         COUNT(id) as order_count
       FROM orders
-      WHERE restaurant_id = ?
+      WHERE (branch_id = ? OR restaurant_id = ?)
       GROUP BY hour_slot
       ORDER BY hour_slot ASC
-    `).all(restaurantId);
+    `).all(restaurantId, restaurantId);
 
     res.json({
       metrics: {
@@ -113,6 +113,9 @@ router.get('/restaurant/:restaurantId', authenticate, requireRestaurantOwner, (r
     console.error('Fetch analytics error:', err);
     res.status(500).json({ error: 'Failed to fetch analytics data.' });
   }
-});
+};
+
+router.get('/restaurant/:restaurantId', authenticate, requireRestaurantOwner, getAnalyticsHandler);
+router.get('/branch/:branchId', authenticate, requireRestaurantOwner, getAnalyticsHandler);
 
 module.exports = router;

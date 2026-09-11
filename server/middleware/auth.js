@@ -12,7 +12,11 @@ function authenticate(req, res, next) {
   const token = authHeader.split(' ')[1];
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
-    const user = db.prepare('SELECT id, name, email, phone, role, avatar, notification_preferences, is_suspended FROM users WHERE id = ?').get(decoded.id);
+    const user = db.prepare(`
+      SELECT id, name, email, phone, role, avatar, notification_preferences, is_suspended, restaurant_id, branch_id 
+      FROM users 
+      WHERE id = ?
+    `).get(decoded.id);
 
     if (!user) {
       return res.status(401).json({ error: 'User not found or session expired.' });
@@ -51,30 +55,22 @@ function requireRestaurantOwner(req, res, next) {
     return res.status(403).json({ error: 'Access denied: restaurant manager credentials required.' });
   }
 
-  const restaurantId = req.params.restaurantId || req.params.id || req.body.restaurant_id;
+  const restaurantId = Number(req.params.restaurantId || req.params.branchId || req.params.id || req.body.restaurant_id || req.body.branch_id);
   if (!restaurantId) {
-    return res.status(400).json({ error: 'Restaurant ID is required.' });
+    return res.status(400).json({ error: 'Restaurant/Branch ID is required.' });
   }
 
   const restaurant = db.prepare('SELECT id, owner_id, brand_id FROM restaurants WHERE id = ?').get(restaurantId);
   if (!restaurant) {
-    return res.status(404).json({ error: 'Restaurant not found.' });
+    return res.status(404).json({ error: 'Restaurant or branch not found.' });
   }
 
-  // 1. Direct branch owner check
-  if (restaurant.owner_id === req.user.id) {
+  // Strictly enforce branch ownership: must be the direct owner or user assigned to this branch
+  if (restaurant.owner_id === req.user.id || (req.user.branch_id && Number(req.user.branch_id) === Number(restaurant.id))) {
     return next();
   }
 
-  // 2. Brand-level manager check (authorized for any branch belonging to their brand)
-  if (restaurant.brand_id) {
-    const brandMatch = db.prepare('SELECT id FROM restaurants WHERE brand_id = ? AND owner_id = ?').get(restaurant.brand_id, req.user.id);
-    if (brandMatch) {
-      return next();
-    }
-  }
-
-  return res.status(403).json({ error: 'Access denied: you do not manage this restaurant.' });
+  return res.status(403).json({ error: 'Access denied: you do not manage this restaurant branch.' });
 }
 
 module.exports = {

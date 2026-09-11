@@ -755,6 +755,11 @@ export default function OrderHistoryPage({
                             <span style={{ color: 'var(--accent-gold)' }}>•</span>
                             <h3 style={{ fontSize: '1.05rem', fontWeight: 800, margin: 0, fontFamily: 'var(--font-serif)', color: 'var(--text-charcoal)' }}>
                               {order.restaurant_name}
+                              {order.branch_name && order.branch_name !== order.restaurant_name && (
+                                <span style={{ fontSize: '0.85rem', color: 'var(--accent-gold)', marginLeft: '6px', fontWeight: 600 }}>
+                                  ({order.branch_name})
+                                </span>
+                              )}
                             </h3>
                           </div>
                           <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: 0 }}>

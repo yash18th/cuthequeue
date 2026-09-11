@@ -180,10 +180,16 @@ export default function AdminDashboardPage({ onOpenScanner }) {
               <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#22C55E' }} />
             </div>
             <h1 className="font-royal" style={{ fontSize: '1.8rem', color: '#0B352D', marginTop: '2px' }}>
-              {restaurant?.name || 'Restaurant Kitchen'}
+              {restaurant?.brand_name || restaurant?.name || 'Restaurant Kitchen'}
             </h1>
-            <p style={{ fontSize: '0.85rem', color: '#5C6E6A' }}>
-              {restaurant?.branch_name ? `${restaurant.branch_name} • ` : ''}Bengaluru Heritage Dining • Live Ticket Dispatch
+            <p style={{ fontSize: '0.85rem', color: '#5C6E6A', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+              <span style={{ fontWeight: 700, color: '#0B352D' }}>
+                📍 {restaurant?.branch_name || restaurant?.area || 'Bengaluru'} Branch
+              </span>
+              <span>•</span>
+              <span>{restaurant?.address || 'Bengaluru'}</span>
+              <span>•</span>
+              <span style={{ color: '#22C55E', fontWeight: 700 }}>● Live Dispatch Active</span>
             </p>
           </div>
 

@@ -202,6 +202,50 @@ function initDatabase() {
     db.exec('ALTER TABLE restaurants ADD COLUMN queue_count INTEGER DEFAULT 6;');
   }
 
+  // Users table branch migrations
+  const userCols = db.prepare("PRAGMA table_info(users)").all().map(c => c.name);
+  if (!userCols.includes('restaurant_id')) {
+    db.exec('ALTER TABLE users ADD COLUMN restaurant_id INTEGER REFERENCES brands(id) ON DELETE SET NULL;');
+  }
+  if (!userCols.includes('branch_id')) {
+    db.exec('ALTER TABLE users ADD COLUMN branch_id INTEGER REFERENCES restaurants(id) ON DELETE SET NULL;');
+  }
+
+  // Orders table branch migrations
+  const orderCols = db.prepare("PRAGMA table_info(orders)").all().map(c => c.name);
+  if (!orderCols.includes('branch_id')) {
+    db.exec('ALTER TABLE orders ADD COLUMN branch_id INTEGER REFERENCES restaurants(id) ON DELETE CASCADE;');
+  }
+  // Backfill legacy orders with branch_id = restaurant_id if null
+  db.exec('UPDATE orders SET branch_id = restaurant_id WHERE branch_id IS NULL;');
+
+  // Create branches view for clean relational model access
+  db.exec(`
+    CREATE VIEW IF NOT EXISTS branches AS
+    SELECT 
+      id,
+      COALESCE(brand_id, id) AS restaurant_id,
+      COALESCE(branch_name, name) AS name,
+      address,
+      area,
+      location,
+      latitude,
+      longitude,
+      contact_phone,
+      opening_time,
+      closing_time,
+      is_open,
+      is_approved,
+      is_suspended,
+      prep_time_minutes,
+      queue_status,
+      queue_count,
+      rating,
+      owner_id,
+      created_at
+    FROM restaurants;
+  `);
+
   // Normalize any existing emails in the database for case-insensitive consistency
   try {
     db.exec(`UPDATE users SET email = LOWER(TRIM(email)) WHERE email != LOWER(TRIM(email)) OR email LIKE ' %' OR email LIKE '% ';`);
@@ -213,12 +257,14 @@ function initDatabase() {
   db.exec(`
     CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
     CREATE INDEX IF NOT EXISTS idx_users_email_lower ON users(LOWER(TRIM(email)));
+    CREATE INDEX IF NOT EXISTS idx_users_branch_id ON users(branch_id);
     CREATE INDEX IF NOT EXISTS idx_restaurants_brand_id ON restaurants(brand_id);
     CREATE INDEX IF NOT EXISTS idx_restaurants_owner_id ON restaurants(owner_id);
     CREATE INDEX IF NOT EXISTS idx_categories_restaurant ON categories(restaurant_id);
     CREATE INDEX IF NOT EXISTS idx_menu_items_restaurant ON menu_items(restaurant_id);
     CREATE INDEX IF NOT EXISTS idx_orders_customer ON orders(customer_id);
     CREATE INDEX IF NOT EXISTS idx_orders_restaurant ON orders(restaurant_id);
+    CREATE INDEX IF NOT EXISTS idx_orders_branch_id ON orders(branch_id);
     CREATE INDEX IF NOT EXISTS idx_showcases_restaurant ON restaurant_showcases(restaurant_id);
     CREATE INDEX IF NOT EXISTS idx_showcases_active ON restaurant_showcases(is_active);
   `);

@@ -34,13 +34,18 @@ router.post('/', authenticate, requireRole('customer'), (req, res) => {
       return res.status(400).json({ error: 'Restaurant and items are required.' });
     }
 
-    const restaurant = db.prepare('SELECT * FROM restaurants WHERE id = ?').get(restaurant_id);
+    const targetBranchId = req.body.branch_id || req.body.restaurant_id;
+    if (!targetBranchId || !items || !Array.isArray(items) || items.length === 0) {
+      return res.status(400).json({ error: 'Restaurant/branch and items are required.' });
+    }
+
+    const restaurant = db.prepare('SELECT * FROM restaurants WHERE id = ?').get(targetBranchId);
     if (!restaurant) {
-      return res.status(404).json({ error: 'Restaurant not found.' });
+      return res.status(404).json({ error: 'Restaurant branch not found.' });
     }
 
     if (!restaurant.is_open && pickup_type === 'asap') {
-      return res.status(400).json({ error: 'Sorry, this restaurant is currently closed for instant orders.' });
+      return res.status(400).json({ error: 'Sorry, this restaurant branch is currently closed for instant orders.' });
     }
 
     // Validate items and calculate prices server-side
@@ -50,9 +55,10 @@ router.post('/', authenticate, requireRole('customer'), (req, res) => {
     const getItemStmt = db.prepare('SELECT * FROM menu_items WHERE id = ? AND restaurant_id = ?');
 
     for (const orderItem of items) {
-      const dbItem = getItemStmt.get(orderItem.menu_item_id, restaurant_id);
+      const itemId = orderItem.menu_item_id || orderItem.id;
+      const dbItem = getItemStmt.get(itemId, restaurant.id);
       if (!dbItem) {
-        return res.status(400).json({ error: `Item "${orderItem.name || 'Unknown'}" is not available at this restaurant.` });
+        return res.status(400).json({ error: `Item "${orderItem.name || 'Unknown'}" is not available at this restaurant branch.` });
       }
 
       if (!dbItem.is_available) {
@@ -105,13 +111,14 @@ router.post('/', authenticate, requireRole('customer'), (req, res) => {
     const insertTransaction = db.transaction(() => {
       const orderInsert = db.prepare(`
         INSERT INTO orders (
-          order_number, customer_id, restaurant_id, status, pickup_type, scheduled_time,
+          order_number, customer_id, restaurant_id, branch_id, status, pickup_type, scheduled_time,
           subtotal, tax, fee, discount, total, qr_code_token, notes
-        ) VALUES (?, ?, ?, 'pending', ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ) VALUES (?, ?, ?, ?, 'pending', ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `).run(
         orderNumber,
         req.user.id,
-        restaurant_id,
+        restaurant.id,
+        restaurant.id,
         pickup_type,
         scheduled_time || null,
         calculatedSubtotal,
@@ -167,7 +174,7 @@ router.post('/', authenticate, requireRole('customer'), (req, res) => {
 
     // Fetch full order for response and live socket broadcast
     const fullOrder = db.prepare(`
-      SELECT o.*, r.name as restaurant_name, r.cover_image as restaurant_cover, r.address as restaurant_address,
+      SELECT o.*, r.name as restaurant_name, r.branch_name, r.area, r.cover_image as restaurant_cover, r.address as restaurant_address,
              r.prep_time_minutes, u.name as customer_name, u.phone as customer_phone
       FROM orders o
       JOIN restaurants r ON o.restaurant_id = r.id
@@ -182,17 +189,18 @@ router.post('/', authenticate, requireRole('customer'), (req, res) => {
     }));
     fullOrder.total_amount = fullOrder.total;
 
-    console.log(`[ORDER CREATE] order ID: ${fullOrder.id} (${fullOrder.order_number}) | restaurant ID: ${restaurant_id} | status: ${fullOrder.status} | total: ₹${fullOrder.total}`);
+    console.log(`[ORDER CREATE] order ID: ${fullOrder.id} (${fullOrder.order_number}) | branch ID: ${restaurant.id} (${restaurant.branch_name}) | status: ${fullOrder.status} | total: ₹${fullOrder.total}`);
 
-    // Emit live Socket.IO events to Restaurant Admin
+    // Emit live Socket.IO events to both restaurant and branch rooms
     if (req.io) {
       const socketPayload = {
         ...fullOrder,
         order: fullOrder,
         soundAlert: true
       };
-      req.io.to(`restaurant_${restaurant_id}`).emit('order:created', socketPayload);
-      console.log(`[SOCKET] Emitted order:created for order #${fullOrder.id} to room restaurant_${restaurant_id}`);
+      req.io.to(`branch:${restaurant.id}`).emit('order:created', socketPayload);
+      req.io.to(`restaurant_${restaurant.id}`).emit('order:created', socketPayload);
+      console.log(`[SOCKET] Emitted order:created for order #${fullOrder.id} to branch:${restaurant.id} & restaurant_${restaurant.id}`);
     }
 
     res.status(201).json({
@@ -202,6 +210,57 @@ router.post('/', authenticate, requireRole('customer'), (req, res) => {
   } catch (err) {
     console.error('Create order error:', err);
     res.status(500).json({ error: 'We couldn’t place your order. Please try again.' });
+  }
+});
+
+// Get orders based on role (Admin / Super Admin / Customer)
+router.get('/', authenticate, (req, res) => {
+  try {
+    let ordersQuery = `
+      SELECT o.*, r.name as restaurant_name, r.branch_name, r.area,
+             u.name as customer_name, u.phone as customer_phone,
+             p.status as payment_status, p.method as payment_method
+      FROM orders o
+      JOIN restaurants r ON (o.branch_id = r.id OR o.restaurant_id = r.id)
+      JOIN users u ON o.customer_id = u.id
+      LEFT JOIN payments p ON o.id = p.order_id
+    `;
+    const params = [];
+
+    if (req.user.role === 'customer') {
+      ordersQuery += ' WHERE o.customer_id = ? ORDER BY o.id DESC';
+      params.push(req.user.id);
+    } else if (req.user.role === 'restaurant_admin') {
+      const branchId = req.user.branch_id;
+      if (branchId) {
+        ordersQuery += ' WHERE (o.branch_id = ? OR o.restaurant_id = ?) ORDER BY o.id DESC';
+        params.push(branchId, branchId);
+      } else {
+        ordersQuery += ' WHERE (r.owner_id = ? OR o.restaurant_id IN (SELECT id FROM restaurants WHERE owner_id = ?)) ORDER BY o.id DESC';
+        params.push(req.user.id, req.user.id);
+      }
+    } else if (req.user.role === 'super_admin') {
+      ordersQuery += ' ORDER BY o.id DESC';
+    } else {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+
+    const orders = db.prepare(ordersQuery).all(...params);
+    const getItems = db.prepare('SELECT * FROM order_items WHERE order_id = ?');
+
+    const formatted = orders.map(order => ({
+      ...order,
+      total_amount: order.total,
+      items: getItems.all(order.id).map(i => ({
+        ...i,
+        customizations: JSON.parse(i.customizations_selected_json || '{}')
+      }))
+    }));
+
+    res.json(formatted);
+  } catch (err) {
+    console.error('Fetch all orders error:', err);
+    res.status(500).json({ error: 'Failed to fetch orders.' });
   }
 });
 
@@ -264,14 +323,14 @@ router.get('/:id', authenticate, (req, res) => {
       return res.status(404).json({ error: 'Order not found.' });
     }
 
-    // Security check: customer can only view their own order; restaurant admin can only view orders for their restaurant; super admin can view all
+    // Security check: customer can only view their own order; restaurant admin can only view orders for their restaurant branch; super admin can view all
     if (req.user.role === 'customer' && order.customer_id !== req.user.id) {
       return res.status(403).json({ error: 'Access denied: not your order.' });
     }
     if (req.user.role === 'restaurant_admin') {
-      const rest = db.prepare('SELECT owner_id FROM restaurants WHERE id = ?').get(order.restaurant_id);
-      if (!rest || rest.owner_id !== req.user.id) {
-        return res.status(403).json({ error: 'Access denied: order belongs to another restaurant.' });
+      const rest = db.prepare('SELECT id, owner_id FROM restaurants WHERE id = ?').get(order.branch_id || order.restaurant_id);
+      if (!rest || (rest.owner_id !== req.user.id && (!req.user.branch_id || Number(req.user.branch_id) !== Number(rest.id)))) {
+        return res.status(403).json({ error: 'Access denied: order belongs to another restaurant branch.' });
       }
     }
 
@@ -297,9 +356,9 @@ router.get('/restaurant/:restaurantId', authenticate, requireRestaurantOwner, (r
       FROM orders o
       JOIN users u ON o.customer_id = u.id
       LEFT JOIN payments p ON o.id = p.order_id
-      WHERE o.restaurant_id = ?
+      WHERE (o.branch_id = ? OR o.restaurant_id = ?)
       ORDER BY o.id DESC
-    `).all(req.params.restaurantId);
+    `).all(req.params.restaurantId, req.params.restaurantId);
 
     const getItems = db.prepare('SELECT * FROM order_items WHERE order_id = ?');
 
@@ -334,7 +393,7 @@ router.patch('/:id/status', authenticate, (req, res) => {
     const order = db.prepare(`
       SELECT o.*, r.name as restaurant_name, r.owner_id
       FROM orders o
-      JOIN restaurants r ON o.restaurant_id = r.id
+      JOIN restaurants r ON (o.branch_id = r.id OR o.restaurant_id = r.id)
       WHERE o.id = ?
     `).get(req.params.id);
 
@@ -342,9 +401,13 @@ router.patch('/:id/status', authenticate, (req, res) => {
       return res.status(404).json({ error: 'Order not found.' });
     }
 
-    // Role verification
-    if (req.user.role !== 'super_admin' && order.owner_id !== req.user.id) {
-      return res.status(403).json({ error: 'Access denied.' });
+    // Role verification: Super admin or owner/manager of this branch
+    const isAuthorized = req.user.role === 'super_admin' ||
+      order.owner_id === req.user.id ||
+      (req.user.branch_id && (Number(req.user.branch_id) === Number(order.branch_id) || Number(req.user.branch_id) === Number(order.restaurant_id)));
+
+    if (!isAuthorized) {
+      return res.status(403).json({ error: 'Access denied: order belongs to another restaurant branch.' });
     }
 
     db.prepare(`
@@ -383,12 +446,14 @@ router.patch('/:id/status', authenticate, (req, res) => {
 
     // Real-Time Socket Broadcast
     if (req.io) {
+      const branchId = order.branch_id || order.restaurant_id;
       const payload = {
         id: order.id,
         orderId: order.id,
         order_id: order.id,
         order_number: order.order_number,
         restaurant_id: order.restaurant_id,
+        branch_id: branchId,
         restaurant_name: order.restaurant_name,
         customer_id: order.customer_id,
         status,
@@ -408,11 +473,15 @@ router.patch('/:id/status', authenticate, (req, res) => {
         req.io.to(`customer_${order.customer_id}`).emit('order:ready', payload);
       }
 
-      // Notify restaurant channel for synchronized admin dashboard
-      req.io.to(`restaurant_${order.restaurant_id}`).emit('order:status_changed', payload);
-      req.io.to(`restaurant_${order.restaurant_id}`).emit('order:restaurant_status_updated', payload);
-      req.io.to(`restaurant_${order.restaurant_id}`).emit('order:status_updated', payload);
-      console.log(`[SOCKET] Emitted order:status_changed (${status}) for order #${order.id} to room restaurant_${order.restaurant_id}`);
+      // Notify restaurant/branch channel for synchronized admin dashboard
+      req.io.to(`branch:${branchId}`).emit('order:status_changed', payload);
+      req.io.to(`branch:${branchId}`).emit('order:restaurant_status_updated', payload);
+      req.io.to(`branch:${branchId}`).emit('order:status_updated', payload);
+
+      req.io.to(`restaurant_${branchId}`).emit('order:status_changed', payload);
+      req.io.to(`restaurant_${branchId}`).emit('order:restaurant_status_updated', payload);
+      req.io.to(`restaurant_${branchId}`).emit('order:status_updated', payload);
+      console.log(`[SOCKET] Emitted order:status_changed (${status}) for order #${order.id} to branch:${branchId} & restaurant_${branchId}`);
     }
 
     res.json({
@@ -438,7 +507,7 @@ router.post('/verify-qr', authenticate, (req, res) => {
     let query = `
       SELECT o.*, r.name as restaurant_name, r.owner_id, u.name as customer_name
       FROM orders o
-      JOIN restaurants r ON o.restaurant_id = r.id
+      JOIN restaurants r ON (o.branch_id = r.id OR o.restaurant_id = r.id)
       JOIN users u ON o.customer_id = u.id
       WHERE 1=1
     `;
@@ -453,8 +522,8 @@ router.post('/verify-qr', authenticate, (req, res) => {
     }
 
     if (restaurant_id) {
-      query += ' AND o.restaurant_id = ?';
-      params.push(restaurant_id);
+      query += ' AND (o.restaurant_id = ? OR o.branch_id = ?)';
+      params.push(restaurant_id, restaurant_id);
     }
 
     const order = db.prepare(query).get(...params);
@@ -464,8 +533,12 @@ router.post('/verify-qr', authenticate, (req, res) => {
     }
 
     // Authorization check: only authorized restaurant staff or super admin
-    if (req.user.role !== 'super_admin' && order.owner_id !== req.user.id) {
-      return res.status(403).json({ error: 'Access denied: this order is for a different restaurant.' });
+    const isAuthorized = req.user.role === 'super_admin' ||
+      order.owner_id === req.user.id ||
+      (req.user.branch_id && (Number(req.user.branch_id) === Number(order.branch_id) || Number(req.user.branch_id) === Number(order.restaurant_id)));
+
+    if (!isAuthorized) {
+      return res.status(403).json({ error: 'Access denied: this order is for a different restaurant branch.' });
     }
 
     // Check if already completed (prevent reuse)
@@ -504,15 +577,18 @@ router.post('/verify-qr', authenticate, (req, res) => {
 
     // Broadcast real-time completion
     if (req.io) {
+      const branchId = order.branch_id || order.restaurant_id;
       const payload = {
         order_id: order.id,
         order_number: order.order_number,
         status: 'completed',
-        restaurant_id: order.restaurant_id
+        restaurant_id: order.restaurant_id,
+        branch_id: branchId
       };
       req.io.to(`order_${order.id}`).emit('order:status_updated', payload);
       req.io.to(`customer_${order.customer_id}`).emit('order:status_updated', payload);
-      req.io.to(`restaurant_${order.restaurant_id}`).emit('order:restaurant_status_updated', payload);
+      req.io.to(`branch:${branchId}`).emit('order:restaurant_status_updated', payload);
+      req.io.to(`restaurant_${branchId}`).emit('order:restaurant_status_updated', payload);
     }
 
     res.json({

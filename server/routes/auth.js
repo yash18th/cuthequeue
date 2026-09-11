@@ -155,8 +155,19 @@ router.post('/login', async (req, res) => {
     // Step 4: Demo accounts fallback self-healing (password123 or admin123)
     const DEMO_EMAILS = [
       'campus@demo.com',
+      'rameshwaram.jpnagar@demo.com',
+      'rameshwaram.whitefield@demo.com',
+      'rameshwaram.rajajinagar@demo.com',
       'spice@demo.com',
+      'empire.koramangala@demo.com',
+      'empire.indiranagar@demo.com',
+      'empire.jayanagar@demo.com',
+      'empire.kammanahalli@demo.com',
       'meghana@demo.com',
+      'meghana.indiranagar@demo.com',
+      'meghana.jayanagar@demo.com',
+      'meghana.residency@demo.com',
+      'meghana.marathahalli@demo.com',
       'admin@cutthequeue.com',
       'customer@demo.com',
       'yashvanthnayak1104@gmail.com'
@@ -183,12 +194,28 @@ router.post('/login', async (req, res) => {
       });
     }
 
-    console.log(`[Auth] Login successful: "${cleanEmail}" (Role: ${user.role}, ID: ${user.id})`);
-    const token = jwt.sign({ id: user.id, role: user.role, email: cleanEmail }, JWT_SECRET, { expiresIn: '7d' });
+    console.log(`[Auth] Login successful: "${cleanEmail}" (Role: ${user.role}, ID: ${user.id}, Branch: ${user.branch_id || 'N/A'})`);
+    const token = jwt.sign(
+      { 
+        id: user.id, 
+        role: user.role, 
+        email: cleanEmail,
+        branch_id: user.branch_id || null,
+        restaurant_id: user.restaurant_id || null
+      }, 
+      JWT_SECRET, 
+      { expiresIn: '7d' }
+    );
 
     let restaurant = null;
     if (user.role === 'restaurant_admin') {
-      restaurant = db.prepare('SELECT * FROM restaurants WHERE owner_id = ?').get(user.id);
+      const restId = user.branch_id || user.restaurant_id;
+      if (restId) {
+        restaurant = db.prepare('SELECT * FROM restaurants WHERE id = ?').get(restId);
+      }
+      if (!restaurant) {
+        restaurant = db.prepare('SELECT * FROM restaurants WHERE owner_id = ?').get(user.id);
+      }
     }
 
     const { password_hash, ...userWithoutPassword } = user;
@@ -198,9 +225,12 @@ router.post('/login', async (req, res) => {
       token,
       user: {
         ...userWithoutPassword,
+        branch_id: user.branch_id || (restaurant ? restaurant.id : null),
+        restaurant_id: user.restaurant_id || (restaurant ? restaurant.brand_id : null),
         notification_preferences: JSON.parse(user.notification_preferences || '{"push":true,"sound":true,"vibration":true}')
       },
-      restaurant
+      restaurant,
+      branch: restaurant
     });
   } catch (err) {
     console.error('Login error:', err);
@@ -213,15 +243,24 @@ router.get('/me', authenticate, (req, res) => {
   try {
     let restaurant = null;
     if (req.user.role === 'restaurant_admin') {
-      restaurant = db.prepare('SELECT * FROM restaurants WHERE owner_id = ?').get(req.user.id);
+      const restId = req.user.branch_id || req.user.restaurant_id;
+      if (restId) {
+        restaurant = db.prepare('SELECT * FROM restaurants WHERE id = ?').get(restId);
+      }
+      if (!restaurant) {
+        restaurant = db.prepare('SELECT * FROM restaurants WHERE owner_id = ?').get(req.user.id);
+      }
     }
 
     res.json({
       user: {
         ...req.user,
+        branch_id: req.user.branch_id || (restaurant ? restaurant.id : null),
+        restaurant_id: req.user.restaurant_id || (restaurant ? restaurant.brand_id : null),
         notification_preferences: JSON.parse(req.user.notification_preferences || '{"push":true,"sound":true,"vibration":true}')
       },
-      restaurant
+      restaurant,
+      branch: restaurant
     });
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch user data.' });
@@ -286,51 +325,63 @@ router.post('/reset-password', async (req, res) => {
 
 // Quick demo users list for easy 1-click testing
 router.get('/demo-users', (req, res) => {
-  res.json([
-    {
+  try {
+    const branchAdmins = db.prepare(`
+      SELECT 
+        u.email,
+        'password123' as password,
+        u.name,
+        u.role,
+        r.id as branch_id,
+        r.name as restaurantName,
+        r.branch_name,
+        b.name as brand_name,
+        b.slug as brand_slug,
+        r.area
+      FROM users u
+      JOIN restaurants r ON u.branch_id = r.id
+      JOIN brands b ON r.brand_id = b.id
+      WHERE u.role = 'restaurant_admin'
+      ORDER BY b.id ASC, r.id ASC
+    `).all();
+
+    const formattedBranchAdmins = branchAdmins.map(ba => ({
       role: 'restaurant_admin',
-      roleLabel: 'Rameshwaram Cafe Manager',
-      email: 'campus@demo.com',
+      roleLabel: `${ba.brand_name} Manager`,
+      email: ba.email,
       password: 'password123',
-      name: 'Rohan Sharma',
-      restaurantName: 'The Rameshwaram Cafe - Indiranagar',
-      description: 'Manage live orders, prepare ghee delicacies, and call customer tokens'
-    },
-    {
-      role: 'restaurant_admin',
-      roleLabel: 'Empire Restaurant Manager',
-      email: 'spice@demo.com',
-      password: 'password123',
-      name: 'Farhan Khan',
-      restaurantName: 'Empire Restaurant - Church Street',
-      description: 'Manage live orders, late-night Mughlai & kebab orders'
-    },
-    {
-      role: 'restaurant_admin',
-      roleLabel: 'Meghana Foods Manager',
-      email: 'meghana@demo.com',
-      password: 'password123',
-      name: 'Arjun Rao',
-      restaurantName: 'Meghana Foods - Koramangala',
-      description: 'Manage spicy Andhra biryanis, live queue status, and kitchen fulfillment'
-    },
-    {
-      role: 'super_admin',
-      roleLabel: 'Super Admin',
-      email: 'admin@cutthequeue.com',
-      password: 'password123',
-      name: 'System Administrator',
-      description: 'Platform analytics, manage restaurants, and supervise users'
-    },
-    {
-      role: 'customer',
-      roleLabel: 'Customer',
-      email: 'customer@demo.com',
-      password: 'password123',
-      name: 'Alex Morgan',
-      description: 'Explore menus, place pre-orders, and track queue live'
-    }
-  ]);
+      name: ba.name,
+      restaurantName: ba.restaurantName,
+      branchName: ba.branch_name,
+      brandName: ba.brand_name,
+      area: ba.area,
+      branchId: ba.branch_id,
+      description: `Manage live kitchen orders at ${ba.branch_name} branch`
+    }));
+
+    res.json([
+      ...formattedBranchAdmins,
+      {
+        role: 'super_admin',
+        roleLabel: 'Super Admin',
+        email: 'admin@cutthequeue.com',
+        password: 'password123',
+        name: 'System Administrator',
+        description: 'Platform analytics, manage restaurants, and supervise users'
+      },
+      {
+        role: 'customer',
+        roleLabel: 'Customer',
+        email: 'customer@demo.com',
+        password: 'password123',
+        name: 'Alex Morgan',
+        description: 'Explore menus, place pre-orders, and track queue live'
+      }
+    ]);
+  } catch (err) {
+    console.error('Demo users error:', err);
+    res.status(500).json({ error: 'Failed to fetch demo users' });
+  }
 });
 
 module.exports = router;

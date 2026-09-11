@@ -73,21 +73,28 @@ export default function AdminNavbar({ onOpenScanner, activeOrderCount = 0 }) {
           {restaurant && (
             <div
               style={{
-                display: 'none',
+                display: 'flex',
                 alignItems: 'center',
                 gap: '8px',
-                padding: '4px 12px',
-                background: 'rgba(248, 241, 223, 0.08)',
-                border: '1px solid rgba(196, 154, 82, 0.35)',
+                padding: '5px 14px',
+                background: 'rgba(248, 241, 223, 0.12)',
+                border: '1px solid rgba(196, 154, 82, 0.45)',
                 borderRadius: '9999px',
                 color: '#F8F1DF',
-                fontSize: '0.8rem',
+                fontSize: '0.82rem',
                 marginLeft: '8px'
               }}
               className="restaurant-pill"
             >
               <strong style={{ color: '#C49A52' }}>{restaurant.name}</strong>
-              {restaurant.branch_name && <span style={{ opacity: 0.7 }}>• {restaurant.branch_name}</span>}
+              {restaurant.branch_name && (
+                <span style={{ color: '#F8F1DF', fontWeight: 600 }}>
+                  • 📍 {restaurant.branch_name} Branch
+                </span>
+              )}
+              <span style={{ fontSize: '0.65rem', background: '#10B981', color: 'white', padding: '1px 6px', borderRadius: '4px', fontWeight: 800, textTransform: 'uppercase' }}>
+                LIVE
+              </span>
             </div>
           )}
         </div>

@@ -30,9 +30,14 @@ export function AuthProvider({ children }) {
 
       setUser(res.user);
 
-      // If user has a linked restaurant
-      if (res.user.restaurant_id || res.restaurant?.id) {
-        const restId = res.user.restaurant_id || res.restaurant.id;
+      setUser(res.user);
+
+      // If user has a linked branch/restaurant
+      const restId = res.user.branch_id || res.restaurant?.id || res.user.restaurant_id;
+      if (res.restaurant) {
+        setRestaurant(res.restaurant);
+      }
+      if (restId) {
         try {
           const restData = await restaurantAPI.getById(restId);
           setRestaurant(restData.restaurant || restData);
@@ -69,8 +74,12 @@ export function AuthProvider({ children }) {
     localStorage.setItem('cq_admin_token', res.token);
     setUser(res.user);
 
-    if (res.user.restaurant_id || res.restaurant?.id) {
-      const restId = res.user.restaurant_id || res.restaurant.id;
+    if (res.restaurant) {
+      setRestaurant(res.restaurant);
+    }
+
+    const restId = res.user.branch_id || res.restaurant?.id || res.user.restaurant_id;
+    if (restId) {
       try {
         const restData = await restaurantAPI.getById(restId);
         setRestaurant(restData.restaurant || restData);

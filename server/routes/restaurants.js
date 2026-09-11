@@ -85,6 +85,33 @@ router.get('/brands', (req, res) => {
   }
 });
 
+// Get all branches across all brands
+router.get('/branches', (req, res) => {
+  try {
+    const branches = db.prepare(`
+      SELECT r.*,
+             b.name as brand_name,
+             b.slug as brand_slug,
+             b.logo as brand_logo,
+             b.cuisine as brand_cuisine
+      FROM restaurants r
+      LEFT JOIN brands b ON r.brand_id = b.id
+      WHERE r.is_approved = 1 AND r.is_suspended = 0
+      ORDER BY b.id ASC, r.id ASC
+    `).all();
+
+    const enriched = branches.map(br => ({
+      ...br,
+      is_currently_open: checkIsCurrentlyOpen(br)
+    }));
+
+    res.json({ branches: enriched, total: enriched.length });
+  } catch (err) {
+    console.error('Fetch branches error:', err);
+    res.status(500).json({ error: 'Failed to fetch branches.' });
+  }
+});
+
 // Get single brand with all its branches
 router.get('/brands/:brandIdOrSlug', (req, res) => {
   try {
@@ -373,13 +400,27 @@ router.get('/:id', (req, res) => {
       items: formattedItems.filter(item => item.category_id === cat.id)
     }));
 
+    // Sibling branches belonging to the same brand
+    const siblingBranches = restaurant.brand_id ? db.prepare(`
+      SELECT id, brand_id, name, branch_name, area, address, location, latitude, longitude,
+             contact_phone, opening_time, closing_time, is_open, prep_time_minutes,
+             distance_km, queue_status, queue_count, rating
+      FROM restaurants
+      WHERE brand_id = ? AND is_approved = 1 AND is_suspended = 0
+      ORDER BY id ASC
+    `).all(restaurant.brand_id).map(br => ({
+      ...br,
+      is_currently_open: checkIsCurrentlyOpen(br)
+    })) : [];
+
     res.json({
       restaurant: {
         ...restaurant,
         is_currently_open: checkIsCurrentlyOpen(restaurant)
       },
       categories: categorized,
-      allItems: formattedItems
+      allItems: formattedItems,
+      branches: siblingBranches
     });
   } catch (err) {
     console.error('Fetch restaurant details error:', err);

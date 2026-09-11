@@ -83,8 +83,9 @@ async function seed(options = {}) {
     'password123'
   );
 
-  const rameshwaramAdminId = await upsertUser(
-    'Rohan Sharma (The Rameshwaram Cafe)',
+  // Rameshwaram Cafe Branch Admins
+  const rameshwaramIndiranagarAdminId = await upsertUser(
+    'Rohan Sharma (The Rameshwaram Cafe - Indiranagar)',
     'campus@demo.com',
     '+91 98765 11111',
     'restaurant_admin',
@@ -92,8 +93,36 @@ async function seed(options = {}) {
     'password123'
   );
 
-  const empireAdminId = await upsertUser(
-    'Farhan Khan (Empire Restaurant)',
+  const rameshwaramJpnagarAdminId = await upsertUser(
+    'Suresh Hegde (The Rameshwaram Cafe - JP Nagar)',
+    'rameshwaram.jpnagar@demo.com',
+    '+91 98765 11112',
+    'restaurant_admin',
+    'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
+    'password123'
+  );
+
+  const rameshwaramWhitefieldAdminId = await upsertUser(
+    'Karthik Bhat (The Rameshwaram Cafe - Whitefield)',
+    'rameshwaram.whitefield@demo.com',
+    '+91 98765 11113',
+    'restaurant_admin',
+    'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
+    'password123'
+  );
+
+  const rameshwaramRajajinagarAdminId = await upsertUser(
+    'Naveen Kumar (The Rameshwaram Cafe - Rajajinagar)',
+    'rameshwaram.rajajinagar@demo.com',
+    '+91 98765 11114',
+    'restaurant_admin',
+    'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
+    'password123'
+  );
+
+  // Empire Restaurant Branch Admins
+  const empireChurchStreetAdminId = await upsertUser(
+    'Farhan Khan (Empire Restaurant - Church Street)',
     'spice@demo.com',
     '+91 98765 22222',
     'restaurant_admin',
@@ -101,10 +130,83 @@ async function seed(options = {}) {
     'password123'
   );
 
-  const meghanaAdminId = await upsertUser(
-    'Arjun Rao (Meghana Foods)',
+  const empireKoramangalaAdminId = await upsertUser(
+    'Tariq Ahmed (Empire Restaurant - Koramangala)',
+    'empire.koramangala@demo.com',
+    '+91 98765 22223',
+    'restaurant_admin',
+    'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150',
+    'password123'
+  );
+
+  const empireIndiranagarAdminId = await upsertUser(
+    'Bilal Mansoor (Empire Restaurant - Indiranagar)',
+    'empire.indiranagar@demo.com',
+    '+91 98765 22224',
+    'restaurant_admin',
+    'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150',
+    'password123'
+  );
+
+  const empireJayanagarAdminId = await upsertUser(
+    'Sameer Pasha (Empire Restaurant - Jayanagar)',
+    'empire.jayanagar@demo.com',
+    '+91 98765 22225',
+    'restaurant_admin',
+    'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150',
+    'password123'
+  );
+
+  const empireKammanahalliAdminId = await upsertUser(
+    'Rizwan Syed (Empire Restaurant - Kammanahalli)',
+    'empire.kammanahalli@demo.com',
+    '+91 98765 22226',
+    'restaurant_admin',
+    'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150',
+    'password123'
+  );
+
+  // Meghana Foods Branch Admins
+  const meghanaKoramangalaAdminId = await upsertUser(
+    'Arjun Rao (Meghana Foods - Koramangala)',
     'meghana@demo.com',
     '+91 98765 33333',
+    'restaurant_admin',
+    'https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=150',
+    'password123'
+  );
+
+  const meghanaIndiranagarAdminId = await upsertUser(
+    'Venkatesh Reddy (Meghana Foods - Indiranagar)',
+    'meghana.indiranagar@demo.com',
+    '+91 98765 33334',
+    'restaurant_admin',
+    'https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=150',
+    'password123'
+  );
+
+  const meghanaJayanagarAdminId = await upsertUser(
+    'Praveen Naidu (Meghana Foods - Jayanagar)',
+    'meghana.jayanagar@demo.com',
+    '+91 98765 33335',
+    'restaurant_admin',
+    'https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=150',
+    'password123'
+  );
+
+  const meghanaResidencyAdminId = await upsertUser(
+    'Sunil Verma (Meghana Foods - Residency Road)',
+    'meghana.residency@demo.com',
+    '+91 98765 33336',
+    'restaurant_admin',
+    'https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=150',
+    'password123'
+  );
+
+  const meghanaMarathahalliAdminId = await upsertUser(
+    'Kiran Goud (Meghana Foods - Marathahalli)',
+    'meghana.marathahalli@demo.com',
+    '+91 98765 33337',
     'restaurant_admin',
     'https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=150',
     'password123'
@@ -154,43 +256,51 @@ async function seed(options = {}) {
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `);
   const updateRestOwnerStmt = db.prepare('UPDATE restaurants SET owner_id = ? WHERE id = ?');
+  const linkUserBranchStmt = db.prepare('UPDATE users SET branch_id = ?, restaurant_id = ? WHERE id = ?');
 
   function upsertRestaurant(brandId, name, branch, ownerId) {
     const existing = getRestStmt.get(brandId, branch.branch_name);
+    let restId;
     if (existing) {
+      restId = existing.id;
       if (ownerId && existing.owner_id !== ownerId) {
         updateRestOwnerStmt.run(ownerId, existing.id);
       }
-      return existing.id;
+    } else {
+      const res = insertRestStmt.run(
+        brandId,
+        name,
+        branch.branch_name,
+        branch.area,
+        branch.description || '',
+        branch.cuisine || '',
+        branch.rating || 4.7,
+        branch.logo || '',
+        branch.cover_image || '',
+        branch.address,
+        branch.location,
+        branch.latitude,
+        branch.longitude,
+        branch.contact_phone,
+        branch.opening_time,
+        branch.closing_time,
+        1,
+        1,
+        branch.prep_time_minutes,
+        0,
+        0.05,
+        branch.distance_km,
+        branch.queue_status,
+        branch.queue_count,
+        ownerId
+      );
+      restId = res.lastInsertRowid;
     }
-    const res = insertRestStmt.run(
-      brandId,
-      name,
-      branch.branch_name,
-      branch.area,
-      branch.description || '',
-      branch.cuisine || '',
-      branch.rating || 4.7,
-      branch.logo || '',
-      branch.cover_image || '',
-      branch.address,
-      branch.location,
-      branch.latitude,
-      branch.longitude,
-      branch.contact_phone,
-      branch.opening_time,
-      branch.closing_time,
-      1,
-      1,
-      branch.prep_time_minutes,
-      0,
-      0.05,
-      branch.distance_km,
-      branch.queue_status,
-      branch.queue_count,
-      ownerId
-    );
-    return res.lastInsertRowid;
+
+    if (ownerId && restId) {
+      linkUserBranchStmt.run(restId, brandId, ownerId);
+    }
+    return restId;
   }
 
   // 5. Idempotent Categories & Menu Items
@@ -265,7 +375,7 @@ async function seed(options = {}) {
       queue_count: 14,
       prep_time_minutes: 15,
       distance_km: 1.8,
-      owner_id: rameshwaramAdminId,
+      owner_id: rameshwaramIndiranagarAdminId,
       description: 'Bengaluru’s legendary premium South Indian breakfast and tiffin destination. Famous for fragrant pure dairy ghee delicacies, crispy Podi dosas, and filter coffee.',
       cuisine: 'Pure Veg • South Indian • Tiffin',
       rating: 4.8,
@@ -286,7 +396,7 @@ async function seed(options = {}) {
       queue_count: 8,
       prep_time_minutes: 12,
       distance_km: 5.4,
-      owner_id: null,
+      owner_id: rameshwaramJpnagarAdminId,
       description: 'The Rameshwaram Cafe JP Nagar branch offering warm South Indian breakfast and fresh ghee roasted dosas.',
       cuisine: 'Pure Veg • South Indian • Tiffin',
       rating: 4.7,
@@ -307,7 +417,7 @@ async function seed(options = {}) {
       queue_count: 7,
       prep_time_minutes: 12,
       distance_km: 9.8,
-      owner_id: null,
+      owner_id: rameshwaramWhitefieldAdminId,
       description: 'Whitefield flagship outpost of The Rameshwaram Cafe.',
       cuisine: 'Pure Veg • South Indian • Tiffin',
       rating: 4.8,
@@ -328,7 +438,7 @@ async function seed(options = {}) {
       queue_count: 4,
       prep_time_minutes: 10,
       distance_km: 7.2,
-      owner_id: null,
+      owner_id: rameshwaramRajajinagarAdminId,
       description: 'Rajajinagar branch serving pure ghee dosas and traditional degree filter coffee.',
       cuisine: 'Pure Veg • South Indian • Tiffin',
       rating: 4.7,
@@ -399,7 +509,7 @@ async function seed(options = {}) {
       queue_count: 12,
       prep_time_minutes: 18,
       distance_km: 2.1,
-      owner_id: empireAdminId,
+      owner_id: empireChurchStreetAdminId,
       description: 'Iconic institution of Bengaluru nightlife and comforting Mughlai feasts since 1966. Famous for Empire Special Chicken Kebab, Coin Parottas, and Biryani.',
       cuisine: 'North Indian • Mughlai • Arabian • Biryani',
       rating: 4.6,
@@ -420,7 +530,7 @@ async function seed(options = {}) {
       queue_count: 8,
       prep_time_minutes: 15,
       distance_km: 4.2,
-      owner_id: null,
+      owner_id: empireKoramangalaAdminId,
       description: 'Late night food lovers landmark in 5th Block Koramangala.',
       cuisine: 'North Indian • Mughlai • Arabian • Biryani',
       rating: 4.5,
@@ -441,7 +551,7 @@ async function seed(options = {}) {
       queue_count: 9,
       prep_time_minutes: 15,
       distance_km: 1.6,
-      owner_id: null,
+      owner_id: empireIndiranagarAdminId,
       description: '80 Feet Road Indiranagar hub for delicious kebab platters and biryani.',
       cuisine: 'North Indian • Mughlai • Arabian • Biryani',
       rating: 4.6,
@@ -462,7 +572,7 @@ async function seed(options = {}) {
       queue_count: 5,
       prep_time_minutes: 12,
       distance_km: 6.8,
-      owner_id: null,
+      owner_id: empireJayanagarAdminId,
       description: 'Family dining favorite in Jayanagar 9th Block.',
       cuisine: 'North Indian • Mughlai • Arabian • Biryani',
       rating: 4.5,
@@ -483,7 +593,7 @@ async function seed(options = {}) {
       queue_count: 3,
       prep_time_minutes: 12,
       distance_km: 8.5,
-      owner_id: null,
+      owner_id: empireKammanahalliAdminId,
       description: 'CMR Road Kammanahalli outlet for late evening rolls and meals.',
       cuisine: 'North Indian • Mughlai • Arabian • Biryani',
       rating: 4.5,
@@ -547,7 +657,7 @@ async function seed(options = {}) {
       queue_count: 18,
       prep_time_minutes: 20,
       distance_km: 3.8,
-      owner_id: meghanaAdminId,
+      owner_id: meghanaKoramangalaAdminId,
       description: 'Synonymous with fiery Andhra cuisine and legendary long-grain Biryanis across Bengaluru since 2006. Cooked with authentic Guntur spices and basmati.',
       cuisine: 'Andhra • Biryani Specialist • Spicy South Indian',
       rating: 4.7,
@@ -568,7 +678,7 @@ async function seed(options = {}) {
       queue_count: 14,
       prep_time_minutes: 18,
       distance_km: 1.5,
-      owner_id: null,
+      owner_id: meghanaIndiranagarAdminId,
       description: 'CMH Road Indiranagar branch of Meghana Foods serving spicy boneless biryani.',
       cuisine: 'Andhra • Biryani Specialist • Spicy South Indian',
       rating: 4.7,
@@ -589,7 +699,7 @@ async function seed(options = {}) {
       queue_count: 9,
       prep_time_minutes: 15,
       distance_km: 6.2,
-      owner_id: null,
+      owner_id: meghanaJayanagarAdminId,
       description: 'Jayanagar 4th block hotspot for hot chilli chicken and paneer biryani.',
       cuisine: 'Andhra • Biryani Specialist • Spicy South Indian',
       rating: 4.6,
@@ -610,7 +720,7 @@ async function seed(options = {}) {
       queue_count: 8,
       prep_time_minutes: 15,
       distance_km: 2.8,
-      owner_id: null,
+      owner_id: meghanaResidencyAdminId,
       description: 'Residency Road CBD outlet serving busy business lunch crowds.',
       cuisine: 'Andhra • Biryani Specialist • Spicy South Indian',
       rating: 4.7,
@@ -631,7 +741,7 @@ async function seed(options = {}) {
       queue_count: 5,
       prep_time_minutes: 12,
       distance_km: 8.9,
-      owner_id: null,
+      owner_id: meghanaMarathahalliAdminId,
       description: 'Marathahalli bridge outlet catering to eastern IT corridor.',
       cuisine: 'Andhra • Biryani Specialist • Spicy South Indian',
       rating: 4.6,

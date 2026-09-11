@@ -41,6 +41,50 @@ export default function AdminLoginPage() {
     }
   };
 
+  const [selectedBrandTab, setSelectedBrandTab] = useState('rameshwaram');
+
+  const BRANCH_PROFILES = {
+    rameshwaram: {
+      brandName: 'The Rameshwaram Cafe',
+      shortLabel: 'Rameshwaram (4)',
+      branches: [
+        { branch: 'Indiranagar (Flagship)', email: 'campus@demo.com', manager: 'Rohan Sharma' },
+        { branch: 'JP Nagar', email: 'rameshwaram.jpnagar@demo.com', manager: 'Suresh Hegde' },
+        { branch: 'Whitefield', email: 'rameshwaram.whitefield@demo.com', manager: 'Karthik Bhat' },
+        { branch: 'Rajajinagar', email: 'rameshwaram.rajajinagar@demo.com', manager: 'Naveen Kumar' }
+      ]
+    },
+    empire: {
+      brandName: 'Empire Restaurant',
+      shortLabel: 'Empire (5)',
+      branches: [
+        { branch: 'Church Street (Central)', email: 'spice@demo.com', manager: 'Farhan Khan' },
+        { branch: 'Koramangala', email: 'empire.koramangala@demo.com', manager: 'Tariq Ahmed' },
+        { branch: 'Indiranagar', email: 'empire.indiranagar@demo.com', manager: 'Bilal Mansoor' },
+        { branch: 'Jayanagar', email: 'empire.jayanagar@demo.com', manager: 'Sameer Pasha' },
+        { branch: 'Kammanahalli', email: 'empire.kammanahalli@demo.com', manager: 'Rizwan Syed' }
+      ]
+    },
+    meghana: {
+      brandName: 'Meghana Foods',
+      shortLabel: 'Meghana (5)',
+      branches: [
+        { branch: 'Koramangala (Flagship)', email: 'meghana@demo.com', manager: 'Arjun Rao' },
+        { branch: 'Indiranagar', email: 'meghana.indiranagar@demo.com', manager: 'Venkatesh Reddy' },
+        { branch: 'Jayanagar', email: 'meghana.jayanagar@demo.com', manager: 'Praveen Naidu' },
+        { branch: 'Residency Road', email: 'meghana.residency@demo.com', manager: 'Sunil Verma' },
+        { branch: 'Marathahalli', email: 'meghana.marathahalli@demo.com', manager: 'Kiran Goud' }
+      ]
+    },
+    superadmin: {
+      brandName: 'System Administration',
+      shortLabel: 'Super Admin',
+      branches: [
+        { branch: 'All 14 Branches Super Admin', email: 'admin@cutthequeue.com', manager: 'System Administrator' }
+      ]
+    }
+  };
+
   return (
     <div style={{
       minHeight: '100vh',
@@ -51,7 +95,7 @@ export default function AdminLoginPage() {
       padding: '2rem 1rem'
     }}>
       <div style={{
-        maxWidth: '480px',
+        maxWidth: '520px',
         width: '100%',
         background: '#FFFFFF',
         borderRadius: '16px',
@@ -93,7 +137,7 @@ export default function AdminLoginPage() {
             CUT THE QUEUE
           </h1>
           <p style={{ fontSize: '0.78rem', color: '#C49A52', fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', marginTop: '4px' }}>
-            Restaurant Operations Portal
+            Branch Operations Portal
           </p>
         </div>
 
@@ -123,7 +167,7 @@ export default function AdminLoginPage() {
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             <div>
               <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, color: '#1E2927', marginBottom: '6px' }}>
-                Manager Email
+                Branch Manager Email
               </label>
               <div style={{ position: 'relative' }}>
                 <Mail size={16} style={{ position: 'absolute', left: '12px', top: '14px', color: '#5C6E6A' }} />
@@ -183,83 +227,73 @@ export default function AdminLoginPage() {
                 marginTop: '8px'
               }}
             >
-              {loading ? 'Authenticating...' : 'Sign In to Operations Console'}
+              {loading ? 'Authenticating...' : 'Sign In to Branch Kitchen'}
               {!loading && <ArrowRight size={16} />}
             </button>
           </form>
 
-          {/* Quick Restaurant Selection Switcher */}
+          {/* Quick Restaurant Selection Switcher with All 14 Branches */}
           <div style={{ marginTop: '2rem', paddingTop: '1.5rem', borderTop: '1px dashed #E8E0D2' }}>
             <span style={{ fontSize: '0.72rem', fontWeight: 800, color: '#C49A52', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: '10px', textAlign: 'center' }}>
-              Authorized Restaurant Profiles
+              Select Branch for 1-Click Operations Demo
             </span>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <button
-                type="button"
-                onClick={() => handleQuickFill('campus@demo.com')}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  padding: '10px 14px',
-                  background: '#F8F4EC',
-                  border: '1px solid #E8E0D2',
-                  borderRadius: '8px',
-                  cursor: 'pointer',
-                  textAlign: 'left'
-                }}
-              >
-                <div>
-                  <strong style={{ fontSize: '0.88rem', color: '#0B352D', display: 'block' }}>The Rameshwaram Cafe</strong>
-                  <span style={{ fontSize: '0.74rem', color: '#5C6E6A' }}>Indiranagar • campus@demo.com</span>
-                </div>
-                <ArrowRight size={15} style={{ color: '#C49A52' }} />
-              </button>
+            {/* Brand Tabs */}
+            <div style={{ display: 'flex', gap: '4px', marginBottom: '12px', background: '#F8F4EC', padding: '3px', borderRadius: '8px' }}>
+              {Object.keys(BRANCH_PROFILES).map((key) => (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => setSelectedBrandTab(key)}
+                  style={{
+                    flex: 1,
+                    padding: '6px 4px',
+                    fontSize: '0.72rem',
+                    fontWeight: selectedBrandTab === key ? 800 : 600,
+                    borderRadius: '6px',
+                    border: 'none',
+                    cursor: 'pointer',
+                    background: selectedBrandTab === key ? '#0B352D' : 'transparent',
+                    color: selectedBrandTab === key ? '#F8F1DF' : '#5C6E6A',
+                    transition: 'all 0.15s ease'
+                  }}
+                >
+                  {BRANCH_PROFILES[key].shortLabel}
+                </button>
+              ))}
+            </div>
 
-              <button
-                type="button"
-                onClick={() => handleQuickFill('spice@demo.com')}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  padding: '10px 14px',
-                  background: '#F8F4EC',
-                  border: '1px solid #E8E0D2',
-                  borderRadius: '8px',
-                  cursor: 'pointer',
-                  textAlign: 'left'
-                }}
-              >
-                <div>
-                  <strong style={{ fontSize: '0.88rem', color: '#0B352D', display: 'block' }}>Empire Restaurant</strong>
-                  <span style={{ fontSize: '0.74rem', color: '#5C6E6A' }}>Church Street • spice@demo.com</span>
-                </div>
-                <ArrowRight size={15} style={{ color: '#C49A52' }} />
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleQuickFill('meghana@demo.com')}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  padding: '10px 14px',
-                  background: '#F8F4EC',
-                  border: '1px solid #E8E0D2',
-                  borderRadius: '8px',
-                  cursor: 'pointer',
-                  textAlign: 'left'
-                }}
-              >
-                <div>
-                  <strong style={{ fontSize: '0.88rem', color: '#0B352D', display: 'block' }}>Meghana Foods</strong>
-                  <span style={{ fontSize: '0.74rem', color: '#5C6E6A' }}>Koramangala • meghana@demo.com</span>
-                </div>
-                <ArrowRight size={15} style={{ color: '#C49A52' }} />
-              </button>
+            {/* Branch list for selected brand */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '240px', overflowY: 'auto', paddingRight: '2px' }}>
+              {BRANCH_PROFILES[selectedBrandTab].branches.map((b) => (
+                <button
+                  key={b.email}
+                  type="button"
+                  onClick={() => handleQuickFill(b.email)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '9px 12px',
+                    background: '#FDFCFA',
+                    border: '1px solid #E8E0D2',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                    transition: 'background 0.15s ease'
+                  }}
+                >
+                  <div>
+                    <strong style={{ fontSize: '0.84rem', color: '#0B352D', display: 'block' }}>
+                      {BRANCH_PROFILES[selectedBrandTab].brandName} — {b.branch}
+                    </strong>
+                    <span style={{ fontSize: '0.72rem', color: '#5C6E6A' }}>
+                      {b.manager} • {b.email}
+                    </span>
+                  </div>
+                  <ArrowRight size={14} style={{ color: '#C49A52', flexShrink: 0 }} />
+                </button>
+              ))}
             </div>
           </div>
         </div>

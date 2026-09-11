@@ -88,11 +88,20 @@ app.get('/api/health', (req, res) => {
 io.on('connection', (socket) => {
   console.log(`⚡ [Socket] Client connected: ${socket.id}`);
 
-  // Join restaurant room for live kitchen updates
+  // Join restaurant or branch room for live kitchen updates
   socket.on('join:restaurant', (restaurantId) => {
     if (restaurantId) {
       socket.join(`restaurant_${restaurantId}`);
-      console.log(`[Socket] ${socket.id} joined restaurant_${restaurantId}`);
+      socket.join(`branch:${restaurantId}`);
+      console.log(`[Socket] ${socket.id} joined restaurant_${restaurantId} & branch:${restaurantId}`);
+    }
+  });
+
+  socket.on('join:branch', (branchId) => {
+    if (branchId) {
+      socket.join(`branch:${branchId}`);
+      socket.join(`restaurant_${branchId}`);
+      console.log(`[Socket] ${socket.id} joined branch:${branchId} & restaurant_${branchId}`);
     }
   });
 

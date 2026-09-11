@@ -262,7 +262,13 @@ export default function OrderTrackingPage({ orderId, setActivePage }) {
                 <StatusBadge status={order.status} size="large" />
               </div>
               <p style={{ color: 'var(--text-secondary)', fontSize: '0.925rem' }}>
-                Placed at <strong style={{ color: 'var(--text-charcoal)' }}>{order.restaurant_name}</strong> • {new Date(order.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                Placed at <strong style={{ color: 'var(--text-charcoal)' }}>{order.restaurant_name}</strong>
+                {order.branch_name && order.branch_name !== order.restaurant_name && (
+                  <span style={{ color: 'var(--accent-gold)', fontWeight: 700, marginLeft: '6px' }}>
+                    ({order.branch_name})
+                  </span>
+                )}
+                {' '}• {new Date(order.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
               </p>
             </div>
 
@@ -429,7 +435,7 @@ export default function OrderTrackingPage({ orderId, setActivePage }) {
             Pickup Code: <strong style={{ color: 'var(--bg-deep-green)' }}>{order.qr_code_token?.substring(0, 8).toUpperCase()}</strong>
           </div>
           <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 600 }}>
-            Counter: {order.restaurant_name}
+            Counter: {order.restaurant_name} {order.branch_name && order.branch_name !== order.restaurant_name ? `(${order.branch_name})` : ''}
           </div>
 
           {order.status === 'completed' && (
@@ -519,7 +525,12 @@ export default function OrderTrackingPage({ orderId, setActivePage }) {
             fontSize: '0.85rem'
           }}>
             <div>
-              <div style={{ fontWeight: 800, color: 'var(--text-charcoal)', fontFamily: 'var(--font-serif)', fontSize: '1rem' }}>{order.restaurant_name}</div>
+              <div style={{ fontWeight: 800, color: 'var(--text-charcoal)', fontFamily: 'var(--font-serif)', fontSize: '1rem' }}>
+                {order.restaurant_name}
+                {order.branch_name && order.branch_name !== order.restaurant_name && (
+                  <span style={{ fontSize: '0.85rem', color: 'var(--accent-gold)', marginLeft: '6px' }}>• {order.branch_name}</span>
+                )}
+              </div>
               <div style={{ color: 'var(--text-secondary)', marginTop: '2px' }}>{order.restaurant_address}</div>
             </div>
             {order.restaurant_phone && (

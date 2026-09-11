@@ -163,8 +163,13 @@ export default function OrderConfirmationPage() {
               <div style={{ fontSize: '1.05rem', fontWeight: 800, color: 'var(--text-charcoal)', marginTop: '4px', fontFamily: 'var(--font-serif)' }}>
                 {order?.restaurant_name}
               </div>
+              {order?.branch_name && (
+                <div style={{ fontSize: '0.85rem', color: '#0B352D', fontWeight: 700, marginTop: '2px' }}>
+                  📍 {order.branch_name} Branch
+                </div>
+              )}
               <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
-                {order?.restaurant_location || order?.restaurant_address || 'Bengaluru Counter Pickup'}
+                {order?.restaurant_address || order?.restaurant_location || 'Bengaluru Counter Pickup'}
               </div>
             </div>
           </div>

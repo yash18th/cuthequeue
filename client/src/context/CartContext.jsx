@@ -51,6 +51,11 @@ function sanitizeRestaurant(rest) {
   return {
     ...rest,
     id: rest.id,
+    branch_id: rest.branch_id || rest.id,
+    branch_name: rest.branch_name || rest.area || '',
+    area: rest.area || '',
+    address: rest.address || '',
+    brand_name: rest.brand_name || (rest.name ? rest.name.split(' - ')[0] : 'Restaurant'),
     name: rest.name || 'Restaurant Kitchen',
     tax_rate: Number.isFinite(Number(rest.tax_rate)) ? Number(rest.tax_rate) : 0.05,
     prep_time_minutes: Number(rest.prep_time_minutes) || 15

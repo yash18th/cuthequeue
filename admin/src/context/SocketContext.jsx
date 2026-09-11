@@ -37,13 +37,14 @@ export function SocketProvider({ children }) {
     };
   }, []);
 
-  // Join the restaurant room once authenticated and socket is ready
+  // Join the restaurant / branch room once authenticated and socket is ready
   useEffect(() => {
     if (!socket || !connected || !restaurant?.id) return;
 
     socket.emit('join:restaurant', restaurant.id);
-    console.log(`📡 Joined real-time room for restaurant #${restaurant.id} (${restaurant.name})`);
-  }, [socket, connected, restaurant?.id]);
+    socket.emit('join:branch', restaurant.id);
+    console.log(`📡 Joined real-time room for restaurant/branch #${restaurant.id} (${restaurant.name} - ${restaurant.branch_name || ''})`);
+  }, [socket, connected, restaurant?.id, restaurant?.name, restaurant?.branch_name]);
 
   // Global event listener for new orders
   useEffect(() => {
@@ -55,10 +56,11 @@ export function SocketProvider({ children }) {
       const num = order.order_number || order.id || 'Live';
       const itemsCount = Array.isArray(order.items) ? order.items.length : 1;
       const amt = Number(order.total_amount || order.total || 0);
+      const branchStr = order.branch_name || restaurant?.branch_name || '';
 
       notify({
-        title: `🔔 New Order #${num}!`,
-        message: `${itemsCount} item${itemsCount > 1 ? 's' : ''} • ₹${amt}`,
+        title: `🔔 New Order ${num}!`,
+        message: `${branchStr ? `📍 ${branchStr} • ` : ''}${itemsCount} item${itemsCount > 1 ? 's' : ''} • ₹${amt}`,
         type: 'success'
       });
     };
@@ -68,7 +70,7 @@ export function SocketProvider({ children }) {
     return () => {
       socket.off('order:created', handleNewOrder);
     };
-  }, [socket, notify]);
+  }, [socket, notify, restaurant?.branch_name]);
 
   return (
     <SocketContext.Provider value={{ socket, connected }}>
