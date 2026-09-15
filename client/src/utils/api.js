@@ -37,7 +37,10 @@ export async function apiRequest(endpoint, options = {}) {
 
     return data;
   } catch (err) {
-    if (err.name === 'TypeError' && err.message && err.message.includes('fetch')) {
+    if ((err.name === 'TypeError' && err.message && (err.message.includes('fetch') || err.message.includes('Load failed'))) ||
+        err.message?.includes('Failed to fetch') ||
+        err.message?.includes('NetworkError') ||
+        err.name === 'AbortError') {
       const netErr = new Error('Unable to connect to the server. Please try again.');
       netErr.code = 'NETWORK_ERROR';
       netErr.status = 0;

@@ -27,12 +27,12 @@ router.post('/register', async (req, res) => {
     const validRoles = ['customer', 'restaurant_admin'];
     const assignedRole = validRoles.includes(role) ? role : 'customer';
 
-    const existing = db.prepare('SELECT id FROM users WHERE LOWER(TRIM(email)) = ?').get(cleanEmail);
+    const existing = db.prepare('SELECT id FROM users WHERE LOWER(TRIM(email)) = LOWER(TRIM(?))').get(cleanEmail);
     if (existing) {
       console.log(`[AUTH REGISTER] email=${cleanEmail} database=${dbPath} existingUser=true`);
       return res.status(409).json({
-        error: 'This email is already registered. Please sign in.',
-        message: 'This email is already registered. Please sign in.',
+        error: 'An account with this email already exists. Please sign in instead.',
+        message: 'An account with this email already exists. Please sign in instead.',
         code: 'EMAIL_ALREADY_REGISTERED'
       });
     }
@@ -44,6 +44,17 @@ router.post('/register', async (req, res) => {
     `).run(cleanName, cleanEmail, cleanPhone, passwordHash, assignedRole);
 
     const userId = result.lastInsertRowid;
+
+    // Immediately verify user exists in database via normalized email lookup
+    const verifiedUser = db.prepare('SELECT id, name, email, phone, role, avatar, notification_preferences FROM users WHERE LOWER(TRIM(email)) = LOWER(TRIM(?))').get(cleanEmail);
+    if (!verifiedUser || verifiedUser.id !== userId) {
+      console.error(`[AUTH REGISTER FAILED] User verification failed after insert for email=${cleanEmail}`);
+      return res.status(500).json({
+        error: 'Registration failed due to database verification error. Please try again.',
+        message: 'Registration failed due to database verification error. Please try again.',
+        code: 'SERVER_ERROR'
+      });
+    }
 
     // If registered as restaurant admin, create a default restaurant entry for them
     let restaurant = null;
@@ -64,17 +75,15 @@ router.post('/register', async (req, res) => {
 
     const token = jwt.sign({ id: userId, role: assignedRole, email: cleanEmail }, JWT_SECRET, { expiresIn: '7d' });
 
-    const newUser = db.prepare('SELECT id, name, email, phone, role, avatar, notification_preferences FROM users WHERE id = ?').get(userId);
-
     console.log(`[AUTH REGISTER] email=${cleanEmail} database=${dbPath} existingUser=false userId=${userId} role=${assignedRole}`);
 
     res.status(201).json({
       message: 'Account created successfully',
       token,
       user: {
-        ...newUser,
+        ...verifiedUser,
         email: cleanEmail,
-        notification_preferences: JSON.parse(newUser.notification_preferences || '{"push":true,"sound":true,"vibration":true}')
+        notification_preferences: JSON.parse(verifiedUser.notification_preferences || '{"push":true,"sound":true,"vibration":true}')
       },
       restaurant
     });
@@ -104,8 +113,12 @@ router.post('/login', async (req, res) => {
       });
     }
 
-    const user = db.prepare('SELECT * FROM users WHERE LOWER(TRIM(email)) = ?').get(cleanEmail);
-    console.log(`[AUTH LOGIN] email=${cleanEmail} database=${dbPath} userFound=${!!user}`);
+    console.log(`[AUTH] Login attempt`);
+    console.log(`[AUTH] normalized email: ${cleanEmail}`);
+    console.log(`[AUTH] database connected: true`);
+
+    const user = db.prepare('SELECT * FROM users WHERE LOWER(TRIM(email)) = LOWER(TRIM(?))').get(cleanEmail);
+    console.log(`[AUTH] user found: ${!!user}`);
 
     if (!user) {
       return res.status(401).json({
@@ -126,6 +139,7 @@ router.post('/login', async (req, res) => {
 
     // Step 1: Direct comparison with normalized cleanPassword
     let isMatch = await bcrypt.compare(cleanPassword, user.password_hash);
+    console.log(`[AUTH] password valid: ${isMatch}`);
 
     // Step 2: Fallback comparison with un-trimmed raw password if provided
     if (!isMatch && typeof password === 'string' && password !== cleanPassword) {
@@ -169,8 +183,7 @@ router.post('/login', async (req, res) => {
       'meghana.residency@demo.com',
       'meghana.marathahalli@demo.com',
       'admin@cutthequeue.com',
-      'customer@demo.com',
-      'yashvanthnayak1104@gmail.com'
+      'customer@demo.com'
     ];
 
     if (!isMatch && DEMO_EMAILS.includes(cleanEmail)) {
@@ -188,8 +201,8 @@ router.post('/login', async (req, res) => {
 
     if (!isMatch) {
       return res.status(401).json({
-        error: 'Incorrect password. Please try again.',
-        message: 'Incorrect password. Please try again.',
+        error: 'Incorrect password.',
+        message: 'Incorrect password.',
         code: 'INVALID_PASSWORD'
       });
     }

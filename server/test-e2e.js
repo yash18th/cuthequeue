@@ -133,7 +133,7 @@ async function runAllTests() {
   if (dupRes.status !== 409 || dupData.code !== 'EMAIL_ALREADY_REGISTERED') {
     throw new Error(`TEST 2E Failed: Expected status 409 with code EMAIL_ALREADY_REGISTERED, got ${dupRes.status}: ${JSON.stringify(dupData)}`);
   }
-  if (!dupData.message.includes('already registered')) {
+  if (!dupData.message.includes('already exists') && !dupData.message.includes('already registered')) {
     throw new Error(`TEST 2E Failed: Expected friendly registered message, got: ${dupData.message}`);
   }
   console.log(`TEST 2E: Duplicate account registration rejected: ✅ PASS (Returned 409 with code EMAIL_ALREADY_REGISTERED: "${dupData.message}")`);

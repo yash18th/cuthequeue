@@ -77,13 +77,13 @@ export default function AuthPage({ setActivePage, initialMode = 'login' }) {
       setErrorCode(code);
 
       if (code === 'EMAIL_ALREADY_REGISTERED' || code === 'ACCOUNT_EXISTS') {
-        setError('This email is already registered. Please sign in.');
+        setError('This email is already registered.');
       } else if (code === 'INVALID_PASSWORD') {
-        setError('Incorrect password. Please try again.');
+        setError('Incorrect password.');
       } else if (code === 'ACCOUNT_NOT_FOUND') {
         setError('No account found with this email.');
       } else if (code === 'NETWORK_ERROR') {
-        setError('Unable to connect to the server. Please check your internet connection.');
+        setError('Unable to connect to the server. Please try again.');
       } else if (code === 'SERVER_ERROR') {
         setError('Something went wrong on the server. Please try again.');
       } else {
@@ -193,7 +193,7 @@ export default function AuthPage({ setActivePage, initialMode = 'login' }) {
                     boxShadow: '0 2px 8px rgba(11, 53, 45, 0.2)'
                   }}
                 >
-                  <span>Sign in instead &rarr;</span>
+                  <span>Sign In Instead &rarr;</span>
                 </button>
               )}
               {isLogin && errorCode === 'ACCOUNT_NOT_FOUND' && (

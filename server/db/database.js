@@ -2,12 +2,36 @@ const Database = require('better-sqlite3');
 const path = require('path');
 const fs = require('fs');
 
-const defaultDbPath = path.join(__dirname, '../../data/cutthequeue.db');
-const dbPath = process.env.DB_PATH ? path.resolve(process.env.DB_PATH) : defaultDbPath;
-const dbDir = path.dirname(dbPath);
+const defaultDbPath = path.resolve(__dirname, '../../data/cutthequeue.db');
 
+// Check DATABASE_PATH first (Render / industry standard), then DB_PATH
+const rawEnvPath = process.env.DATABASE_PATH || process.env.DB_PATH;
+
+let dbPath;
+if (rawEnvPath && rawEnvPath.trim()) {
+  const clean = rawEnvPath.trim();
+  dbPath = path.isAbsolute(clean) ? clean : path.resolve(process.cwd(), clean);
+} else if (fs.existsSync('/var/data')) {
+  // Render persistent disk mount directory convention
+  dbPath = '/var/data/cutthequeue.db';
+} else {
+  dbPath = defaultDbPath;
+}
+
+const dbDir = path.dirname(dbPath);
 if (!fs.existsSync(dbDir)) {
   fs.mkdirSync(dbDir, { recursive: true });
+}
+
+const dbExistsBefore = fs.existsSync(dbPath);
+console.log(`[DB] Using database: ${dbPath}`);
+console.log(`[DB] Database exists prior to connection: ${dbExistsBefore}`);
+
+// In production (Render/cloud), warn if database is on ephemeral filesystem
+const isProduction = process.env.NODE_ENV === 'production' || process.env.RENDER === 'true';
+const isEphemeralPath = !dbPath.startsWith('/var/data') && !process.env.DATABASE_PATH;
+if (isProduction && isEphemeralPath) {
+  console.warn(`⚠️ [DB WARNING] Running in cloud production without a dedicated persistent disk (DATABASE_PATH). SQLite file is at ephemeral path (${dbPath}) and will be reset if the container restarts. To ensure permanent data persistence on Render, attach a persistent disk (e.g., at /var/data) and configure DATABASE_PATH=/var/data/cutthequeue.db.`);
 }
 
 const db = new Database(dbPath);
@@ -253,6 +277,32 @@ function initDatabase() {
     console.warn('[Database] Email normalization note:', normErr.message);
   }
 
+  // Detect and resolve any duplicate normalized emails before applying unique constraint
+  try {
+    const dupUsers = db.prepare(`
+      SELECT LOWER(TRIM(email)) as norm_email, COUNT(*) as count, MIN(id) as keep_id
+      FROM users
+      GROUP BY LOWER(TRIM(email))
+      HAVING count > 1
+    `).all();
+
+    if (dupUsers && dupUsers.length > 0) {
+      console.warn(`[Database] Found ${dupUsers.length} duplicated user email accounts. Preserving earliest IDs.`);
+      for (const dup of dupUsers) {
+        db.prepare(`
+          UPDATE users
+          SET email = email || '_dup_' || id
+          WHERE LOWER(TRIM(email)) = ? AND id != ?
+        `).run(dup.norm_email, dup.keep_id);
+      }
+    }
+
+    // Safely enforce unique case-insensitive email index
+    db.exec(`CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email_unique_lower ON users(LOWER(TRIM(email)));`);
+  } catch (idxErr) {
+    console.warn('[Database] Unique email index note:', idxErr.message);
+  }
+
   // Create performance indexes if not exists
   db.exec(`
     CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
@@ -273,4 +323,17 @@ function initDatabase() {
   return { success: true, dbPath };
 }
 
-module.exports = { db, initDatabase, dbPath };
+function checkDatabaseHealth() {
+  try {
+    const check = db.prepare('SELECT 1 as alive').get();
+    if (!check || check.alive !== 1) return false;
+    const requiredTables = ['users', 'restaurants', 'orders'];
+    const tables = db.prepare("SELECT name FROM sqlite_master WHERE type='table'").all().map(t => t.name);
+    return requiredTables.every(t => tables.includes(t));
+  } catch (err) {
+    console.error('[DB Health] Check failed:', err.message);
+    return false;
+  }
+}
+
+module.exports = { db, initDatabase, dbPath, DB_PATH: dbPath, checkDatabaseHealth };

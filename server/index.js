@@ -5,7 +5,7 @@ const cors = require('cors');
 const path = require('path');
 require('dotenv').config();
 
-const { db, initDatabase } = require('./db/database');
+const { db, initDatabase, checkDatabaseHealth } = require('./db/database');
 const { seed } = require('./db/seed');
 const authRoutes = require('./routes/auth');
 const restaurantRoutes = require('./routes/restaurants');
@@ -77,9 +77,19 @@ app.use('/api/showcases', showcaseRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
+  const isHealthy = checkDatabaseHealth ? checkDatabaseHealth() : true;
+  if (!isHealthy) {
+    return res.status(503).json({
+      status: 'error',
+      database: 'disconnected',
+      service: 'Cut the Queue API',
+      message: 'Database health verification failed'
+    });
+  }
+
   res.json({
     status: 'ok',
-    timestamp: new Date().toISOString(),
+    database: 'connected',
     service: 'Cut the Queue API'
   });
 });
