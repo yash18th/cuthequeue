@@ -220,30 +220,16 @@ router.post('/login', async (req, res) => {
       { expiresIn: '7d' }
     );
 
-    let restaurant = null;
-    if (user.role === 'restaurant_admin') {
-      const restId = user.branch_id || user.restaurant_id;
-      if (restId) {
-        restaurant = db.prepare('SELECT * FROM restaurants WHERE id = ?').get(restId);
-      }
-      if (!restaurant) {
-        restaurant = db.prepare('SELECT * FROM restaurants WHERE owner_id = ?').get(user.id);
-      }
-    }
-
     const { password_hash, ...userWithoutPassword } = user;
+    const { enrichedUser, restaurant, branch, brand } = resolveUserRestaurantContext(userWithoutPassword);
 
     res.json({
       message: 'Login successful',
       token,
-      user: {
-        ...userWithoutPassword,
-        branch_id: user.branch_id || (restaurant ? restaurant.id : null),
-        restaurant_id: user.restaurant_id || (restaurant ? restaurant.brand_id : null),
-        notification_preferences: JSON.parse(user.notification_preferences || '{"push":true,"sound":true,"vibration":true}')
-      },
+      user: enrichedUser,
       restaurant,
-      branch: restaurant
+      branch,
+      brand
     });
   } catch (err) {
     console.error('Login error:', err);
@@ -255,29 +241,66 @@ router.post('/login', async (req, res) => {
   }
 });
 
+// Helper to resolve enriched branch, restaurant, and brand info
+function resolveUserRestaurantContext(user) {
+  let restaurant = null;
+  let brand = null;
+  if (user && user.role === 'restaurant_admin') {
+    const branchId = user.branch_id;
+    if (branchId) {
+      restaurant = db.prepare('SELECT * FROM restaurants WHERE id = ?').get(branchId);
+    }
+    if (!restaurant && user.restaurant_id) {
+      restaurant = db.prepare('SELECT * FROM restaurants WHERE id = ?').get(user.restaurant_id);
+    }
+    if (!restaurant) {
+      restaurant = db.prepare('SELECT * FROM restaurants WHERE owner_id = ?').get(user.id);
+    }
+
+    if (restaurant) {
+      const brandId = restaurant.brand_id || user.restaurant_id;
+      if (brandId) {
+        brand = db.prepare('SELECT * FROM brands WHERE id = ?').get(brandId);
+      }
+      restaurant = {
+        ...restaurant,
+        branch_id: restaurant.id,
+        branch_name: restaurant.branch_name || restaurant.name,
+        branch_slug: restaurant.slug || '',
+        brand_id: brand ? brand.id : (restaurant.brand_id || null),
+        brand_name: brand ? brand.name : restaurant.name,
+        brand_slug: brand ? brand.slug : ''
+      };
+    }
+  }
+
+  const enrichedUser = {
+    ...user,
+    branch_id: user.branch_id || (restaurant ? restaurant.id : null),
+    branch_name: restaurant ? (restaurant.branch_name || restaurant.name) : null,
+    branch_slug: restaurant ? restaurant.slug : null,
+    restaurant_id: (brand ? brand.id : (restaurant ? restaurant.brand_id : user.restaurant_id)) || null,
+    brand_id: (brand ? brand.id : (restaurant ? restaurant.brand_id : user.restaurant_id)) || null,
+    brand_name: brand ? brand.name : (restaurant ? restaurant.name : null),
+    brand_slug: brand ? brand.slug : null,
+    notification_preferences: typeof user.notification_preferences === 'string'
+      ? JSON.parse(user.notification_preferences || '{"push":true,"sound":true,"vibration":true}')
+      : (user.notification_preferences || { push: true, sound: true, vibration: true })
+  };
+
+  return { enrichedUser, restaurant, branch: restaurant, brand };
+}
+
 // Current user profile + restaurant info
 router.get('/me', authenticate, (req, res) => {
   try {
-    let restaurant = null;
-    if (req.user.role === 'restaurant_admin') {
-      const restId = req.user.branch_id || req.user.restaurant_id;
-      if (restId) {
-        restaurant = db.prepare('SELECT * FROM restaurants WHERE id = ?').get(restId);
-      }
-      if (!restaurant) {
-        restaurant = db.prepare('SELECT * FROM restaurants WHERE owner_id = ?').get(req.user.id);
-      }
-    }
+    const { enrichedUser, restaurant, branch, brand } = resolveUserRestaurantContext(req.user);
 
     res.json({
-      user: {
-        ...req.user,
-        branch_id: req.user.branch_id || (restaurant ? restaurant.id : null),
-        restaurant_id: req.user.restaurant_id || (restaurant ? restaurant.brand_id : null),
-        notification_preferences: JSON.parse(req.user.notification_preferences || '{"push":true,"sound":true,"vibration":true}')
-      },
+      user: enrichedUser,
       restaurant,
-      branch: restaurant
+      branch,
+      brand
     });
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch user data.' });

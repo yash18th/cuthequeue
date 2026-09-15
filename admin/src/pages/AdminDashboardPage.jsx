@@ -360,14 +360,14 @@ export default function AdminDashboardPage({ onOpenScanner }) {
               <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#22C55E' }} />
             </div>
             <h1 className="font-royal" style={{ fontSize: '1.8rem', color: '#0B352D', marginTop: '2px' }}>
-              {selectedBrand?.name || authRestaurant?.brand_name || authRestaurant?.name || 'The Rameshwaram Cafe'}
+              {selectedBrand?.name || authRestaurant?.brand_name || selectedBranch?.name || authRestaurant?.name || (isSuperAdmin ? 'System Administration' : 'Restaurant Operations')}
             </h1>
             <p style={{ fontSize: '0.85rem', color: '#5C6E6A', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
               <span style={{ fontWeight: 700, color: '#0B352D' }}>
-                {selectedBranch?.branch_name || selectedBranch?.area || authRestaurant?.branch_name || 'Indiranagar'}
+                {selectedBranch?.branch_name || selectedBranch?.area || authRestaurant?.branch_name || (isSuperAdmin ? 'All 14 Branches' : 'Main Branch')}
               </span>
               <span>•</span>
-              <span>Bengaluru Heritage Dining</span>
+              <span>Bengaluru Operations</span>
               <span>•</span>
               <span style={{ color: '#22C55E', fontWeight: 700 }}>● Live Ticket Dispatch</span>
             </p>

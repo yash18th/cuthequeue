@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useBranch } from '../context/BranchContext';
 import { restaurantAPI } from '../utils/api';
 import {
   UtensilsCrossed,
@@ -18,6 +19,9 @@ import {
 
 export default function AdminMenuPage() {
   const { restaurant } = useAuth();
+  const { selectedBranch } = useBranch();
+  const activeRestaurantId = selectedBranch?.id || restaurant?.id;
+
   const [menuItems, setMenuItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -39,9 +43,9 @@ export default function AdminMenuPage() {
   const [submitting, setSubmitting] = useState(false);
 
   const fetchMenu = useCallback(async () => {
-    if (!restaurant?.id) return;
+    if (!activeRestaurantId) return;
     try {
-      const res = await restaurantAPI.getMenu(restaurant.id);
+      const res = await restaurantAPI.getMenu(activeRestaurantId);
       const items = res.menu_items || res.items || res || [];
       setMenuItems(items);
     } catch (err) {
@@ -49,7 +53,7 @@ export default function AdminMenuPage() {
     } finally {
       setLoading(false);
     }
-  }, [restaurant?.id]);
+  }, [activeRestaurantId]);
 
   useEffect(() => {
     fetchMenu();

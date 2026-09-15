@@ -63,8 +63,8 @@ export default function CheckoutPage({ setActivePage, setTrackedOrderId }) {
     try {
       // 1. Prepare server payload with selected customizations and branch_id
       const orderPayload = {
-        restaurant_id: restaurant.id,
-        branch_id: restaurant.branch_id || restaurant.id,
+        restaurant_id: restaurant.brand_id || restaurant.id,
+        branch_id: restaurant.id,
         items: cartItems.map((item) => ({
           menu_item_id: item.menu_item_id,
           name: item.name,

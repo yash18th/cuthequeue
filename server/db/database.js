@@ -225,6 +225,34 @@ function initDatabase() {
   if (!restaurantCols.includes('queue_count')) {
     db.exec('ALTER TABLE restaurants ADD COLUMN queue_count INTEGER DEFAULT 6;');
   }
+  if (!restaurantCols.includes('slug')) {
+    db.exec('ALTER TABLE restaurants ADD COLUMN slug TEXT;');
+  }
+
+  // Backfill unique branch slugs
+  try {
+    const slugMap = [
+      { pattern: '%Rameshwaram%Indiranagar%', slug: 'rameshwaram-indiranagar' },
+      { pattern: '%Rameshwaram%JP Nagar%', slug: 'rameshwaram-jpnagar' },
+      { pattern: '%Rameshwaram%Whitefield%', slug: 'rameshwaram-whitefield' },
+      { pattern: '%Rameshwaram%Rajajinagar%', slug: 'rameshwaram-rajajinagar' },
+      { pattern: '%Empire%Church Street%', slug: 'empire-church-street' },
+      { pattern: '%Empire%Koramangala%', slug: 'empire-koramangala' },
+      { pattern: '%Empire%Indiranagar%', slug: 'empire-indiranagar' },
+      { pattern: '%Empire%Jayanagar%', slug: 'empire-jayanagar' },
+      { pattern: '%Empire%Kammanahalli%', slug: 'empire-kammanahalli' },
+      { pattern: '%Meghana%Koramangala%', slug: 'meghana-koramangala' },
+      { pattern: '%Meghana%Indiranagar%', slug: 'meghana-indiranagar' },
+      { pattern: '%Meghana%Jayanagar%', slug: 'meghana-jayanagar' },
+      { pattern: '%Meghana%Residency%', slug: 'meghana-residency' },
+      { pattern: '%Meghana%Marathahalli%', slug: 'meghana-marathahalli' }
+    ];
+    for (const sm of slugMap) {
+      db.prepare(`UPDATE restaurants SET slug = ? WHERE (slug IS NULL OR slug = '') AND name LIKE ?`).run(sm.slug, sm.pattern);
+    }
+  } catch (slugErr) {
+    console.warn('[Database] Branch slug backfill note:', slugErr.message);
+  }
 
   // Users table branch migrations
   const userCols = db.prepare("PRAGMA table_info(users)").all().map(c => c.name);
@@ -235,13 +263,17 @@ function initDatabase() {
     db.exec('ALTER TABLE users ADD COLUMN branch_id INTEGER REFERENCES restaurants(id) ON DELETE SET NULL;');
   }
 
-  // Orders table branch migrations
+  // Orders table branch and brand migrations
   const orderCols = db.prepare("PRAGMA table_info(orders)").all().map(c => c.name);
   if (!orderCols.includes('branch_id')) {
     db.exec('ALTER TABLE orders ADD COLUMN branch_id INTEGER REFERENCES restaurants(id) ON DELETE CASCADE;');
   }
-  // Backfill legacy orders with branch_id = restaurant_id if null
+  if (!orderCols.includes('brand_id')) {
+    db.exec('ALTER TABLE orders ADD COLUMN brand_id INTEGER REFERENCES brands(id) ON DELETE SET NULL;');
+  }
+  // Backfill legacy orders with branch_id = restaurant_id and brand_id from restaurant
   db.exec('UPDATE orders SET branch_id = restaurant_id WHERE branch_id IS NULL;');
+  db.exec('UPDATE orders SET brand_id = (SELECT brand_id FROM restaurants WHERE restaurants.id = orders.restaurant_id) WHERE brand_id IS NULL;');
 
   // Create branches view for clean relational model access
   db.exec(`
@@ -249,6 +281,7 @@ function initDatabase() {
     SELECT 
       id,
       COALESCE(brand_id, id) AS restaurant_id,
+      slug,
       COALESCE(branch_name, name) AS name,
       address,
       area,

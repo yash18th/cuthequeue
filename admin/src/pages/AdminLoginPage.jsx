@@ -1,89 +1,134 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Lock, Mail, ShieldAlert, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { useBranch } from '../context/BranchContext';
+import { Lock, Mail, ShieldAlert, ArrowRight, CheckCircle2, Store, MapPin, UserCheck, Shield } from 'lucide-react';
 
 export default function AdminLoginPage() {
   const { login } = useAuth();
+  const { setAssignedBranch } = useBranch();
   const navigate = useNavigate();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+
+  const [selectedBrandKey, setSelectedBrandKey] = useState('empire');
+  const [selectedBranch, setSelectedBranch] = useState({
+    id: 24,
+    branch: 'Church Street (Central)',
+    slug: 'empire-church-street',
+    email: 'spice@demo.com',
+    manager: 'Farhan Khan'
+  });
+
+  const [email, setEmail] = useState('spice@demo.com');
+  const [password, setPassword] = useState('password123');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const handleSubmit = async (e) => {
-    e?.preventDefault();
-    setError('');
-    setLoading(true);
-
-    try {
-      await login(email, password);
-      navigate('/dashboard');
-    } catch (err) {
-      setError(err.message || 'Login failed. Please verify credentials.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleQuickFill = async (presetEmail) => {
-    setEmail(presetEmail);
-    setPassword('password123');
-    setError('');
-    setLoading(true);
-    try {
-      await login(presetEmail, 'password123');
-      navigate('/dashboard');
-    } catch (err) {
-      setError(err.message || 'Quick login failed');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const [selectedBrandTab, setSelectedBrandTab] = useState('rameshwaram');
-
-  const BRANCH_PROFILES = {
+  const BRAND_PROFILES = {
     rameshwaram: {
+      brandId: 1,
       brandName: 'The Rameshwaram Cafe',
-      shortLabel: 'Rameshwaram (4)',
+      shortLabel: 'Rameshwaram',
+      tagline: 'Pure South Indian Heritage • Filter Coffee & Ghee Podi Idli',
       branches: [
-        { branch: 'Indiranagar (Flagship)', email: 'campus@demo.com', manager: 'Rohan Sharma' },
-        { branch: 'JP Nagar', email: 'rameshwaram.jpnagar@demo.com', manager: 'Suresh Hegde' },
-        { branch: 'Whitefield', email: 'rameshwaram.whitefield@demo.com', manager: 'Karthik Bhat' },
-        { branch: 'Rajajinagar', email: 'rameshwaram.rajajinagar@demo.com', manager: 'Naveen Kumar' }
+        { id: 20, branch: 'Indiranagar (Flagship)', slug: 'rameshwaram-indiranagar', email: 'campus@demo.com', manager: 'Rohan Sharma' },
+        { id: 21, branch: 'JP Nagar', slug: 'rameshwaram-jpnagar', email: 'rameshwaram.jpnagar@demo.com', manager: 'Suresh Hegde' },
+        { id: 22, branch: 'Whitefield', slug: 'rameshwaram-whitefield', email: 'rameshwaram.whitefield@demo.com', manager: 'Karthik Bhat' },
+        { id: 23, branch: 'Rajajinagar', slug: 'rameshwaram-rajajinagar', email: 'rameshwaram.rajajinagar@demo.com', manager: 'Naveen Kumar' }
       ]
     },
     empire: {
+      brandId: 2,
       brandName: 'Empire Restaurant',
-      shortLabel: 'Empire (5)',
+      shortLabel: 'Empire',
+      tagline: 'Bengaluru Nightlife Icon • Biryani, Ghee Rice & Kebabs',
       branches: [
-        { branch: 'Church Street (Central)', email: 'spice@demo.com', manager: 'Farhan Khan' },
-        { branch: 'Koramangala', email: 'empire.koramangala@demo.com', manager: 'Tariq Ahmed' },
-        { branch: 'Indiranagar', email: 'empire.indiranagar@demo.com', manager: 'Bilal Mansoor' },
-        { branch: 'Jayanagar', email: 'empire.jayanagar@demo.com', manager: 'Sameer Pasha' },
-        { branch: 'Kammanahalli', email: 'empire.kammanahalli@demo.com', manager: 'Rizwan Syed' }
+        { id: 24, branch: 'Church Street (Central)', slug: 'empire-church-street', email: 'spice@demo.com', manager: 'Farhan Khan' },
+        { id: 25, branch: 'Koramangala', slug: 'empire-koramangala', email: 'empire.koramangala@demo.com', manager: 'Tariq Ahmed' },
+        { id: 26, branch: 'Indiranagar', slug: 'empire-indiranagar', email: 'empire.indiranagar@demo.com', manager: 'Bilal Mansoor' },
+        { id: 27, branch: 'Jayanagar', slug: 'empire-jayanagar', email: 'empire.jayanagar@demo.com', manager: 'Sameer Pasha' },
+        { id: 28, branch: 'Kammanahalli', slug: 'empire-kammanahalli', email: 'empire.kammanahalli@demo.com', manager: 'Rizwan Syed' }
       ]
     },
     meghana: {
+      brandId: 3,
       brandName: 'Meghana Foods',
-      shortLabel: 'Meghana (5)',
+      shortLabel: 'Meghana',
+      tagline: 'Legendary Andhra Spicy Biryani & Boneless Chicken Specialties',
       branches: [
-        { branch: 'Koramangala (Flagship)', email: 'meghana@demo.com', manager: 'Arjun Rao' },
-        { branch: 'Indiranagar', email: 'meghana.indiranagar@demo.com', manager: 'Venkatesh Reddy' },
-        { branch: 'Jayanagar', email: 'meghana.jayanagar@demo.com', manager: 'Praveen Naidu' },
-        { branch: 'Residency Road', email: 'meghana.residency@demo.com', manager: 'Sunil Verma' },
-        { branch: 'Marathahalli', email: 'meghana.marathahalli@demo.com', manager: 'Kiran Goud' }
+        { id: 29, branch: 'Koramangala (Flagship)', slug: 'meghana-koramangala', email: 'meghana@demo.com', manager: 'Arjun Rao' },
+        { id: 30, branch: 'Indiranagar', slug: 'meghana-indiranagar', email: 'meghana.indiranagar@demo.com', manager: 'Venkatesh Reddy' },
+        { id: 31, branch: 'Jayanagar', slug: 'meghana-jayanagar', email: 'meghana.jayanagar@demo.com', manager: 'Praveen Naidu' },
+        { id: 32, branch: 'Residency Road', slug: 'meghana-residency-road', email: 'meghana.residency@demo.com', manager: 'Sunil Verma' },
+        { id: 33, branch: 'Marathahalli', slug: 'meghana-marathahalli', email: 'meghana.marathahalli@demo.com', manager: 'Kiran Goud' }
       ]
     },
     superadmin: {
-      brandName: 'System Administration',
+      brandId: null,
+      brandName: 'CutTheQueue Platform Administration',
       shortLabel: 'Super Admin',
+      tagline: 'Unified Multi-Brand Oversight • All 14 Branches',
       branches: [
-        { branch: 'All 14 Branches Super Admin', email: 'admin@cutthequeue.com', manager: 'System Administrator' }
+        { id: null, branch: 'All 14 Branches Super Admin', slug: 'super-admin', email: 'admin@cutthequeue.com', manager: 'System Administrator' }
       ]
     }
   };
+
+  const handleBrandSelect = (brandKey) => {
+    setSelectedBrandKey(brandKey);
+    const profile = BRAND_PROFILES[brandKey];
+    const defaultBranch = profile.branches[0];
+    setSelectedBranch(defaultBranch);
+    setEmail(defaultBranch.email);
+    setPassword(brandKey === 'superadmin' ? 'admin123' : 'password123');
+    setError('');
+  };
+
+  const handleBranchSelect = (branchObj) => {
+    setSelectedBranch(branchObj);
+    setEmail(branchObj.email);
+    setPassword(selectedBrandKey === 'superadmin' ? 'admin123' : 'password123');
+    setError('');
+  };
+
+  const handleDirectBranchLogin = async (branchObj, e) => {
+    if (e) e.stopPropagation();
+    handleBranchSelect(branchObj);
+    executeLogin(branchObj.email, selectedBrandKey === 'superadmin' ? 'admin123' : 'password123', branchObj);
+  };
+
+  const handleSubmit = async (e) => {
+    e?.preventDefault();
+    executeLogin(email, password, selectedBranch);
+  };
+
+  const executeLogin = async (loginEmail, loginPassword, targetBranch) => {
+    setError('');
+    setLoading(true);
+
+    try {
+      const res = await login(loginEmail, loginPassword);
+      const currentBrand = BRAND_PROFILES[selectedBrandKey];
+
+      // Synchronously configure branch and brand in BranchContext before route navigation
+      if (res?.restaurant) {
+        setAssignedBranch(res.restaurant, res.brand || { id: currentBrand?.brandId, name: currentBrand?.brandName });
+      } else if (targetBranch && targetBranch.id) {
+        setAssignedBranch(
+          { id: targetBranch.id, branch_name: targetBranch.branch, slug: targetBranch.slug, brand_id: currentBrand?.brandId },
+          { id: currentBrand?.brandId, name: currentBrand?.brandName }
+        );
+      }
+
+      navigate('/dashboard');
+    } catch (err) {
+      console.error('[Admin Login Error]', err);
+      setError(err.message || 'Login failed. Please verify branch manager credentials.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const currentBrand = BRAND_PROFILES[selectedBrandKey];
 
   return (
     <div style={{
@@ -95,7 +140,7 @@ export default function AdminLoginPage() {
       padding: '2rem 1rem'
     }}>
       <div style={{
-        maxWidth: '520px',
+        maxWidth: '560px',
         width: '100%',
         background: '#FFFFFF',
         borderRadius: '16px',
@@ -103,10 +148,10 @@ export default function AdminLoginPage() {
         boxShadow: '0 24px 60px rgba(0, 0, 0, 0.45)',
         overflow: 'hidden'
       }}>
-        {/* Card Header with Heritage Emblem */}
+        {/* Header with Temple Arch */}
         <div style={{
           background: 'linear-gradient(180deg, #0B352D 0%, #123F35 100%)',
-          padding: '2.5rem 2rem 2rem',
+          padding: '2rem 2rem 1.5rem',
           textAlign: 'center',
           color: '#F8F1DF',
           position: 'relative'
@@ -114,8 +159,8 @@ export default function AdminLoginPage() {
           <div className="temple-frieze" style={{ position: 'absolute', top: 0, left: 0, right: 0 }} />
           
           <div style={{
-            width: '56px',
-            height: '56px',
+            width: '52px',
+            height: '52px',
             borderRadius: '12px',
             background: 'linear-gradient(135deg, #123F35 0%, #0B352D 100%)',
             border: '2px solid #C49A52',
@@ -123,26 +168,22 @@ export default function AdminLoginPage() {
             alignItems: 'center',
             justifyContent: 'center',
             color: '#C49A52',
-            marginBottom: '1rem',
+            marginBottom: '0.75rem',
             boxShadow: '0 6px 20px rgba(0, 0, 0, 0.4)'
           }}>
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M4 20V9C4 5.5 7.5 3 12 3C16.5 3 20 5.5 20 9V20" stroke="#C49A52" strokeWidth="1.6" strokeLinecap="round" />
-              <path d="M8 20V12C8 9.8 9.8 8 12 8C14.2 8 16 9.8 16 12V20" stroke="#C49A52" strokeWidth="1.3" strokeLinecap="round" />
-              <circle cx="12" cy="4.5" r="1.2" fill="#C49A52" />
-            </svg>
+            <Store size={26} strokeWidth={1.8} />
           </div>
 
-          <h1 className="font-royal" style={{ fontSize: '1.6rem', fontWeight: 800, letterSpacing: '0.04em', color: '#F8F1DF', lineHeight: 1.2 }}>
+          <h1 className="font-royal" style={{ fontSize: '1.5rem', fontWeight: 800, letterSpacing: '0.04em', color: '#F8F1DF', lineHeight: 1.2 }}>
             CUT THE QUEUE
           </h1>
-          <p style={{ fontSize: '0.78rem', color: '#C49A52', fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', marginTop: '4px' }}>
-            Branch Operations Portal
+          <p style={{ fontSize: '0.75rem', color: '#C49A52', fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', marginTop: '4px' }}>
+            Restaurant Branch Operations Portal
           </p>
         </div>
 
-        {/* Card Form */}
-        <div style={{ padding: '2rem' }}>
+        {/* Content Container */}
+        <div style={{ padding: '1.75rem 2rem' }}>
           {error && (
             <div style={{
               background: '#FFF1F2',
@@ -158,19 +199,137 @@ export default function AdminLoginPage() {
             }}>
               <ShieldAlert size={18} style={{ flexShrink: 0, marginTop: '2px' }} />
               <div>
-                <strong style={{ display: 'block', marginBottom: '2px' }}>Access Prohibited</strong>
+                <strong style={{ display: 'block', marginBottom: '2px' }}>Authentication Error</strong>
                 <span>{error}</span>
               </div>
             </div>
           )}
 
-          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <div>
-              <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, color: '#1E2927', marginBottom: '6px' }}>
-                Branch Manager Email
+          {/* STEP 1: Select Restaurant Brand */}
+          <div style={{ marginBottom: '1.25rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+              <label style={{ fontSize: '0.78rem', fontWeight: 800, color: '#0B352D', textTransform: 'uppercase', letterSpacing: '0.06em', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span style={{ width: '18px', height: '18px', borderRadius: '50%', background: '#C49A52', color: '#0B352D', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.68rem', fontWeight: 900 }}>1</span>
+                Select Restaurant Brand
               </label>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '6px' }}>
+              {Object.keys(BRAND_PROFILES).map((key) => {
+                const b = BRAND_PROFILES[key];
+                const isActive = selectedBrandKey === key;
+                return (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => handleBrandSelect(key)}
+                    style={{
+                      padding: '8px 4px',
+                      fontSize: '0.74rem',
+                      fontWeight: isActive ? 800 : 600,
+                      borderRadius: '8px',
+                      border: isActive ? '1.5px solid #C49A52' : '1px solid #E8E0D2',
+                      cursor: 'pointer',
+                      background: isActive ? '#0B352D' : '#FCFAF6',
+                      color: isActive ? '#F8F1DF' : '#3D4D49',
+                      transition: 'all 0.15s ease',
+                      textAlign: 'center'
+                    }}
+                  >
+                    {b.shortLabel}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* STEP 2: Select Branch */}
+          <div style={{ marginBottom: '1.25rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+              <label style={{ fontSize: '0.78rem', fontWeight: 800, color: '#0B352D', textTransform: 'uppercase', letterSpacing: '0.06em', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span style={{ width: '18px', height: '18px', borderRadius: '50%', background: '#C49A52', color: '#0B352D', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.68rem', fontWeight: 900 }}>2</span>
+                Select Operational Branch ({currentBrand.brandName})
+              </label>
+              <span style={{ fontSize: '0.7rem', color: '#7E6E5A' }}>
+                {currentBrand.branches.length} {currentBrand.branches.length === 1 ? 'Role' : 'Locations'}
+              </span>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', maxHeight: '175px', overflowY: 'auto', paddingRight: '2px' }}>
+              {currentBrand.branches.map((br) => {
+                const isBranchActive = selectedBranch?.email === br.email;
+                return (
+                  <div
+                    key={br.email}
+                    onClick={() => handleBranchSelect(br)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '8px 12px',
+                      background: isBranchActive ? '#F8F4EC' : '#FCFAF6',
+                      border: isBranchActive ? '1.5px solid #C49A52' : '1px solid #E8E0D2',
+                      borderRadius: '8px',
+                      cursor: 'pointer',
+                      transition: 'all 0.15s ease'
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <MapPin size={15} style={{ color: isBranchActive ? '#C49A52' : '#7E6E5A', flexShrink: 0 }} />
+                      <div>
+                        <strong style={{ fontSize: '0.84rem', color: '#0B352D', display: 'block' }}>
+                          {br.branch}
+                        </strong>
+                        <span style={{ fontSize: '0.72rem', color: '#5C6E6A' }}>
+                          {br.manager} • {br.email}
+                        </span>
+                      </div>
+                    </div>
+                    {isBranchActive ? (
+                      <CheckCircle2 size={16} style={{ color: '#C49A52', flexShrink: 0 }} />
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={(e) => handleDirectBranchLogin(br, e)}
+                        style={{
+                          background: 'transparent',
+                          border: 'none',
+                          color: '#C49A52',
+                          cursor: 'pointer',
+                          padding: '2px 4px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '2px',
+                          fontSize: '0.72rem',
+                          fontWeight: 700
+                        }}
+                      >
+                        Select <ArrowRight size={12} />
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* STEP 3: Sign In Form */}
+          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '12px', borderTop: '1px solid #F0EAE1', paddingTop: '1rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '-4px' }}>
+              <label style={{ fontSize: '0.78rem', fontWeight: 800, color: '#0B352D', textTransform: 'uppercase', letterSpacing: '0.06em', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span style={{ width: '18px', height: '18px', borderRadius: '50%', background: '#C49A52', color: '#0B352D', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.68rem', fontWeight: 900 }}>3</span>
+                Authenticate Branch Manager
+              </label>
+              {selectedBranch && (
+                <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#0B352D', background: '#F8F4EC', padding: '2px 8px', borderRadius: '4px', border: '1px solid #E8E0D2' }}>
+                  {selectedBranch.branch}
+                </span>
+              )}
+            </div>
+
+            <div>
               <div style={{ position: 'relative' }}>
-                <Mail size={16} style={{ position: 'absolute', left: '12px', top: '14px', color: '#5C6E6A' }} />
+                <Mail size={15} style={{ position: 'absolute', left: '12px', top: '12px', color: '#5C6E6A' }} />
                 <input
                   type="email"
                   value={email}
@@ -179,10 +338,10 @@ export default function AdminLoginPage() {
                   required
                   style={{
                     width: '100%',
-                    padding: '10px 12px 10px 38px',
+                    padding: '8px 12px 8px 36px',
                     borderRadius: '8px',
                     border: '1px solid #E8E0D2',
-                    fontSize: '0.92rem',
+                    fontSize: '0.88rem',
                     outline: 'none',
                     background: '#FCFAF6'
                   }}
@@ -191,11 +350,8 @@ export default function AdminLoginPage() {
             </div>
 
             <div>
-              <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, color: '#1E2927', marginBottom: '6px' }}>
-                Password
-              </label>
               <div style={{ position: 'relative' }}>
-                <Lock size={16} style={{ position: 'absolute', left: '12px', top: '14px', color: '#5C6E6A' }} />
+                <Lock size={15} style={{ position: 'absolute', left: '12px', top: '12px', color: '#5C6E6A' }} />
                 <input
                   type="password"
                   value={password}
@@ -204,10 +360,10 @@ export default function AdminLoginPage() {
                   required
                   style={{
                     width: '100%',
-                    padding: '10px 12px 10px 38px',
+                    padding: '8px 12px 8px 36px',
                     borderRadius: '8px',
                     border: '1px solid #E8E0D2',
-                    fontSize: '0.92rem',
+                    fontSize: '0.88rem',
                     outline: 'none',
                     background: '#FCFAF6'
                   }}
@@ -221,81 +377,22 @@ export default function AdminLoginPage() {
               disabled={loading}
               style={{
                 width: '100%',
-                padding: '12px',
-                fontSize: '1rem',
+                padding: '11px',
+                fontSize: '0.95rem',
                 justifyContent: 'center',
-                marginTop: '8px'
+                marginTop: '4px'
               }}
             >
-              {loading ? 'Authenticating...' : 'Sign In to Branch Kitchen'}
-              {!loading && <ArrowRight size={16} />}
+              {loading ? (
+                'Connecting to Branch...'
+              ) : (
+                <>
+                  <span>Sign In as {selectedBranch?.branch || currentBrand.brandName} Manager</span>
+                  <ArrowRight size={16} />
+                </>
+              )}
             </button>
           </form>
-
-          {/* Quick Restaurant Selection Switcher with All 14 Branches */}
-          <div style={{ marginTop: '2rem', paddingTop: '1.5rem', borderTop: '1px dashed #E8E0D2' }}>
-            <span style={{ fontSize: '0.72rem', fontWeight: 800, color: '#C49A52', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: '10px', textAlign: 'center' }}>
-              Select Branch for 1-Click Operations Demo
-            </span>
-
-            {/* Brand Tabs */}
-            <div style={{ display: 'flex', gap: '4px', marginBottom: '12px', background: '#F8F4EC', padding: '3px', borderRadius: '8px' }}>
-              {Object.keys(BRANCH_PROFILES).map((key) => (
-                <button
-                  key={key}
-                  type="button"
-                  onClick={() => setSelectedBrandTab(key)}
-                  style={{
-                    flex: 1,
-                    padding: '6px 4px',
-                    fontSize: '0.72rem',
-                    fontWeight: selectedBrandTab === key ? 800 : 600,
-                    borderRadius: '6px',
-                    border: 'none',
-                    cursor: 'pointer',
-                    background: selectedBrandTab === key ? '#0B352D' : 'transparent',
-                    color: selectedBrandTab === key ? '#F8F1DF' : '#5C6E6A',
-                    transition: 'all 0.15s ease'
-                  }}
-                >
-                  {BRANCH_PROFILES[key].shortLabel}
-                </button>
-              ))}
-            </div>
-
-            {/* Branch list for selected brand */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '240px', overflowY: 'auto', paddingRight: '2px' }}>
-              {BRANCH_PROFILES[selectedBrandTab].branches.map((b) => (
-                <button
-                  key={b.email}
-                  type="button"
-                  onClick={() => handleQuickFill(b.email)}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    padding: '9px 12px',
-                    background: '#FDFCFA',
-                    border: '1px solid #E8E0D2',
-                    borderRadius: '8px',
-                    cursor: 'pointer',
-                    textAlign: 'left',
-                    transition: 'background 0.15s ease'
-                  }}
-                >
-                  <div>
-                    <strong style={{ fontSize: '0.84rem', color: '#0B352D', display: 'block' }}>
-                      {BRANCH_PROFILES[selectedBrandTab].brandName} — {b.branch}
-                    </strong>
-                    <span style={{ fontSize: '0.72rem', color: '#5C6E6A' }}>
-                      {b.manager} • {b.email}
-                    </span>
-                  </div>
-                  <ArrowRight size={14} style={{ color: '#C49A52', flexShrink: 0 }} />
-                </button>
-              ))}
-            </div>
-          </div>
         </div>
       </div>
     </div>

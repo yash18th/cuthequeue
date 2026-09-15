@@ -34,16 +34,16 @@ export function BranchProvider({ children }) {
 
       // Determine initial selection
       if (!isSuperAdmin && assignedBranchId) {
-        // Branch Admin: Lock to assigned branch
+        // Branch Admin: Strictly lock to assigned branch
         const myBranch = branchList.find(b => Number(b.id) === Number(assignedBranchId));
         if (myBranch) {
           setSelectedBrandId(myBranch.brand_id);
           setSelectedBranchId(myBranch.id);
         } else if (authRestaurant) {
-          setSelectedBrandId(authRestaurant.brand_id || 1);
+          setSelectedBrandId(authRestaurant.brand_id || null);
           setSelectedBranchId(authRestaurant.id);
         }
-      } else if (branchList.length > 0) {
+      } else if (isSuperAdmin && branchList.length > 0) {
         // Super Admin: Restore saved branch or default to first
         const savedBranchId = localStorage.getItem('cq_admin_selected_branch');
         const existing = branchList.find(b => String(b.id) === String(savedBranchId));
@@ -67,25 +67,91 @@ export function BranchProvider({ children }) {
     loadMetadata();
   }, [loadMetadata]);
 
+  // Synchronously react to user / authRestaurant updates
+  useEffect(() => {
+    if (user?.role === 'restaurant_admin') {
+      const restId = user.branch_id || authRestaurant?.id;
+      const brandId = user.brand_id || user.restaurant_id || authRestaurant?.brand_id;
+      if (restId) {
+        setSelectedBranchId(Number(restId));
+        localStorage.setItem('cq_admin_selected_branch', String(restId));
+      }
+      if (brandId) {
+        setSelectedBrandId(Number(brandId));
+      }
+    } else if (isSuperAdmin && allBranches.length > 0) {
+      const savedBranchId = localStorage.getItem('cq_admin_selected_branch');
+      if (savedBranchId && !selectedBranchId) {
+        const found = allBranches.find(b => String(b.id) === String(savedBranchId));
+        if (found) {
+          setSelectedBrandId(found.brand_id);
+          setSelectedBranchId(found.id);
+        }
+      }
+    }
+  }, [user, authRestaurant, isSuperAdmin, allBranches, selectedBranchId]);
+
   // Available branches for current selected brand
   const availableBranches = useMemo(() => {
     if (!selectedBrandId) return allBranches;
     return allBranches.filter(b => Number(b.brand_id) === Number(selectedBrandId));
   }, [allBranches, selectedBrandId]);
 
-  // Currently selected objects
-  const selectedBrand = useMemo(() => {
-    return brands.find(b => Number(b.id) === Number(selectedBrandId)) || null;
-  }, [brands, selectedBrandId]);
-
+  // Currently selected branch object (never falls back to random/Rameshwaram branch for logged-in branch manager)
   const selectedBranch = useMemo(() => {
-    const found = allBranches.find(b => Number(b.id) === Number(selectedBranchId));
-    if (found) return found;
-    if (!isSuperAdmin && authRestaurant) return authRestaurant;
-    return availableBranches[0] || null;
-  }, [allBranches, selectedBranchId, isSuperAdmin, authRestaurant, availableBranches]);
+    // 1. If assigned to a specific branch (branch admin), lock to that branch
+    if (!isSuperAdmin && assignedBranchId) {
+      const assigned = allBranches.find(b => Number(b.id) === Number(assignedBranchId));
+      if (assigned) return assigned;
+      if (authRestaurant && Number(authRestaurant.id) === Number(assignedBranchId)) {
+        return authRestaurant;
+      }
+    }
+    // 2. Look up by selectedBranchId
+    if (selectedBranchId) {
+      const found = allBranches.find(b => Number(b.id) === Number(selectedBranchId));
+      if (found) return found;
+    }
+    // 3. Use authRestaurant if present
+    if (authRestaurant) return authRestaurant;
+    // 4. If super admin, pick first available
+    if (isSuperAdmin && availableBranches.length > 0) {
+      return availableBranches[0];
+    }
+    return null;
+  }, [allBranches, selectedBranchId, isSuperAdmin, assignedBranchId, authRestaurant, availableBranches]);
 
-  // Action: Select Brand
+  // Currently selected brand object
+  const selectedBrand = useMemo(() => {
+    if (selectedBrandId) {
+      const found = brands.find(b => Number(b.id) === Number(selectedBrandId));
+      if (found) return found;
+    }
+    if (selectedBranch?.brand_id) {
+      const found = brands.find(b => Number(b.id) === Number(selectedBranch.brand_id));
+      if (found) return found;
+    }
+    if (authRestaurant?.brand_id) {
+      const found = brands.find(b => Number(b.id) === Number(authRestaurant.brand_id));
+      if (found) return found;
+    }
+    return null;
+  }, [brands, selectedBrandId, selectedBranch, authRestaurant]);
+
+  // Synchronous assignment method (used immediately on login or branch selection)
+  const setAssignedBranch = useCallback((branch, brand) => {
+    if (!branch) return;
+    const branchId = Number(branch.id || branch.branch_id);
+    const brandId = Number(brand?.id || branch.brand_id);
+
+    if (brandId) setSelectedBrandId(brandId);
+    if (branchId) {
+      setSelectedBranchId(branchId);
+      localStorage.setItem('cq_admin_selected_branch', String(branchId));
+    }
+  }, []);
+
+  // Action: Select Brand (Super Admin)
   const selectBrand = useCallback((brandId) => {
     const numId = Number(brandId);
     setSelectedBrandId(numId);
@@ -93,7 +159,6 @@ export function BranchProvider({ children }) {
     // Find branches belonging to this brand
     const matchingBranches = allBranches.filter(b => Number(b.brand_id) === numId);
     if (matchingBranches.length > 0) {
-      // If user has an assigned branch under this brand, keep it; otherwise pick first
       const myAssigned = matchingBranches.find(b => Number(b.id) === Number(assignedBranchId));
       const nextBranch = myAssigned || matchingBranches[0];
       setSelectedBranchId(nextBranch.id);
@@ -103,7 +168,7 @@ export function BranchProvider({ children }) {
     }
   }, [allBranches, assignedBranchId, isSuperAdmin]);
 
-  // Action: Select Branch
+  // Action: Select Branch (Super Admin)
   const selectBranch = useCallback((branchId) => {
     const numId = Number(branchId);
     const targetBranch = allBranches.find(b => Number(b.id) === numId);
@@ -127,6 +192,7 @@ export function BranchProvider({ children }) {
     loading,
     selectBrand,
     selectBranch,
+    setAssignedBranch,
     isSuperAdmin,
     canSwitchBranch: isSuperAdmin,
     assignedBranchId,

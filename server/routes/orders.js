@@ -119,14 +119,15 @@ router.post('/', authenticate, (req, res) => {
     const insertTransaction = db.transaction(() => {
       const orderInsert = db.prepare(`
         INSERT INTO orders (
-          order_number, customer_id, restaurant_id, branch_id, status, pickup_type, scheduled_time,
+          order_number, customer_id, restaurant_id, branch_id, brand_id, status, pickup_type, scheduled_time,
           subtotal, tax, fee, discount, total, qr_code_token, notes
-        ) VALUES (?, ?, ?, ?, 'pending', ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ) VALUES (?, ?, ?, ?, ?, 'pending', ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `).run(
         orderNumber,
         req.user.id,
         restaurant.id,
         restaurant.id,
+        restaurant.brand_id || null,
         pickup_type,
         scheduled_time || null,
         calculatedSubtotal,
@@ -183,9 +184,10 @@ router.post('/', authenticate, (req, res) => {
     // Fetch full order for response and live socket broadcast
     const fullOrder = db.prepare(`
       SELECT o.*, r.name as restaurant_name, r.branch_name, r.area, r.cover_image as restaurant_cover, r.address as restaurant_address,
-             r.prep_time_minutes, r.brand_id, u.name as customer_name, u.phone as customer_phone
+             r.prep_time_minutes, b.name as brand_name, b.slug as brand_slug, u.name as customer_name, u.phone as customer_phone
       FROM orders o
-      JOIN restaurants r ON (o.branch_id = r.id OR o.restaurant_id = r.id)
+      JOIN restaurants r ON (o.branch_id = r.id OR (o.branch_id IS NULL AND o.restaurant_id = r.id))
+      LEFT JOIN brands b ON (o.brand_id = b.id OR r.brand_id = b.id)
       JOIN users u ON o.customer_id = u.id
       WHERE o.id = ?
     `).get(result.orderId);
@@ -252,15 +254,15 @@ router.get('/', authenticate, (req, res) => {
       }
       const targetBranch = userBranch || reqBranchId;
       if (targetBranch) {
-        ordersQuery += ' WHERE (o.branch_id = ? OR o.restaurant_id = ?) ORDER BY o.id DESC';
+        ordersQuery += ' WHERE (o.branch_id = ? OR (o.branch_id IS NULL AND o.restaurant_id = ?)) ORDER BY o.id DESC';
         params.push(Number(targetBranch), Number(targetBranch));
       } else {
-        ordersQuery += ' WHERE (r.owner_id = ? OR o.restaurant_id IN (SELECT id FROM restaurants WHERE owner_id = ?)) ORDER BY o.id DESC';
-        params.push(req.user.id, req.user.id);
+        ordersQuery += ' WHERE (r.owner_id = ? OR o.restaurant_id IN (SELECT id FROM restaurants WHERE owner_id = ?) OR o.branch_id IN (SELECT id FROM restaurants WHERE owner_id = ?)) ORDER BY o.id DESC';
+        params.push(req.user.id, req.user.id, req.user.id);
       }
     } else if (req.user.role === 'super_admin') {
       if (reqBranchId) {
-        ordersQuery += ' WHERE (o.branch_id = ? OR o.restaurant_id = ?) ORDER BY o.id DESC';
+        ordersQuery += ' WHERE (o.branch_id = ? OR (o.branch_id IS NULL AND o.restaurant_id = ?)) ORDER BY o.id DESC';
         params.push(Number(reqBranchId), Number(reqBranchId));
       } else if (reqRestaurantId) {
         ordersQuery += ' WHERE (o.restaurant_id = ? OR o.branch_id IN (SELECT id FROM restaurants WHERE brand_id = ?)) ORDER BY o.id DESC';
@@ -298,7 +300,7 @@ router.get('/my-orders', authenticate, (req, res) => {
       SELECT o.*, r.name as restaurant_name, r.logo as restaurant_logo, r.cover_image as restaurant_cover,
              r.prep_time_minutes, p.status as payment_status, p.method as payment_method
       FROM orders o
-      JOIN restaurants r ON o.restaurant_id = r.id
+      JOIN restaurants r ON (o.branch_id = r.id OR (o.branch_id IS NULL AND o.restaurant_id = r.id))
       LEFT JOIN payments p ON o.id = p.order_id
       WHERE o.customer_id = ?
       ORDER BY o.id DESC
@@ -339,7 +341,7 @@ router.get('/:id', authenticate, (req, res) => {
                 AND ahead.status IN ('pending', 'accepted', 'preparing') 
                 AND ahead.id < o.id) as orders_ahead
       FROM orders o
-      JOIN restaurants r ON o.restaurant_id = r.id
+      JOIN restaurants r ON (o.branch_id = r.id OR (o.branch_id IS NULL AND o.restaurant_id = r.id))
       LEFT JOIN brands b ON r.brand_id = b.id
       JOIN users u ON o.customer_id = u.id
       LEFT JOIN payments p ON o.id = p.order_id
@@ -383,7 +385,7 @@ router.get('/restaurant/:restaurantId', authenticate, requireRestaurantOwner, (r
       FROM orders o
       JOIN users u ON o.customer_id = u.id
       LEFT JOIN payments p ON o.id = p.order_id
-      WHERE (o.branch_id = ? OR o.restaurant_id = ?)
+      WHERE (o.branch_id = ? OR (o.branch_id IS NULL AND o.restaurant_id = ?))
       ORDER BY o.id DESC
     `).all(req.params.restaurantId, req.params.restaurantId);
 

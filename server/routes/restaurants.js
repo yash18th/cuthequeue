@@ -378,9 +378,9 @@ router.get('/:id', (req, res) => {
                  b.logo as brand_logo
           FROM restaurants r
           LEFT JOIN brands b ON r.brand_id = b.id
-          WHERE b.slug = ? OR b.slug = ? OR b.slug = ? OR LOWER(r.name) LIKE ?
+          WHERE r.slug = ? OR b.slug = ? OR b.slug = ? OR b.slug = ? OR LOWER(r.name) LIKE ?
           ORDER BY r.id ASC LIMIT 1
-        `).get(req.params.id, `the-${req.params.id}`, req.params.id.replace(/^the-/, ''), `%${req.params.id.replace(/-/g, ' ')}%`);
+        `).get(req.params.id, req.params.id, `the-${req.params.id}`, req.params.id.replace(/^the-/, ''), `%${req.params.id.replace(/-/g, ' ')}%`);
 
     if (!restaurant) {
       return res.status(404).json({ error: 'Restaurant not found.' });
