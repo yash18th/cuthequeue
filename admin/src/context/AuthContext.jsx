@@ -72,6 +72,10 @@ export function AuthProvider({ children }) {
     }
 
     localStorage.setItem('cq_admin_token', res.token);
+    const targetBranch = res.user.branch_id || res.restaurant?.id;
+    if (targetBranch) {
+      localStorage.setItem('cq_admin_selected_branch', String(targetBranch));
+    }
     setUser(res.user);
 
     if (res.restaurant) {
@@ -93,6 +97,7 @@ export function AuthProvider({ children }) {
 
   const logout = () => {
     localStorage.removeItem('cq_admin_token');
+    localStorage.removeItem('cq_admin_selected_branch');
     setUser(null);
     setRestaurant(null);
   };
