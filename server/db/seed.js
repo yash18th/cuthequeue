@@ -765,7 +765,8 @@ async function seed(options = {}) {
       items: [
         { name: 'Meghana Special Chicken Biryani (Boneless)', desc: 'The city favorite. Succulent boneless chicken pieces fried with hot green chillies, served over richly spiced Andhra dum biryani rice with raita & gravy.', price: 320, is_veg: 0, img: 'https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=600' },
         { name: 'Andhra Chicken Biryani', desc: 'Classic bone-in chicken biryani cooked with Guntur red spices, fresh mint, coriander, and aged long-grain basmati.', price: 290, is_veg: 0, img: 'https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=600' },
-        { name: 'Meghana Paneer Biryani', desc: 'Generous cubes of soft malai paneer roasted in spicy Andhra masala layered over spiced basmati dum rice.', price: 260, is_veg: 1, img: 'https://images.unsplash.com/photo-1589301760014-d929f3979dbc?w=600' }
+        { name: 'Meghana Paneer Biryani', desc: 'Generous cubes of soft malai paneer roasted in spicy Andhra masala layered over spiced basmati dum rice.', price: 260, is_veg: 1, img: 'https://images.unsplash.com/photo-1589301760014-d929f3979dbc?w=600' },
+        { name: 'Meghana Special Fish Biryani', desc: 'Boneless fish fillets marinated in coastal Andhra spices, layered with saffron-scented dum basmati rice, mint, and fried onions.', price: 340, is_veg: 0, img: 'https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=600' }
       ]
     },
     {
@@ -773,6 +774,8 @@ async function seed(options = {}) {
       items: [
         { name: 'Andhra Chilli Chicken', desc: 'Tender chicken cubes tossed with diced green chillies, garlic, and curry leaves. Fiery and intensely flavorful.', price: 250, is_veg: 0, img: 'https://images.unsplash.com/photo-1562967914-608f82629710?w=600' },
         { name: 'Crispy Chicken 65', desc: 'South Indian style deep-fried marinated chicken morsels tempered with mustard seeds and fresh curry leaves.', price: 240, is_veg: 0, img: 'https://images.unsplash.com/photo-1562967914-608f82629710?w=600' },
+        { name: 'Apollo Fish', desc: 'Crispy fried boneless fish batons tossed in hot green chillies, yogurt, curry leaves, and coastal garlic tempering.', price: 280, is_veg: 0, img: 'https://images.unsplash.com/photo-1534422298391-e4f8c172dddb?w=600' },
+        { name: 'Tawa Fish Fry', desc: 'Shallow fried marinated fish steaks coated with spicy Andhra masala podi, lemon juice, and crispy curry leaves.', price: 270, is_veg: 0, img: 'https://images.unsplash.com/photo-1534422298391-e4f8c172dddb?w=600' },
         { name: 'Tangy Lemon Chicken', desc: 'Wok-tossed chicken bites with fresh lime juice, crushed black pepper, and slivered ginger.', price: 240, is_veg: 0, img: 'https://images.unsplash.com/photo-1529006557810-274b9b2fc783?w=600' },
         { name: 'Andhra Dal Fry with Ghee', desc: 'Homestyle yellow toor dal tempered with mustard, cumin, dried red chillies, and melted ghee.', price: 150, is_veg: 1, img: 'https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=600' }
       ]

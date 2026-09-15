@@ -54,7 +54,8 @@ export default function AdminMenuPage() {
     description: '',
     prep_time_minutes: 15,
     is_veg: true,
-    is_available: true
+    is_available: true,
+    apply_to_all_branches: true
   });
   const [submitting, setSubmitting] = useState(false);
 
@@ -88,7 +89,8 @@ export default function AdminMenuPage() {
       description: '',
       prep_time_minutes: 15,
       is_veg: true,
-      is_available: true
+      is_available: true,
+      apply_to_all_branches: true
     });
     setIsModalOpen(true);
   };
@@ -103,7 +105,8 @@ export default function AdminMenuPage() {
       description: item.description || '',
       prep_time_minutes: item.prep_time_minutes || 15,
       is_veg: item.is_veg !== false && item.is_veg !== 0,
-      is_available: item.is_available !== false && item.is_available !== 0
+      is_available: item.is_available !== false && item.is_available !== 0,
+      apply_to_all_branches: false
     });
     setIsModalOpen(true);
   };
@@ -160,7 +163,8 @@ export default function AdminMenuPage() {
         description: formData.description ? formData.description.trim() : '',
         prep_time_minutes: Number(formData.prep_time_minutes) || 15,
         is_veg: Boolean(formData.is_veg),
-        is_available: formData.is_available !== false
+        is_available: formData.is_available !== false,
+        apply_to_all_branches: Boolean(formData.apply_to_all_branches)
       };
 
       if (editingItem) {
@@ -614,6 +618,22 @@ export default function AdminMenuPage() {
                     Available in stock (Live for ordering)
                   </label>
                 </div>
+
+                {/* Publish to all branches toggle */}
+                {!editingItem && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', background: 'rgba(196, 154, 82, 0.12)', border: '1px solid #C49A52', borderRadius: '6px' }}>
+                    <input
+                      type="checkbox"
+                      id="apply_to_all_branches"
+                      checked={formData.apply_to_all_branches}
+                      onChange={(e) => setFormData({ ...formData, apply_to_all_branches: e.target.checked })}
+                      style={{ width: '16px', height: '16px', accentColor: '#0B352D', cursor: 'pointer' }}
+                    />
+                    <label htmlFor="apply_to_all_branches" style={{ fontSize: '0.82rem', fontWeight: 700, color: '#0B352D', cursor: 'pointer' }}>
+                      Publish to all branches of {selectedBrand?.name || 'this brand'} (All Locations)
+                    </label>
+                  </div>
+                )}
 
                 {/* Actions */}
                 <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '8px' }}>

@@ -111,7 +111,8 @@ router.post('/:restaurantId/items', authenticate, (req, res) => {
       is_veg = true,
       image,
       is_available = true,
-      customizations = []
+      customizations = [],
+      apply_to_all_branches = true
     } = req.body;
 
     if (!name || !name.trim()) {
@@ -122,58 +123,88 @@ router.post('/:restaurantId/items', authenticate, (req, res) => {
       return res.status(400).json({ error: 'A valid price is required.' });
     }
 
-    const resolvedCategoryId = resolveCategoryId(
-      req.params.restaurantId,
-      category_id,
-      category || category_name || 'Mains'
-    );
+    // Determine target branches (all branches of brand if requested, or specific branch)
+    const currentRest = db.prepare('SELECT id, brand_id FROM restaurants WHERE id = ?').get(req.params.restaurantId);
+    const targetBranchIds = [];
+    if (apply_to_all_branches && currentRest && currentRest.brand_id) {
+      const branches = db.prepare('SELECT id FROM restaurants WHERE brand_id = ?').all(currentRest.brand_id);
+      if (branches.length > 0) {
+        targetBranchIds.push(...branches.map(b => b.id));
+      }
+    }
+    if (targetBranchIds.length === 0) {
+      targetBranchIds.push(Number(req.params.restaurantId));
+    }
 
     const defaultImg = (is_veg === true || is_veg === 1 || is_veg === '1' || is_veg === 'veg')
       ? 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600'
       : 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=600';
 
-    const result = db.prepare(`
-      INSERT INTO menu_items (
-        restaurant_id, category_id, name, description, price, is_veg, image, is_available, customizations_json
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `).run(
-      req.params.restaurantId,
-      resolvedCategoryId,
-      name.trim(),
-      description ? description.trim() : '',
-      parseFloat(price),
-      (is_veg === true || is_veg === 1 || is_veg === '1' || is_veg === 'veg') ? 1 : 0,
-      image || defaultImg,
-      (is_available !== false && is_available !== 0 && is_available !== '0') ? 1 : 0,
-      JSON.stringify(customizations || [])
-    );
+    let primaryNewItem = null;
 
-    const newItem = db.prepare(`
-      SELECT m.*, c.name AS category_name, COALESCE(c.name, 'Mains') AS category
-      FROM menu_items m
-      LEFT JOIN categories c ON m.category_id = c.id
-      WHERE m.id = ?
-    `).get(result.lastInsertRowid);
+    for (const bId of targetBranchIds) {
+      const resolvedCategoryId = resolveCategoryId(
+        bId,
+        category_id,
+        category || category_name || 'Mains'
+      );
+
+      const result = db.prepare(`
+        INSERT INTO menu_items (
+          restaurant_id, category_id, name, description, price, is_veg, image, is_available, customizations_json
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(
+        bId,
+        resolvedCategoryId,
+        name.trim(),
+        description ? description.trim() : '',
+        parseFloat(price),
+        (is_veg === true || is_veg === 1 || is_veg === '1' || is_veg === 'veg') ? 1 : 0,
+        image || defaultImg,
+        (is_available !== false && is_available !== 0 && is_available !== '0') ? 1 : 0,
+        JSON.stringify(customizations || [])
+      );
+
+      const created = db.prepare(`
+        SELECT m.*, c.name AS category_name, COALESCE(c.name, 'Mains') AS category
+        FROM menu_items m
+        LEFT JOIN categories c ON m.category_id = c.id
+        WHERE m.id = ?
+      `).get(result.lastInsertRowid);
+
+      if (Number(bId) === Number(req.params.restaurantId) || !primaryNewItem) {
+        primaryNewItem = created;
+      }
+    }
 
     if (req.io) {
-      req.io.to(`restaurant_${req.params.restaurantId}`).emit('menu:updated');
-      req.io.emit('menu:updated');
+      targetBranchIds.forEach(bId => {
+        req.io.to(`restaurant_${bId}`).emit('menu:updated', { restaurant_id: bId });
+      });
+      req.io.emit('menu:updated', { 
+        restaurant_id: Number(req.params.restaurantId),
+        restaurant_ids: targetBranchIds,
+        brand_id: currentRest?.brand_id 
+      });
     }
 
     res.status(201).json({
-      message: 'Item added successfully',
+      message: targetBranchIds.length > 1 
+        ? `Item added to all ${targetBranchIds.length} branches successfully`
+        : 'Item added successfully',
       item: {
-        ...newItem,
-        is_available: Boolean(newItem.is_available),
-        is_veg: Boolean(newItem.is_veg),
-        customizations: JSON.parse(newItem.customizations_json || '[]')
+        ...primaryNewItem,
+        is_available: Boolean(primaryNewItem.is_available),
+        is_veg: Boolean(primaryNewItem.is_veg),
+        customizations: JSON.parse(primaryNewItem.customizations_json || '[]')
       },
       menu_item: {
-        ...newItem,
-        is_available: Boolean(newItem.is_available),
-        is_veg: Boolean(newItem.is_veg),
-        customizations: JSON.parse(newItem.customizations_json || '[]')
-      }
+        ...primaryNewItem,
+        is_available: Boolean(primaryNewItem.is_available),
+        is_veg: Boolean(primaryNewItem.is_veg),
+        customizations: JSON.parse(primaryNewItem.customizations_json || '[]')
+      },
+      branches_updated: targetBranchIds.length
     });
   } catch (err) {
     console.error('Add menu item error:', err);

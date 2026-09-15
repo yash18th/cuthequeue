@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { restaurantAPI } from '../utils/api';
 import { useCart } from '../context/CartContext';
+import { useSocket } from '../context/SocketContext';
 import ItemModal from '../components/ItemModal';
 import PageNavHeader from '../components/PageNavHeader';
 import ErrorBoundary from '../components/ErrorBoundary';
@@ -45,19 +46,68 @@ export default function RestaurantPage({ restaurantId, setActivePage, onOpenCart
     getItemQuantity
   } = useCart() || {};
 
-  useEffect(() => {
+  const { socket } = useSocket() || {};
+
+  // Fetch restaurant menu details
+  const fetchRestaurantData = (showLoading = true) => {
     if (!effectiveId) return;
-    setLoading(true);
+    if (showLoading) setLoading(true);
     restaurantAPI.getById(effectiveId)
       .then((res) => {
         setData(res);
-        if (res.categories && res.categories.length > 0) {
+        if (res.categories && res.categories.length > 0 && !activeCategory) {
           setActiveCategory(res.categories[0].id);
         }
       })
       .catch((err) => console.error('Failed to load restaurant:', err))
-      .finally(() => setLoading(false));
+      .finally(() => {
+        if (showLoading) setLoading(false);
+      });
+  };
+
+  useEffect(() => {
+    fetchRestaurantData(true);
   }, [effectiveId]);
+
+  // Real-time interlink: automatically synchronize when dishes are added, edited, or marked sold out by admin
+  useEffect(() => {
+    if (!socket || !effectiveId) return;
+
+    const handleMenuUpdated = (payload) => {
+      console.log('⚡ [Real-Time] Menu updated event received:', payload);
+      fetchRestaurantData(false);
+    };
+
+    const handleAvailabilityChanged = (payload) => {
+      if (!payload) return;
+      console.log('⚡ [Real-Time] Item availability changed event:', payload);
+      setData((prev) => {
+        if (!prev || !prev.allItems) return prev;
+        const updatedAll = prev.allItems.map((item) =>
+          Number(item.id) === Number(payload.id)
+            ? { ...item, is_available: payload.is_available }
+            : item
+        );
+        const updatedCategories = (prev.categories || []).map((cat) => ({
+          ...cat,
+          items: (cat.items || []).map((item) =>
+            Number(item.id) === Number(payload.id)
+              ? { ...item, is_available: payload.is_available }
+              : item
+          )
+        }));
+        return { ...prev, allItems: updatedAll, categories: updatedCategories };
+      });
+    };
+
+    socket.on('menu:updated', handleMenuUpdated);
+    socket.on('item:availability_changed', handleAvailabilityChanged);
+
+    return () => {
+      socket.off('menu:updated', handleMenuUpdated);
+      socket.off('item:availability_changed', handleAvailabilityChanged);
+    };
+  }, [socket, effectiveId]);
 
   if (loading) {
     return (
@@ -150,10 +200,13 @@ export default function RestaurantPage({ restaurantId, setActivePage, onOpenCart
 
   // Filter items
   const filteredItems = (allItems || []).filter((item) => {
-    const matchesCategory = activeCategory ? item.category_id === activeCategory : true;
-    const matchesSearch = menuSearch.trim() === '' ||
+    // If the customer typed a search query, search across all items regardless of active category
+    const hasSearch = menuSearch.trim() !== '';
+    const matchesCategory = hasSearch ? true : (activeCategory ? item.category_id === activeCategory : true);
+    const matchesSearch = !hasSearch ||
       item.name.toLowerCase().includes(menuSearch.toLowerCase()) ||
-      (item.description && item.description.toLowerCase().includes(menuSearch.toLowerCase()));
+      (item.description && item.description.toLowerCase().includes(menuSearch.toLowerCase())) ||
+      (item.category && item.category.toLowerCase().includes(menuSearch.toLowerCase()));
     const matchesVeg = vegOnly ? Boolean(item.is_veg) : true;
     return matchesCategory && matchesSearch && matchesVeg;
   });
