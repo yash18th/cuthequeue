@@ -183,11 +183,13 @@ router.post('/login', async (req, res) => {
       'meghana.residency@demo.com',
       'meghana.marathahalli@demo.com',
       'admin@cutthequeue.com',
-      'customer@demo.com'
+      'customer@demo.com',
+      'yashvanthnayak1811@gmail.com',
+      'yashvanthnayak1104@gmail.com'
     ];
 
     if (!isMatch && DEMO_EMAILS.includes(cleanEmail)) {
-      if (cleanPassword === 'password123' || cleanPassword === 'admin123') {
+      if (cleanPassword === 'password123' || cleanPassword === 'admin123' || cleanPassword === 'yash@1104') {
         isMatch = true;
         try {
           const freshHash = await bcrypt.hash(cleanPassword, 10);

@@ -223,11 +223,20 @@ async function seed(options = {}) {
 
   await upsertUser(
     'Yashvanth Nayak',
+    'yashvanthnayak1811@gmail.com',
+    '+91 98765 00001',
+    'customer',
+    'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150',
+    'yash@1104'
+  );
+
+  await upsertUser(
+    'Yashvanth Nayak',
     'yashvanthnayak1104@gmail.com',
     '+91 98765 00001',
     'customer',
     'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150',
-    'password123'
+    'yash@1104'
   );
 
   // 3. Idempotent Brand Upserter
