@@ -48,16 +48,13 @@ export default function RestaurantPage({ restaurantId, setActivePage, onOpenCart
 
   const { socket } = useSocket() || {};
 
-  // Fetch restaurant menu details
+  // Fetch restaurant menu details (defaults to All Items so all dishes are visible)
   const fetchRestaurantData = (showLoading = true) => {
     if (!effectiveId) return;
     if (showLoading) setLoading(true);
     restaurantAPI.getById(effectiveId)
       .then((res) => {
         setData(res);
-        if (res.categories && res.categories.length > 0 && !activeCategory) {
-          setActiveCategory(res.categories[0].id);
-        }
       })
       .catch((err) => console.error('Failed to load restaurant:', err))
       .finally(() => {
@@ -511,7 +508,7 @@ export default function RestaurantPage({ restaurantId, setActivePage, onOpenCart
                 <button
                   key={cat.id}
                   type="button"
-                  onClick={() => setActiveCategory(cat.id)}
+                  onClick={() => setActiveCategory(isSelected ? null : cat.id)}
                   style={{
                     padding: '0.45rem 1.1rem',
                     borderRadius: 'var(--radius-md)',
@@ -647,6 +644,12 @@ export default function RestaurantPage({ restaurantId, setActivePage, onOpenCart
                           {item.is_veg ? 'VEG' : 'NON-VEG'}
                         </span>
                       </div>
+
+                      {(item.category || item.category_name) && (
+                        <div style={{ fontSize: '0.68rem', fontWeight: 800, color: '#926010', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '2px 0 1px' }}>
+                          {item.category || item.category_name}
+                        </div>
+                      )}
 
                       <h3 style={{
                         fontSize: '1.05rem',
