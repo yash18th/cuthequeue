@@ -65,8 +65,13 @@ function requireRestaurantOwner(req, res, next) {
     return res.status(404).json({ error: 'Restaurant or branch not found.' });
   }
 
-  // Strictly enforce branch ownership: must be the direct owner or user assigned to this branch
-  if (restaurant.owner_id === req.user.id || (req.user.branch_id && Number(req.user.branch_id) === Number(restaurant.id))) {
+  // Allow branch owners, assigned branch managers, or brand admins
+  if (
+    req.user.role === 'restaurant_admin' ||
+    restaurant.owner_id === req.user.id ||
+    (req.user.branch_id && Number(req.user.branch_id) === Number(restaurant.id)) ||
+    (req.user.restaurant_id && (Number(req.user.restaurant_id) === Number(restaurant.id) || Number(req.user.restaurant_id) === Number(restaurant.brand_id)))
+  ) {
     return next();
   }
 

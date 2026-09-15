@@ -56,7 +56,11 @@ export const restaurantAPI = {
   getMenu: (id) => apiRequest(`/menu/${id}`),
   addMenuItem: (id, item) => apiRequest(`/menu/${id}/items`, { method: 'POST', body: JSON.stringify(item) }),
   updateMenuItem: (id, itemId, item) => apiRequest(`/menu/items/${itemId}`, { method: 'PUT', body: JSON.stringify(item) }),
-  toggleMenuItem: (itemId) => apiRequest(`/menu/items/${itemId}/toggle`, { method: 'PATCH' }),
+  toggleMenuItem: (itemId, isAvailable) => 
+    apiRequest(`/menu/items/${itemId}/availability`, { 
+      method: 'PATCH',
+      body: isAvailable !== undefined ? JSON.stringify({ is_available: isAvailable }) : undefined
+    }),
   deleteMenuItem: (id, itemId) => apiRequest(`/menu/items/${itemId}`, { method: 'DELETE' }),
   getOrders: (id) => apiRequest(`/orders/restaurant/${id}`),
   updateOrderStatus: (orderId, status, estimatedPrepMinutes) => 
