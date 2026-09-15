@@ -19,8 +19,10 @@ import {
   ShoppingBag,
   Store,
   MapPin,
-  ShieldCheck
+  ShieldCheck,
+  Calendar
 } from 'lucide-react';
+import { formatScheduledTime, formatOrderNumber } from '../utils/formatTime';
 
 export default function AdminDashboardPage({ onOpenScanner }) {
   const { restaurant: authRestaurant } = useAuth();
@@ -628,7 +630,7 @@ export default function AdminDashboardPage({ onOpenScanner }) {
                       <div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                           <span style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0B352D', fontFamily: 'var(--font-heading)' }}>
-                            #{order.order_number || order.id}
+                            {formatOrderNumber(order.order_number, order.id)}
                           </span>
                           {order.pickup_code && (
                             <span style={{
@@ -651,6 +653,46 @@ export default function AdminDashboardPage({ onOpenScanner }) {
                       </div>
                       <StatusBadge status={order.status} />
                     </div>
+
+                    {/* Scheduled Pickup or ASAP Badge */}
+                    {order.pickup_type === 'scheduled' || order.scheduled_time ? (
+                      <div style={{
+                        background: '#FEF3C7',
+                        border: '1px solid #FCD34D',
+                        borderRadius: '6px',
+                        padding: '6px 10px',
+                        marginBottom: '10px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        gap: '8px'
+                      }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#92400E', fontSize: '0.8rem', fontWeight: 800 }}>
+                          <Calendar size={14} style={{ color: '#D97706' }} />
+                          <span>SCHEDULED PICKUP:</span>
+                        </div>
+                        <strong style={{ color: '#78350F', fontSize: '0.92rem', fontWeight: 800, fontFamily: 'var(--font-serif)' }}>
+                          {formatScheduledTime(order.scheduled_time) || order.scheduled_time}
+                        </strong>
+                      </div>
+                    ) : (
+                      <div style={{
+                        background: '#ECFDF5',
+                        border: '1px solid #A7F3D0',
+                        borderRadius: '6px',
+                        padding: '4px 8px',
+                        marginBottom: '10px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        color: '#065F46',
+                        fontSize: '0.75rem',
+                        fontWeight: 700
+                      }}>
+                        <Clock size={13} style={{ color: '#059669' }} />
+                        <span>ASAP Pickup (~{order.prep_time_minutes || 15}m prep)</span>
+                      </div>
+                    )}
 
                     {/* Order Items List */}
                     <div style={{
@@ -677,7 +719,7 @@ export default function AdminDashboardPage({ onOpenScanner }) {
                               {item.item_name || item.name || 'Dish'}
                             </span>
                             <span style={{ color: '#5C6E6A', fontWeight: 600 }}>
-                              ₹{Number(item.subtotal || (item.price * item.quantity) || 0)}
+                              ₹{Number(item.total_price || item.subtotal || (item.unit_price * item.quantity) || (item.price * item.quantity) || 0)}
                             </span>
                           </div>
                         ))

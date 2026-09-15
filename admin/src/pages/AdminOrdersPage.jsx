@@ -15,6 +15,7 @@ import {
   Store,
   MapPin
 } from 'lucide-react';
+import { formatScheduledTime, formatOrderNumber } from '../utils/formatTime';
 
 export default function AdminOrdersPage() {
   const { restaurant: authRestaurant } = useAuth();
@@ -250,7 +251,39 @@ export default function AdminOrdersPage() {
                           }}
                         >
                           <td style={{ padding: '12px 16px', fontWeight: 800, color: '#0B352D' }}>
-                            #{o.order_number || o.id}
+                            <div>{formatOrderNumber(o.order_number, o.id)}</div>
+                            {o.pickup_type === 'scheduled' || o.scheduled_time ? (
+                              <span style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '4px',
+                                background: '#FEF3C7',
+                                color: '#92400E',
+                                border: '1px solid #FCD34D',
+                                borderRadius: '4px',
+                                padding: '2px 6px',
+                                fontSize: '0.72rem',
+                                fontWeight: 800,
+                                marginTop: '4px'
+                              }}>
+                                📅 {formatScheduledTime(o.scheduled_time) || o.scheduled_time}
+                              </span>
+                            ) : (
+                              <span style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '4px',
+                                background: '#ECFDF5',
+                                color: '#065F46',
+                                borderRadius: '4px',
+                                padding: '2px 6px',
+                                fontSize: '0.7rem',
+                                fontWeight: 600,
+                                marginTop: '4px'
+                              }}>
+                                ASAP
+                              </span>
+                            )}
                           </td>
                           <td style={{ padding: '12px 16px', color: '#5C6E6A', fontSize: '0.82rem' }}>
                             {o.created_at ? new Date(o.created_at).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' }) : 'Recent'}
@@ -314,7 +347,7 @@ export default function AdminOrdersPage() {
                                       o.items.map((it, idx) => (
                                         <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: idx < o.items.length - 1 ? '1px dashed #E8E0D2' : 'none' }}>
                                           <span><strong>{it.quantity}x</strong> {it.item_name || it.name}</span>
-                                          <span style={{ fontWeight: 600 }}>₹{it.subtotal || (it.price * it.quantity) || 0}</span>
+                                          <span style={{ fontWeight: 600 }}>₹{it.total_price || it.subtotal || (it.unit_price * it.quantity) || (it.price * it.quantity) || 0}</span>
                                         </div>
                                       ))
                                     ) : (
@@ -331,6 +364,12 @@ export default function AdminOrdersPage() {
                                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
                                       <span style={{ color: '#5C6E6A' }}>Payment Status:</span>
                                       <span style={{ fontWeight: 700, color: '#166534' }}>{o.payment_status || 'Paid (Online)'}</span>
+                                    </div>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                                      <span style={{ color: '#5C6E6A' }}>Pickup Preference:</span>
+                                      <span style={{ fontWeight: 700, color: o.pickup_type === 'scheduled' || o.scheduled_time ? '#92400E' : '#065F46' }}>
+                                        {o.pickup_type === 'scheduled' || o.scheduled_time ? `Scheduled (${formatScheduledTime(o.scheduled_time) || o.scheduled_time})` : 'ASAP Pickup'}
+                                      </span>
                                     </div>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
                                       <span style={{ color: '#5C6E6A' }}>Channel:</span>

@@ -4,7 +4,8 @@ import { orderAPI } from '../utils/api';
 import PageNavHeader from '../components/PageNavHeader';
 import CheckoutProgress from '../components/CheckoutProgress';
 import HeritageDivider from '../components/HeritageDivider';
-import { CheckCircle2, Clock, MapPin, ArrowRight, Store, QrCode, ShoppingBag, Sparkles } from 'lucide-react';
+import { CheckCircle2, Clock, MapPin, ArrowRight, Store, QrCode, ShoppingBag, Sparkles, Calendar } from 'lucide-react';
+import { formatScheduledTime, formatOrderNumber } from '../utils/formatTime';
 
 export default function OrderConfirmationPage() {
   const { orderId } = useParams();
@@ -126,16 +127,24 @@ export default function OrderConfirmationPage() {
             maxWidth: '540px',
             margin: '0 auto 1.5rem auto'
           }}>
-            Order <strong style={{ color: 'var(--text-charcoal)' }}>{order?.order_number || `#CQ${orderId}`}</strong> is currently preparing at <strong style={{ color: 'var(--bg-deep-green)' }}>{order?.restaurant_name || 'the restaurant'}</strong>.
-            Arrive relaxed — your table and counter will have your order ready with zero wait.
+            Order <strong style={{ color: 'var(--text-charcoal)' }}>{formatOrderNumber(order?.order_number, orderId)}</strong>{' '}
+            {order?.pickup_type === 'scheduled' || order?.scheduled_time ? (
+              <>
+                is scheduled for pickup today at <strong style={{ color: '#92400E' }}>{formatScheduledTime(order?.scheduled_time) || order?.scheduled_time}</strong> at <strong style={{ color: 'var(--bg-deep-green)' }}>{order?.restaurant_name || 'the restaurant'}</strong>. The kitchen will begin cooking fresh for your arrival.
+              </>
+            ) : (
+              <>
+                is currently preparing at <strong style={{ color: 'var(--bg-deep-green)' }}>{order?.restaurant_name || 'the restaurant'}</strong>. Arrive relaxed — your table and counter will have your order ready with zero wait.
+              </>
+            )}
           </p>
 
           <HeritageDivider />
 
           {/* Time and Pickup Card */}
           <div style={{
-            background: '#F7F1E5',
-            border: '1px solid #E8DDC8',
+            background: order?.pickup_type === 'scheduled' || order?.scheduled_time ? '#FEF3C7' : '#F7F1E5',
+            border: `1px solid ${order?.pickup_type === 'scheduled' || order?.scheduled_time ? '#FCD34D' : '#E8DDC8'}`,
             borderRadius: 'var(--radius-lg)',
             padding: '1.5rem 1.75rem',
             marginBottom: '2rem',
@@ -145,15 +154,31 @@ export default function OrderConfirmationPage() {
             gap: '1.25rem'
           }}>
             <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--bg-deep-green)', fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: 'var(--font-serif)' }}>
-                <Clock size={14} style={{ color: 'var(--accent-gold)' }} /> Estimated Ready Time
-              </div>
-              <div style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--text-charcoal)', marginTop: '4px', fontFamily: 'var(--font-serif)' }}>
-                {readyTimeStr}
-              </div>
-              <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
-                ~{prepMinutes} mins preparation cycle
-              </div>
+              {order?.pickup_type === 'scheduled' || order?.scheduled_time ? (
+                <>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#92400E', fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: 'var(--font-serif)' }}>
+                    <Calendar size={14} style={{ color: '#D97706' }} /> Scheduled Pickup Time
+                  </div>
+                  <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#78350F', marginTop: '4px', fontFamily: 'var(--font-serif)' }}>
+                    {formatScheduledTime(order?.scheduled_time) || order?.scheduled_time}
+                  </div>
+                  <div style={{ fontSize: '0.8rem', color: '#92400E', marginTop: '2px', fontWeight: 600 }}>
+                    📅 Scheduled for pickup today • Fresh preparation
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--bg-deep-green)', fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: 'var(--font-serif)' }}>
+                    <Clock size={14} style={{ color: 'var(--accent-gold)' }} /> Estimated Ready Time
+                  </div>
+                  <div style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--text-charcoal)', marginTop: '4px', fontFamily: 'var(--font-serif)' }}>
+                    {readyTimeStr}
+                  </div>
+                  <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
+                    ~{prepMinutes} mins preparation cycle
+                  </div>
+                </>
+              )}
             </div>
 
             <div>

@@ -14,8 +14,11 @@ import {
   X,
   AlertCircle,
   UtensilsCrossed,
-  ClipboardList
+  ClipboardList,
+  Calendar,
+  Clock
 } from 'lucide-react';
+import { formatScheduledTime, formatOrderNumber } from '../utils/formatTime';
 
 // Distance calculation using Haversine formula (km)
 function calculateDistance(lat1, lon1, lat2, lon2) {
@@ -748,10 +751,26 @@ export default function OrderHistoryPage({
                         marginBottom: '0.75rem'
                       }}>
                         <div>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px', flexWrap: 'wrap' }}>
                             <span style={{ fontSize: '1.05rem', fontWeight: 800, color: 'var(--bg-deep-green)', fontFamily: 'var(--font-serif)' }}>
-                              Order #{order.order_number}
+                              Order {formatOrderNumber(order.order_number, order.id)}
                             </span>
+                            {order.pickup_type === 'scheduled' || order.scheduled_time ? (
+                              <span style={{
+                                background: '#FEF3C7',
+                                color: '#92400E',
+                                border: '1px solid #FCD34D',
+                                borderRadius: '4px',
+                                padding: '1px 7px',
+                                fontSize: '0.72rem',
+                                fontWeight: 800,
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '3px'
+                              }}>
+                                📅 Scheduled: {formatScheduledTime(order.scheduled_time) || order.scheduled_time}
+                              </span>
+                            ) : null}
                             <span style={{ color: 'var(--accent-gold)' }}>•</span>
                             <h3 style={{ fontSize: '1.05rem', fontWeight: 800, margin: 0, fontFamily: 'var(--font-serif)', color: 'var(--text-charcoal)' }}>
                               {order.restaurant_name}
@@ -782,24 +801,38 @@ export default function OrderHistoryPage({
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'space-between',
-                        background: 'var(--bg-subtle)',
+                        background: order.pickup_type === 'scheduled' || order.scheduled_time ? '#FEF3C7' : 'var(--bg-subtle)',
                         borderRadius: 'var(--radius-md)',
                         padding: '0.65rem 0.9rem',
                         marginBottom: '1rem',
                         fontSize: '0.825rem',
                         flexWrap: 'wrap',
-                        gap: '0.5rem'
+                        gap: '0.5rem',
+                        border: order.pickup_type === 'scheduled' || order.scheduled_time ? '1px solid #FCD34D' : 'none'
                       }}>
                         {order.status !== 'completed' && order.status !== 'rejected' && order.status !== 'cancelled' ? (
-                          <>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-secondary)' }}>
-                              <span>⏱️ Estimated ready:</span>
-                              <strong style={{ color: 'var(--text-primary)' }}>{readyTimeStr}</strong>
-                            </div>
-                            <span style={{ color: 'var(--primary)', fontWeight: 700 }}>
-                              Self-Pickup Counter
-                            </span>
-                          </>
+                          order.pickup_type === 'scheduled' || order.scheduled_time ? (
+                            <>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#92400E' }}>
+                                <Calendar size={14} style={{ color: '#D97706' }} />
+                                <span>Scheduled Pickup:</span>
+                                <strong style={{ color: '#78350F' }}>{formatScheduledTime(order.scheduled_time) || order.scheduled_time} (Today)</strong>
+                              </div>
+                              <span style={{ color: '#92400E', fontWeight: 800, background: '#FDE68A', padding: '2px 8px', borderRadius: '4px' }}>
+                                Self-Pickup Counter
+                              </span>
+                            </>
+                          ) : (
+                            <>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-secondary)' }}>
+                                <span>⏱️ Estimated ready:</span>
+                                <strong style={{ color: 'var(--text-primary)' }}>{readyTimeStr}</strong>
+                              </div>
+                              <span style={{ color: 'var(--primary)', fontWeight: 700 }}>
+                                Self-Pickup Counter
+                              </span>
+                            </>
+                          )
                         ) : order.status === 'completed' ? (
                           <>
                             <span style={{ color: '#047857', fontWeight: 700 }}>

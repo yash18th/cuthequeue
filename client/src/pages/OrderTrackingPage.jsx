@@ -6,7 +6,8 @@ import { useSocket } from '../context/SocketContext';
 import { useNotification } from '../context/NotificationContext';
 import StatusBadge from '../components/StatusBadge';
 import PageNavHeader from '../components/PageNavHeader';
-import { Clock, MapPin, Phone, Bell, CheckCircle2, ArrowLeft, Sparkles, QrCode, AlertTriangle, ShieldCheck } from 'lucide-react';
+import { Clock, MapPin, Phone, Bell, CheckCircle2, ArrowLeft, Sparkles, QrCode, AlertTriangle, ShieldCheck, Calendar } from 'lucide-react';
+import { formatScheduledTime, formatOrderNumber } from '../utils/formatTime';
 
 export default function OrderTrackingPage({ orderId, setActivePage }) {
   const params = useParams();
@@ -134,7 +135,7 @@ export default function OrderTrackingPage({ orderId, setActivePage }) {
           breadcrumbs={[
             { label: 'Home', path: '/' },
             { label: 'My Orders', path: '/orders' },
-            { label: `Order ${order.order_number}` }
+            { label: `Order ${formatOrderNumber(order.order_number, order.id)}` }
           ]}
           extraAction={
             <span style={{ fontSize: '0.8rem', color: 'var(--bg-deep-green)', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '6px', fontFamily: 'var(--font-serif)' }}>
@@ -144,10 +145,12 @@ export default function OrderTrackingPage({ orderId, setActivePage }) {
           }
         />
 
-        {/* HERO TIME-SAVING BADGE */}
+        {/* HERO TIME-SAVING OR SCHEDULED BADGE */}
         <div style={{
-          background: 'linear-gradient(135deg, #0B2923 0%, #123C32 100%)',
-          border: '1px solid #C6A15B',
+          background: order.pickup_type === 'scheduled' || order.scheduled_time
+            ? 'linear-gradient(135deg, #2D1B08 0%, #4A2805 100%)'
+            : 'linear-gradient(135deg, #0B2923 0%, #123C32 100%)',
+          border: `1px solid ${order.pickup_type === 'scheduled' || order.scheduled_time ? '#F59E0B' : '#C6A15B'}`,
           borderRadius: 'var(--radius-lg)',
           padding: '1.25rem 1.5rem',
           marginBottom: '1.5rem',
@@ -164,7 +167,7 @@ export default function OrderTrackingPage({ orderId, setActivePage }) {
               height: '46px',
               borderRadius: '50%',
               background: '#F7F1E5',
-              color: 'var(--bg-deep-green)',
+              color: order.pickup_type === 'scheduled' || order.scheduled_time ? '#92400E' : 'var(--bg-deep-green)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -172,23 +175,35 @@ export default function OrderTrackingPage({ orderId, setActivePage }) {
               border: '1.5px solid #C6A15B',
               boxShadow: '0 4px 12px rgba(0,0,0,0.2)'
             }}>
-              ⏱️
+              {order.pickup_type === 'scheduled' || order.scheduled_time ? '📅' : '⏱️'}
             </div>
             <div>
               <div style={{ fontWeight: 800, color: '#F7F1E5', fontSize: '1.05rem', letterSpacing: '-0.01em', fontFamily: 'var(--font-serif)' }}>
-                {order.status === 'completed'
-                  ? `Order complete! You saved ~${timeSaved} minutes in line.`
-                  : `You're saving approximately ${timeSaved} minutes today.`}
+                {order.pickup_type === 'scheduled' || order.scheduled_time ? (
+                  order.status === 'completed'
+                    ? 'Scheduled pickup completed! Zero counter queue wait.'
+                    : `Scheduled Pickup today at ${formatScheduledTime(order.scheduled_time) || order.scheduled_time}`
+                ) : (
+                  order.status === 'completed'
+                    ? `Order complete! You saved ~${timeSaved} minutes in line.`
+                    : `You're saving approximately ${timeSaved} minutes today.`
+                )}
               </div>
               <div style={{ fontSize: '0.825rem', color: '#E8DDC8', marginTop: '2px' }}>
-                {order.status === 'completed'
-                  ? 'Your meal was ready the moment you arrived. Zero counter queue wait.'
-                  : 'Food prepares while you travel. Walk in and collect immediately when ready.'}
+                {order.pickup_type === 'scheduled' || order.scheduled_time ? (
+                  order.status === 'completed'
+                    ? 'Your meal was ready precisely when you arrived.'
+                    : 'The kitchen will prepare your dishes fresh right in time for your pickup today.'
+                ) : (
+                  order.status === 'completed'
+                    ? 'Your meal was ready the moment you arrived. Zero counter queue wait.'
+                    : 'Food prepares while you travel. Walk in and collect immediately when ready.'
+                )}
               </div>
             </div>
           </div>
           <div style={{
-            background: '#C6A15B',
+            background: order.pickup_type === 'scheduled' || order.scheduled_time ? '#F59E0B' : '#C6A15B',
             color: '#0B2923',
             padding: '0.4rem 0.9rem',
             borderRadius: 'var(--radius-md)',
@@ -197,7 +212,9 @@ export default function OrderTrackingPage({ orderId, setActivePage }) {
             letterSpacing: '0.04em',
             fontFamily: 'var(--font-serif)'
           }}>
-            ~{timeSaved} MIN SAVED
+            {order.pickup_type === 'scheduled' || order.scheduled_time
+              ? `📅 SCHEDULED: ${formatScheduledTime(order.scheduled_time) || order.scheduled_time}`
+              : `~${timeSaved} MIN SAVED`}
           </div>
         </div>
 
@@ -338,24 +355,38 @@ export default function OrderTrackingPage({ orderId, setActivePage }) {
           {/* Estimated Ready Time & Queue Progress Info */}
           {order.status !== 'completed' && !isRejectedOrCancelled && (
             <div style={{
-              background: '#F7F1E5',
+              background: order.pickup_type === 'scheduled' || order.scheduled_time ? '#FEF3C7' : '#F7F1E5',
               borderRadius: 'var(--radius-md)',
               padding: '1.1rem 1.25rem',
               display: 'flex',
               flexDirection: 'column',
               gap: '0.75rem',
               fontSize: '0.9rem',
-              border: '1px solid #E8DDC8',
+              border: `1px solid ${order.pickup_type === 'scheduled' || order.scheduled_time ? '#FCD34D' : '#E8DDC8'}`,
               marginTop: '1.25rem'
             }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-secondary)' }}>
-                  <Clock size={16} style={{ color: 'var(--accent-gold)' }} />
-                  <span style={{ fontWeight: 700 }}>Estimated Ready Time:</span>
-                </div>
-                <strong style={{ color: 'var(--text-charcoal)', fontSize: '1.1rem', fontWeight: 800, fontFamily: 'var(--font-serif)' }}>
-                  {readyTimeFormatted} (~{order.prep_time_minutes || 15} min prep)
-                </strong>
+                {order.pickup_type === 'scheduled' || order.scheduled_time ? (
+                  <>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#92400E' }}>
+                      <Calendar size={18} style={{ color: '#D97706' }} />
+                      <span style={{ fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Scheduled Pickup Time:</span>
+                    </div>
+                    <strong style={{ color: '#78350F', fontSize: '1.25rem', fontWeight: 800, fontFamily: 'var(--font-serif)' }}>
+                      {formatScheduledTime(order.scheduled_time) || order.scheduled_time} (Today)
+                    </strong>
+                  </>
+                ) : (
+                  <>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-secondary)' }}>
+                      <Clock size={16} style={{ color: 'var(--accent-gold)' }} />
+                      <span style={{ fontWeight: 700 }}>Estimated Ready Time:</span>
+                    </div>
+                    <strong style={{ color: 'var(--text-charcoal)', fontSize: '1.1rem', fontWeight: 800, fontFamily: 'var(--font-serif)' }}>
+                      {readyTimeFormatted} (~{order.prep_time_minutes || 15} min prep)
+                    </strong>
+                  </>
+                )}
               </div>
 
               {/* Live Kitchen Queue Counter */}
