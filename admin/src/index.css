@@ -113,6 +113,77 @@ body {
   box-shadow: 0 2px 8px rgba(196, 154, 82, 0.2);
 }
 
+/* Restaurant Identity Pill in Admin Header */
+.restaurant-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 14px;
+  background: rgba(248, 241, 223, 0.10);
+  border: 1px solid rgba(196, 154, 82, 0.45);
+  border-radius: 9999px;
+  color: #F8F1DF;
+  font-size: 0.82rem;
+  line-height: 1;
+  white-space: nowrap;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  margin-left: 8px;
+}
+
+.restaurant-pill-brand {
+  color: #C49A52;
+  font-weight: 700;
+  white-space: nowrap;
+  letter-spacing: 0.02em;
+}
+
+.restaurant-pill-divider {
+  color: #C49A52;
+  opacity: 0.6;
+  font-weight: 700;
+  user-select: none;
+}
+
+.restaurant-pill-branch {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #F8F1DF;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.restaurant-pill-badge {
+  font-size: 0.64rem;
+  background: #10B981;
+  color: #FFFFFF;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+  line-height: 1;
+}
+
+.restaurant-pill-badge-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #FFFFFF;
+  display: inline-block;
+  animation: pulse-dot 2s infinite ease-in-out;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.85); }
+}
+
 .admin-card {
   background: var(--bg-card);
   border: 1px solid var(--border-subtle);

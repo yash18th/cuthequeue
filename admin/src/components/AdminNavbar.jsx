@@ -15,7 +15,8 @@ import {
   QrCode,
   Volume2,
   VolumeX,
-  Radio
+  Radio,
+  MapPin
 } from 'lucide-react';
 
 export default function AdminNavbar({ onOpenScanner, activeOrderCount = 0 }) {
@@ -35,7 +36,7 @@ export default function AdminNavbar({ onOpenScanner, activeOrderCount = 0 }) {
       <div className="temple-frieze" />
       <div className="container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', minHeight: '64px' }}>
         {/* Left: Brand Identity & Restaurant Badge */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexShrink: 0 }}>
           <div
             onClick={() => navigate('/dashboard')}
             style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}
@@ -73,30 +74,21 @@ export default function AdminNavbar({ onOpenScanner, activeOrderCount = 0 }) {
 
           {/* Restaurant identity pill */}
           {(selectedBrand || restaurant) && (
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                padding: '5px 14px',
-                background: 'rgba(248, 241, 223, 0.12)',
-                border: '1px solid rgba(196, 154, 82, 0.45)',
-                borderRadius: '9999px',
-                color: '#F8F1DF',
-                fontSize: '0.82rem',
-                marginLeft: '8px'
-              }}
-              className="restaurant-pill"
-            >
-              <strong style={{ color: '#C49A52' }}>
+            <div className="restaurant-pill">
+              <span className="restaurant-pill-brand">
                 {selectedBrand?.name || restaurant?.brand_name || restaurant?.name}
-              </strong>
+              </span>
               {(selectedBranch?.branch_name || selectedBranch?.area || restaurant?.branch_name) && (
-                <span style={{ color: '#F8F1DF', fontWeight: 600 }}>
-                  • 📍 {selectedBranch?.branch_name || selectedBranch?.area || restaurant?.branch_name} Branch
-                </span>
+                <>
+                  <span className="restaurant-pill-divider">•</span>
+                  <span className="restaurant-pill-branch">
+                    <MapPin size={13} style={{ color: '#C49A52', flexShrink: 0 }} />
+                    <span>{selectedBranch?.branch_name || selectedBranch?.area || restaurant?.branch_name} Branch</span>
+                  </span>
+                </>
               )}
-              <span style={{ fontSize: '0.65rem', background: '#10B981', color: 'white', padding: '1px 6px', borderRadius: '4px', fontWeight: 800, textTransform: 'uppercase' }}>
+              <span className="restaurant-pill-badge">
+                <span className="restaurant-pill-badge-dot" />
                 LIVE
               </span>
             </div>
