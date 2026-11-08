@@ -318,6 +318,8 @@ export default function AdminDashboardPage({ onOpenScanner }) {
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: '1rem',
           boxShadow: 'var(--shadow-sm)'
         }}>
           <div>

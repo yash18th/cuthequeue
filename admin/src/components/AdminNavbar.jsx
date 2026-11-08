@@ -82,9 +82,10 @@ export default function AdminNavbar({ onOpenScanner, activeOrderCount = 0 }) {
           <NavLink
             to="/dashboard"
             className={({ isActive }) => `admin-nav-item ${isActive ? 'active' : ''}`}
+            title="Kitchen Queue & Live Ticket Dispatch"
           >
-            <LayoutDashboard size={16} />
-            <span>Kitchen Queue</span>
+            <LayoutDashboard size={15} style={{ flexShrink: 0 }} />
+            <span>Kitchen</span>
             {activeOrderCount > 0 && (
               <span className="admin-nav-badge">
                 {activeOrderCount}
