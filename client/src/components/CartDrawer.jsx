@@ -3,8 +3,6 @@ import { useCart } from '../context/CartContext';
 import { X, Plus, Minus, Trash2, ShoppingBag, ArrowRight } from 'lucide-react';
 
 export default function CartDrawer({ isOpen, onClose, setActivePage }) {
-  if (!isOpen) return null;
-
   const {
     cartItems,
     restaurant,
@@ -17,6 +15,8 @@ export default function CartDrawer({ isOpen, onClose, setActivePage }) {
     total,
     totalItemCount
   } = useCart();
+
+  if (!isOpen) return null;
 
   const handleGoToCheckout = () => {
     onClose();

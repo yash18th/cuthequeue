@@ -205,28 +205,28 @@ export default function AdminDashboardPage({ onOpenScanner }) {
   return (
     <div style={{ padding: '2rem 0 4rem' }}>
       <div className="container">
-        {/* Branch & Restaurant Selector Control Panel */}
-        <div style={{
-          background: 'linear-gradient(135deg, #0B352D 0%, #123F35 100%)',
-          border: '1.5px solid #C49A52',
-          borderRadius: '12px',
-          padding: '1.25rem 1.5rem',
-          marginBottom: '1.5rem',
-          display: 'flex',
-          flexWrap: 'wrap',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          gap: '1.25rem',
-          boxShadow: '0 8px 24px rgba(11, 53, 45, 0.2)'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', flexWrap: 'wrap' }}>
-            {/* Restaurant Selector */}
-            <div>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '0.72rem', fontWeight: 800, color: '#C49A52', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '6px' }}>
-                <Store size={13} />
-                <span>Restaurant Brand</span>
-              </label>
-              {canSwitchBranch ? (
+        {/* Branch & Restaurant Selector Control Panel (Super Admin only) */}
+        {canSwitchBranch && (
+          <div style={{
+            background: 'linear-gradient(135deg, #0B352D 0%, #123F35 100%)',
+            border: '1.5px solid #C49A52',
+            borderRadius: '12px',
+            padding: '1.25rem 1.5rem',
+            marginBottom: '1.5rem',
+            display: 'flex',
+            flexWrap: 'wrap',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            gap: '1.25rem',
+            boxShadow: '0 8px 24px rgba(11, 53, 45, 0.2)'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', flexWrap: 'wrap' }}>
+              {/* Restaurant Selector */}
+              <div>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '0.72rem', fontWeight: 800, color: '#C49A52', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '6px' }}>
+                  <Store size={13} />
+                  <span>Restaurant Brand</span>
+                </label>
                 <select
                   value={selectedBrandId || ''}
                   onChange={(e) => selectBrand(e.target.value)}
@@ -250,29 +250,14 @@ export default function AdminDashboardPage({ onOpenScanner }) {
                     </option>
                   ))}
                 </select>
-              ) : (
-                <div style={{
-                  background: 'rgba(248, 241, 223, 0.12)',
-                  border: '1px solid rgba(196, 154, 82, 0.4)',
-                  color: '#F8F1DF',
-                  padding: '8px 14px',
-                  borderRadius: '8px',
-                  fontWeight: 700,
-                  fontSize: '0.9rem',
-                  minWidth: '200px'
-                }}>
-                  {selectedBrand?.name || authRestaurant?.name || 'Restaurant'}
-                </div>
-              )}
-            </div>
+              </div>
 
-            {/* Branch Selector */}
-            <div>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '0.72rem', fontWeight: 800, color: '#C49A52', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '6px' }}>
-                <MapPin size={13} />
-                <span>Branch Location</span>
-              </label>
-              {canSwitchBranch ? (
+              {/* Branch Selector */}
+              <div>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '0.72rem', fontWeight: 800, color: '#C49A52', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '6px' }}>
+                  <MapPin size={13} />
+                  <span>Branch Location</span>
+                </label>
                 <select
                   value={selectedBranchId || ''}
                   onChange={(e) => selectBranch(e.target.value)}
@@ -296,51 +281,32 @@ export default function AdminDashboardPage({ onOpenScanner }) {
                     </option>
                   ))}
                 </select>
-              ) : (
-                <div style={{
-                  background: 'rgba(248, 241, 223, 0.12)',
-                  border: '1px solid rgba(196, 154, 82, 0.4)',
-                  color: '#F8F1DF',
-                  padding: '8px 14px',
-                  borderRadius: '8px',
-                  fontWeight: 700,
-                  fontSize: '0.9rem',
-                  minWidth: '200px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px'
-                }}>
-                  <span>📍 {selectedBranch?.branch_name || selectedBranch?.area || authRestaurant?.branch_name || 'Assigned Branch'}</span>
-                  <span style={{ fontSize: '0.62rem', background: '#C49A52', color: '#0B352D', padding: '1px 6px', borderRadius: '4px', fontWeight: 900 }}>
-                    ASSIGNED
-                  </span>
-                </div>
-              )}
+              </div>
             </div>
-          </div>
 
-          {/* Access Mode Badge & Auto Sync Info */}
-          <div style={{ textAlign: 'right' }}>
-            <div style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '6px',
-              padding: '4px 10px',
-              borderRadius: '20px',
-              background: isSuperAdmin ? 'rgba(196, 154, 82, 0.25)' : 'rgba(34, 197, 94, 0.2)',
-              border: `1px solid ${isSuperAdmin ? '#C49A52' : '#22C55E'}`,
-              color: isSuperAdmin ? '#F8F1DF' : '#86EFAC',
-              fontSize: '0.75rem',
-              fontWeight: 700
-            }}>
-              <ShieldCheck size={14} />
-              <span>{isSuperAdmin ? 'Super Admin (All Brands)' : 'Branch Operator'}</span>
-            </div>
-            <div style={{ color: '#C49A52', fontSize: '0.74rem', marginTop: '4px', opacity: 0.9 }}>
-              Auto-sync active • Refreshing every 12s
+            {/* Access Mode Badge & Auto Sync Info */}
+            <div style={{ textAlign: 'right' }}>
+              <div style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '4px 10px',
+                borderRadius: '20px',
+                background: isSuperAdmin ? 'rgba(196, 154, 82, 0.25)' : 'rgba(34, 197, 94, 0.2)',
+                border: `1px solid ${isSuperAdmin ? '#C49A52' : '#22C55E'}`,
+                color: isSuperAdmin ? '#F8F1DF' : '#86EFAC',
+                fontSize: '0.75rem',
+                fontWeight: 700
+              }}>
+                <ShieldCheck size={14} />
+                <span>{isSuperAdmin ? 'Super Admin (All Brands)' : 'Branch Operator'}</span>
+              </div>
+              <div style={{ color: '#C49A52', fontSize: '0.74rem', marginTop: '4px', opacity: 0.9 }}>
+                Auto-sync active • Refreshing every 12s
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
         {/* Restaurant Header Banner */}
         <div style={{

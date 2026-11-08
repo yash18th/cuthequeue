@@ -9,7 +9,9 @@
     "build": "echo 'Build complete.'",
     "seed": "node server/db/seed.js",
     "client": "npm run dev --prefix client",
-    "dev": "node -e \"const { spawn } = require('child_process'); spawn('npm', ['run', 'server'], { stdio: 'inherit', shell: true }); spawn('npm', ['run', 'client'], { stdio: 'inherit', shell: true });\""
+    "admin": "npm run dev --prefix admin",
+    "dev": "node -e \"const { spawn } = require('child_process'); spawn('npm', ['run', 'server'], { stdio: 'inherit', shell: true }); spawn('npm', ['run', 'client'], { stdio: 'inherit', shell: true }); spawn('npm', ['run', 'admin'], { stdio: 'inherit', shell: true });\"",
+    "dev:client": "node -e \"const { spawn } = require('child_process'); spawn('npm', ['run', 'server'], { stdio: 'inherit', shell: true }); spawn('npm', ['run', 'client'], { stdio: 'inherit', shell: true });\""
   },
   "keywords": [
     "restaurant",
